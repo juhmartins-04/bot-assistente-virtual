@@ -4,7 +4,13 @@ import {
   Globe2, ChevronDown, ChevronUp, Building2, Save, Sparkles,
   Download, Upload, ExternalLink
 } from "lucide-react";
-import { storageGet, storageSet } from "./storage";
+import {
+  storageGet,
+  storageSet,
+  listarClientes,
+  salvarClienteRemoto,
+  excluirClienteRemoto,
+} from "./storage";
 
 
 const TOKENS = {
@@ -215,17 +221,39 @@ export default function GeradorAtendenteVirtual() {
   useEffect(() => {
     (async () => {
       try {
-        const rawClientes = await storageGet("clientes", "{}");
-        setClientes(JSON.parse(rawClientes || "{}"));
+        const [mapaClientes, rawConfig] = await Promise.all([
+          listarClientes(),
+          storageGet("config", null),
+        ]);
+        setClientes(mapaClientes);
+        if (rawConfig) {
+          const config = JSON.parse(rawConfig);
+          if (config.agencia) setAgencia(config.agencia);
+          if (config.widgetBaseUrl) setWidgetBaseUrl(config.widgetBaseUrl);
+        }
       } catch {
         setClientes({});
+        setErro("Não consegui carregar seus dados agora. Recarregue a página em instantes.");
       } finally {
         setCarregado(true);
       }
     })();
   }, []);
 
+  // Salva nome da agência e URL do widget automaticamente (com debounce)
+  useEffect(() => {
+    if (!carregado) return;
+    const timer = setTimeout(() => {
+      storageSet("config", JSON.stringify({ agencia, widgetBaseUrl })).catch(() => {});
+    }, 600);
+    return () => clearTimeout(timer);
+  }, [agencia, widgetBaseUrl, carregado]);
+
   function escolherCliente(id) {
+    if (!clientes[id]) {
+      setErro("Esse cliente não existe mais (pode ter sido excluído em outra aba).");
+      return;
+    }
     setClienteId(id);
     setCliente(JSON.parse(JSON.stringify(clientes[id])));
     setValidacao([]);
@@ -279,10 +307,9 @@ export default function GeradorAtendenteVirtual() {
 
     setSalvando(true);
     setErro(null);
-    const atualizados = { ...clientes, [cliente.id]: cliente };
     try {
-      await storageSet("clientes", JSON.stringify(atualizados));
-      setClientes(atualizados);
+      await salvarClienteRemoto(cliente);
+      setClientes((prev) => ({ ...prev, [cliente.id]: cliente }));
       setAvisoSalvo(true);
       setTimeout(() => setAvisoSalvo(false), 2000);
     } catch {
@@ -294,13 +321,15 @@ export default function GeradorAtendenteVirtual() {
   async function excluirCliente(id) {
     const alvo = clientes[id];
     const nome = alvo?.nomeNegocio || "este cliente";
-    if (!window.confirm(`Excluir ${nome}? Essa ação remove o cliente deste navegador.`)) return;
+    if (!window.confirm(`Excluir ${nome}? Essa ação não pode ser desfeita.`)) return;
 
-    const atualizados = { ...clientes };
-    delete atualizados[id];
     try {
-      await storageSet("clientes", JSON.stringify(atualizados));
-      setClientes(atualizados);
+      await excluirClienteRemoto(id);
+      setClientes((prev) => {
+        const atualizados = { ...prev };
+        delete atualizados[id];
+        return atualizados;
+      });
       if (clienteId === id) { setClienteId(null); setCliente(null); }
     } catch {
       setErro("Não consegui excluir agora.");
@@ -346,8 +375,9 @@ export default function GeradorAtendenteVirtual() {
         throw new Error("Formato inválido.");
       }
 
+      const listaImportada = Object.values(clientesImportados);
+      await Promise.all(listaImportada.map((c) => salvarClienteRemoto(c)));
       const atualizados = { ...clientes, ...clientesImportados };
-      await storageSet("clientes", JSON.stringify(atualizados));
       setClientes(atualizados);
       if (dados.agencia) setAgencia(dados.agencia);
       if (dados.widgetBaseUrl) setWidgetBaseUrl(dados.widgetBaseUrl);
