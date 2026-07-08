@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="pt-BR">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Teste do Widget</title>
+    <style>
+      body {
+        min-height: 100vh;
+        margin: 0;
+        font-family: Inter, system-ui, sans-serif;
+        color: #1c2430;
+        background: linear-gradient(135deg, #eef2f1, #f8faf9);
+      }
+
+      main {
+        max-width: 760px;
+        padding: 48px 24px;
+      }
+
+      h1 {
+        margin: 0 0 12px;
+        font-size: clamp(28px, 5vw, 44px);
+      }
+
+      p {
+        max-width: 560px;
+        color: #5b6672;
+        line-height: 1.6;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <h1>Teste do widget</h1>
+      <p>
+        Use o botão no canto inferior direito para validar o comportamento real
+        do arquivo <code>atendente-virtual-widget.js</code>.
+      </p>
+    </main>
+
+    <script>
+      window.ATENDENTE_CONFIG = {
+        nomeNegocio: "Clínica Vida Plena",
+        corPrimaria: "#2f6f62",
+        numeroWhatsApp: "5541999999999",
+        idiomaPadrao: "pt",
+        saudacao: {
+          pt: "Olá! Como posso ajudar?",
+          en: "Hi! How can I help?"
+        },
+        transferirLabel: {
+          pt: "Falar com atendente",
+          en: "Talk to someone"
+        },
+        transferirMensagemWhats: {
+          pt: "Olá! Vim pelo site e gostaria de falar com um atendente.",
+          en: "Hi! I came from the website and would like to talk to someone."
+        },
+        opcoes: [
+          {
+            chave: "1",
+            label: { pt: "Horário de funcionamento", en: "Opening hours" },
+            tipo: "resposta",
+            resposta: {
+              pt: "Funcionamos de segunda a sábado, das 9h às 18h.",
+              en: "We're open Monday to Saturday, 9am to 6pm."
+            }
+          },
+          {
+            chave: "2",
+            label: { pt: "Agendar horário", en: "Book an appointment" },
+            tipo: "agenda",
+            linkAgenda: "https://cal.com/seu-estabelecimento"
+          },
+          {
+            chave: "3",
+            label: { pt: "Chamar no WhatsApp", en: "Open WhatsApp" },
+            tipo: "whatsapp",
+            mensagemWhats: {
+              pt: "Olá! Vim pelo site e quero saber mais.",
+              en: "Hi! I came from the website and want to know more."
+            }
+          }
+        ]
+      };
+    </script>
+    <script src="/atendente-virtual-widget.js"></script>
+  </body>
+</html>
