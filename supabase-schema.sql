@@ -286,17 +286,44 @@ create policy "colaboradores: convidado aceita" on public.colaboradores
   using (colaborador_id is null and lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')))
   with check (colaborador_id = auth.uid());
 
+-- O WITH CHECK acima só valida colaborador_id, não impede a mesma
+-- chamada de UPDATE de também alterar dono_id/email — o que deixaria
+-- quem aceita o convite "desligar" a linha da dona de verdade. Trava
+-- por coluna: ninguém consegue mudar dono_id/email/criado_em via
+-- UPDATE, só colaborador_id e aceito_em (o suficiente pro fluxo de
+-- aceitar convite, e a dona hoje só insere/exclui, nunca faz UPDATE
+-- direto nessa tabela).
+revoke update on public.colaboradores from authenticated;
+grant update (colaborador_id, aceito_em) on public.colaboradores to authenticated;
+
+-- Exige as duas coisas: o colaborador_row_id precisa pertencer a quem
+-- chama, E o cliente_id atribuído também precisa ser dela — sem isso,
+-- um dono mal-intencionado poderia atribuir o próprio colaborador a um
+-- cliente de outra conta (o id interno segue um padrão previsível,
+-- "c" + timestamp).
 drop policy if exists "colaborador_clientes: dono gerencia" on public.colaborador_clientes;
 create policy "colaborador_clientes: dono gerencia" on public.colaborador_clientes
   for all
-  using (exists (
-    select 1 from public.colaboradores co
-    where co.id = colaborador_clientes.colaborador_row_id and co.dono_id = auth.uid()
-  ))
-  with check (exists (
-    select 1 from public.colaboradores co
-    where co.id = colaborador_clientes.colaborador_row_id and co.dono_id = auth.uid()
-  ));
+  using (
+    exists (
+      select 1 from public.colaboradores co
+      where co.id = colaborador_clientes.colaborador_row_id and co.dono_id = auth.uid()
+    )
+    and exists (
+      select 1 from public.clientes c
+      where c.id = colaborador_clientes.cliente_id and c.user_id = auth.uid()
+    )
+  )
+  with check (
+    exists (
+      select 1 from public.colaboradores co
+      where co.id = colaborador_clientes.colaborador_row_id and co.dono_id = auth.uid()
+    )
+    and exists (
+      select 1 from public.clientes c
+      where c.id = colaborador_clientes.cliente_id and c.user_id = auth.uid()
+    )
+  );
 
 drop policy if exists "colaborador_clientes: colaborador le o proprio" on public.colaborador_clientes;
 create policy "colaborador_clientes: colaborador le o proprio" on public.colaborador_clientes
