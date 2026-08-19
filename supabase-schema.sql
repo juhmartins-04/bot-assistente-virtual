@@ -214,3 +214,147 @@ create policy "eventos: anon insere se cliente ativo" on public.eventos
 
 grant select on public.eventos to authenticated;
 grant insert on public.eventos to anon;
+
+-- ---------------------------------------------------------------------
+-- nota de atendimento: onde o dono (ou um colaborador atribuído) registra
+-- o que aconteceu depois de uma conversa de WhatsApp — sem precisar
+-- guardar o conteúdo da conversa em si. "pendente"/"respondido" é o
+-- status mínimo pra saber o que ainda falta responder.
+-- ---------------------------------------------------------------------
+alter table public.leads add column if not exists nota text;
+alter table public.leads add column if not exists status_atendimento text not null default 'pendente';
+
+alter table public.leads drop constraint if exists leads_status_atendimento_check;
+alter table public.leads add constraint leads_status_atendimento_check
+  check (status_atendimento in ('pendente', 'respondido'));
+
+drop policy if exists "leads: dono atualiza nota" on public.leads;
+create policy "leads: dono atualiza nota" on public.leads
+  for update
+  using (exists (select 1 from public.clientes c where c.public_id = leads.public_id and c.user_id = auth.uid()))
+  with check (exists (select 1 from public.clientes c where c.public_id = leads.public_id and c.user_id = auth.uid()));
+
+-- ---------------------------------------------------------------------
+-- colaboradores: pra quando a dona da agência terceirizar ajuda de
+-- atendimento. Um colaborador só enxerga os clientes explicitamente
+-- atribuídos a ele (colaborador_clientes), nunca a lista inteira, nunca
+-- a configuração do menu/WhatsApp do cliente (só nome e public_id, via
+-- a view abaixo), e só pode escrever a nota/status de um lead — nunca
+-- editar cliente, mudar status/plano, excluir ou convidar outro
+-- colaborador. Isso é o que garante que terceirizar ajuda não dá a essa
+-- pessoa controle nenhum sobre o negócio.
+-- ---------------------------------------------------------------------
+create table if not exists public.colaboradores (
+  id uuid primary key default gen_random_uuid(),
+  dono_id uuid not null references auth.users(id) on delete cascade,
+  colaborador_id uuid references auth.users(id) on delete cascade,
+  email text not null,
+  criado_em timestamptz not null default now(),
+  aceito_em timestamptz
+);
+
+create index if not exists colaboradores_dono_id_idx on public.colaboradores (dono_id);
+create index if not exists colaboradores_colaborador_id_idx on public.colaboradores (colaborador_id);
+create unique index if not exists colaboradores_dono_email_key on public.colaboradores (dono_id, lower(email));
+
+create table if not exists public.colaborador_clientes (
+  colaborador_row_id uuid not null references public.colaboradores(id) on delete cascade,
+  cliente_id text not null references public.clientes(id) on delete cascade,
+  primary key (colaborador_row_id, cliente_id)
+);
+
+alter table public.colaboradores enable row level security;
+alter table public.colaborador_clientes enable row level security;
+
+drop policy if exists "colaboradores: dono gerencia" on public.colaboradores;
+create policy "colaboradores: dono gerencia" on public.colaboradores
+  for all
+  using (auth.uid() = dono_id)
+  with check (auth.uid() = dono_id);
+
+drop policy if exists "colaboradores: convidado le o proprio convite" on public.colaboradores;
+create policy "colaboradores: convidado le o proprio convite" on public.colaboradores
+  for select
+  using (lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')));
+
+-- Permite que a pessoa convidada "aceite" o convite associando o próprio
+-- login a ele — só funciona enquanto colaborador_id ainda está vazio, e
+-- só pode preencher com o próprio auth.uid() (nunca o de outra pessoa).
+drop policy if exists "colaboradores: convidado aceita" on public.colaboradores;
+create policy "colaboradores: convidado aceita" on public.colaboradores
+  for update
+  using (colaborador_id is null and lower(email) = lower(coalesce(auth.jwt() ->> 'email', '')))
+  with check (colaborador_id = auth.uid());
+
+drop policy if exists "colaborador_clientes: dono gerencia" on public.colaborador_clientes;
+create policy "colaborador_clientes: dono gerencia" on public.colaborador_clientes
+  for all
+  using (exists (
+    select 1 from public.colaboradores co
+    where co.id = colaborador_clientes.colaborador_row_id and co.dono_id = auth.uid()
+  ))
+  with check (exists (
+    select 1 from public.colaboradores co
+    where co.id = colaborador_clientes.colaborador_row_id and co.dono_id = auth.uid()
+  ));
+
+drop policy if exists "colaborador_clientes: colaborador le o proprio" on public.colaborador_clientes;
+create policy "colaborador_clientes: colaborador le o proprio" on public.colaborador_clientes
+  for select
+  using (exists (
+    select 1 from public.colaboradores co
+    where co.id = colaborador_clientes.colaborador_row_id and co.colaborador_id = auth.uid()
+  ));
+
+-- View pública (pro papel "authenticated") com só o mínimo que um
+-- colaborador precisa pra identificar o cliente atribuído — nunca o
+-- menu, textos ou WhatsApp configurados (isso fica só com a dona).
+create or replace view public.colaborador_clientes_view as
+select c.id, c.nome_negocio, c.public_id
+from public.clientes c
+join public.colaborador_clientes cc on cc.cliente_id = c.id
+join public.colaboradores co on co.id = cc.colaborador_row_id
+where co.colaborador_id = auth.uid();
+
+grant select on public.colaborador_clientes_view to authenticated;
+
+drop policy if exists "leads: colaborador le atribuidos" on public.leads;
+create policy "leads: colaborador le atribuidos" on public.leads
+  for select
+  using (exists (
+    select 1 from public.clientes c
+    join public.colaborador_clientes cc on cc.cliente_id = c.id
+    join public.colaboradores co on co.id = cc.colaborador_row_id
+    where c.public_id = leads.public_id and co.colaborador_id = auth.uid()
+  ));
+
+drop policy if exists "leads: colaborador atualiza nota" on public.leads;
+create policy "leads: colaborador atualiza nota" on public.leads
+  for update
+  using (exists (
+    select 1 from public.clientes c
+    join public.colaborador_clientes cc on cc.cliente_id = c.id
+    join public.colaboradores co on co.id = cc.colaborador_row_id
+    where c.public_id = leads.public_id and co.colaborador_id = auth.uid()
+  ))
+  with check (exists (
+    select 1 from public.clientes c
+    join public.colaborador_clientes cc on cc.cliente_id = c.id
+    join public.colaboradores co on co.id = cc.colaborador_row_id
+    where c.public_id = leads.public_id and co.colaborador_id = auth.uid()
+  ));
+
+-- Restringe a escrita (dono e colaborador) só às colunas de nota — nunca
+-- dá pra alterar nome, telefone ou qualquer outra coluna do lead por
+-- essa via, mesmo que a linha esteja liberada por RLS.
+grant update (nota, status_atendimento) on public.leads to authenticated;
+
+drop policy if exists "eventos: colaborador le atribuidos" on public.eventos;
+create policy "eventos: colaborador le atribuidos" on public.eventos
+  for select
+  using (exists (
+    select 1 from public.clientes c
+    join public.colaborador_clientes cc on cc.cliente_id = c.id
+    join public.colaboradores co on co.id = cc.colaborador_row_id
+    where c.public_id = eventos.public_id and co.colaborador_id = auth.uid()
+  ));

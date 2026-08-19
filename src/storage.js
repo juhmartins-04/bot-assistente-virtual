@@ -165,7 +165,7 @@ export async function estenderTesteRemoto(id, dias) {
 export async function listarLeads(publicId) {
   const { data, error } = await supabase
     .from("leads")
-    .select("id, nome, telefone, opcao_label, criado_em")
+    .select("id, nome, telefone, opcao_label, criado_em, nota, status_atendimento")
     .eq("public_id", publicId)
     .order("criado_em", { ascending: false })
     .limit(200);
@@ -175,6 +175,24 @@ export async function listarLeads(publicId) {
     throw error;
   }
   return data || [];
+}
+
+/**
+ * Salva a nota e o status de atendimento de um lead (o que foi combinado
+ * ou resolvido na conversa) — nunca o conteúdo da conversa em si. Funciona
+ * tanto pro dono quanto pra um colaborador atribuído ao cliente do lead.
+ */
+export async function atualizarNotaLead(leadId, nota, statusAtendimento) {
+  const { error } = await supabase
+    .from("leads")
+    .update({ nota, status_atendimento: statusAtendimento })
+    .eq("id", leadId);
+
+  if (error) {
+    console.error("atualizarNotaLead erro:", error.message);
+    throw error;
+  }
+  return true;
 }
 
 export async function buscarMetricas(publicId) {
@@ -208,4 +226,130 @@ export async function buscarMetricas(publicId) {
   });
 
   return { aberturas, handoffs, opcaoMaisClicada };
+}
+
+// ---------------------------------------------------------------------
+// Colaboradores: acesso restrito pra quando a dona terceirizar ajuda de
+// atendimento. Um colaborador só vê os clientes atribuídos a ele (nunca
+// a lista inteira, nunca a configuração de menu/WhatsApp — só nome e
+// public_id, via a view colaborador_clientes_view) e só escreve a
+// nota/status de um lead. Nunca edita cliente, muda status/plano, exclui
+// ou convida outra pessoa — isso é reforçado pela RLS, não só pela UI.
+// ---------------------------------------------------------------------
+
+export async function convidarColaborador(donoId, email) {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .insert({ dono_id: donoId, email: email.trim().toLowerCase() })
+    .select("id, email, colaborador_id, aceito_em")
+    .single();
+
+  if (error) {
+    console.error("convidarColaborador erro:", error.message);
+    throw error;
+  }
+  return data;
+}
+
+export async function listarColaboradores(donoId) {
+  const { data, error } = await supabase
+    .from("colaboradores")
+    .select("id, email, colaborador_id, aceito_em, colaborador_clientes(cliente_id)")
+    .eq("dono_id", donoId)
+    .order("criado_em", { ascending: false });
+
+  if (error) {
+    console.error("listarColaboradores erro:", error.message);
+    throw error;
+  }
+
+  return (data || []).map((c) => ({
+    id: c.id,
+    email: c.email,
+    aceito: !!c.colaborador_id,
+    clienteIds: (c.colaborador_clientes || []).map((cc) => cc.cliente_id),
+  }));
+}
+
+export async function atribuirClienteColaborador(colaboradorRowId, clienteId) {
+  const { error } = await supabase
+    .from("colaborador_clientes")
+    .insert({ colaborador_row_id: colaboradorRowId, cliente_id: clienteId });
+
+  if (error) {
+    console.error("atribuirClienteColaborador erro:", error.message);
+    throw error;
+  }
+  return true;
+}
+
+export async function removerAtribuicaoColaborador(colaboradorRowId, clienteId) {
+  const { error } = await supabase
+    .from("colaborador_clientes")
+    .delete()
+    .eq("colaborador_row_id", colaboradorRowId)
+    .eq("cliente_id", clienteId);
+
+  if (error) {
+    console.error("removerAtribuicaoColaborador erro:", error.message);
+    throw error;
+  }
+  return true;
+}
+
+export async function removerColaborador(colaboradorRowId) {
+  const { error } = await supabase.from("colaboradores").delete().eq("id", colaboradorRowId);
+
+  if (error) {
+    console.error("removerColaborador erro:", error.message);
+    throw error;
+  }
+  return true;
+}
+
+/**
+ * Roda logo após o login: se existir um convite pendente com o mesmo
+ * e-mail da sessão atual, associa esse convite ao usuário logado (aceita
+ * o convite). Retorna true se a sessão tem (ou passou a ter) acesso como
+ * colaborador de alguém — nesse caso o app mostra o painel reduzido.
+ */
+export async function verificarESolicitarAcessoColaborador(userId, email) {
+  const emailNormalizado = (email || "").trim().toLowerCase();
+
+  const { data: pendente } = await supabase
+    .from("colaboradores")
+    .select("id")
+    .is("colaborador_id", null)
+    .eq("email", emailNormalizado)
+    .maybeSingle();
+
+  if (pendente) {
+    await supabase
+      .from("colaboradores")
+      .update({ colaborador_id: userId, aceito_em: new Date().toISOString() })
+      .eq("id", pendente.id);
+    return true;
+  }
+
+  const { data: aceito } = await supabase
+    .from("colaboradores")
+    .select("id")
+    .eq("colaborador_id", userId)
+    .limit(1)
+    .maybeSingle();
+
+  return !!aceito;
+}
+
+export async function listarClientesAtribuidos() {
+  const { data, error } = await supabase
+    .from("colaborador_clientes_view")
+    .select("id, nome_negocio, public_id")
+    .order("nome_negocio", { ascending: true });
+
+  if (error) {
+    console.error("listarClientesAtribuidos erro:", error.message);
+    throw error;
+  }
+  return data || [];
 }

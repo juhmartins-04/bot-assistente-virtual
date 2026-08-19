@@ -2,11 +2,12 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, Copy, Check, MessageCircle, Calendar,
   Globe2, ChevronDown, ChevronUp, Building2, Save, Sparkles,
-  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle
+  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle, Users
 } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
 import Login from "./Login";
+import PainelColaborador from "./PainelColaborador";
 import {
   storageGet,
   storageSet,
@@ -17,6 +18,13 @@ import {
   estenderTesteRemoto,
   listarLeads,
   buscarMetricas,
+  atualizarNotaLead,
+  verificarESolicitarAcessoColaborador,
+  listarColaboradores,
+  convidarColaborador,
+  atribuirClienteColaborador,
+  removerAtribuicaoColaborador,
+  removerColaborador,
 } from "./storage";
 
 const TIPOS = [
@@ -39,6 +47,7 @@ function clienteEmBranco() {
     sobreNegocio: "",
     endereco: "",
     horarioFuncionamento: "",
+    incluiAssistente: true,
     saudacaoPt: "Olá! 👋 Como posso ajudar?",
     saudacaoEn: "Hi! 👋 How can I help?",
     transferirLabelPt: "Falar com atendente",
@@ -178,6 +187,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
 
 export default function GeradorAtendenteVirtual() {
   const [sessao, setSessao] = useState(undefined); // undefined = carregando · null = deslogado
+  const [ehColaborador, setEhColaborador] = useState(undefined); // undefined = verificando
   const [agencia, setAgencia] = useState("Sua Agência");
   const [clientes, setClientes] = useState({});
   const [clienteId, setClienteId] = useState(null);
@@ -194,6 +204,10 @@ export default function GeradorAtendenteVirtual() {
   const [mostrarAvancado, setMostrarAvancado] = useState(false);
   const [copiado, setCopiado] = useState(false);
   const [paginaCopiada, setPaginaCopiada] = useState(false);
+  const [mostrarColaboradores, setMostrarColaboradores] = useState(false);
+  const [colaboradores, setColaboradores] = useState([]);
+  const [carregandoColaboradores, setCarregandoColaboradores] = useState(false);
+  const [novoEmailColaborador, setNovoEmailColaborador] = useState("");
   const [previewMsgs, setPreviewMsgs] = useState([]);
   const [previewIdioma, setPreviewIdioma] = useState("pt");
   const [leads, setLeads] = useState([]);
@@ -221,6 +235,15 @@ export default function GeradorAtendenteVirtual() {
     return () => { cancelado = true; };
   }, [cliente?.publicId]);
 
+  async function salvarNotaLead(lead, nota, statusAtendimento) {
+    try {
+      await atualizarNotaLead(lead.id, nota, statusAtendimento);
+      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nota, status_atendimento: statusAtendimento } : l)));
+    } catch {
+      /* falha ao salvar nota: sem toast dedicado */
+    }
+  }
+
   useEffect(() => {
     supabase.auth.getSession().then(({ data }) => setSessao(data.session));
     const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
@@ -230,7 +253,17 @@ export default function GeradorAtendenteVirtual() {
   }, []);
 
   useEffect(() => {
-    if (!sessao) return;
+    if (!sessao) {
+      setEhColaborador(undefined);
+      return;
+    }
+    verificarESolicitarAcessoColaborador(sessao.user.id, sessao.user.email)
+      .then(setEhColaborador)
+      .catch(() => setEhColaborador(false));
+  }, [sessao]);
+
+  useEffect(() => {
+    if (!sessao || ehColaborador !== false) return;
     (async () => {
       try {
         const [mapaClientes, rawConfig] = await Promise.all([
@@ -250,7 +283,7 @@ export default function GeradorAtendenteVirtual() {
         setCarregado(true);
       }
     })();
-  }, [sessao]);
+  }, [sessao, ehColaborador]);
 
   // Salva nome da agência e URL do widget automaticamente (com debounce)
   useEffect(() => {
@@ -266,6 +299,7 @@ export default function GeradorAtendenteVirtual() {
       setErro("Esse cliente não existe mais (pode ter sido excluído em outra aba).");
       return;
     }
+    setMostrarColaboradores(false);
     setClienteId(id);
     setCliente(JSON.parse(JSON.stringify(clientes[id])));
     setValidacao([]);
@@ -274,6 +308,7 @@ export default function GeradorAtendenteVirtual() {
 
   function iniciarNovoCliente() {
     const c = clienteEmBranco();
+    setMostrarColaboradores(false);
     setClienteId(c.id);
     setCliente(c);
     setValidacao([]);
@@ -389,6 +424,52 @@ export default function GeradorAtendenteVirtual() {
     } catch { /* clipboard indisponível, sem problema */ }
   }
 
+  function abrirColaboradores() {
+    setClienteId(null);
+    setCliente(null);
+    setMostrarColaboradores(true);
+    setCarregandoColaboradores(true);
+    listarColaboradores(sessao.user.id)
+      .then(setColaboradores)
+      .catch(() => setErro("Não consegui carregar os colaboradores agora."))
+      .finally(() => setCarregandoColaboradores(false));
+  }
+
+  async function convidar(e) {
+    e.preventDefault();
+    if (!novoEmailColaborador.trim()) return;
+    try {
+      await convidarColaborador(sessao.user.id, novoEmailColaborador);
+      setNovoEmailColaborador("");
+      abrirColaboradores();
+    } catch {
+      setErro("Não consegui convidar esse e-mail agora (talvez já esteja convidado).");
+    }
+  }
+
+  async function alternarAtribuicao(colaboradorRowId, clienteAlvoId, jaAtribuido) {
+    try {
+      if (jaAtribuido) {
+        await removerAtribuicaoColaborador(colaboradorRowId, clienteAlvoId);
+      } else {
+        await atribuirClienteColaborador(colaboradorRowId, clienteAlvoId);
+      }
+      abrirColaboradores();
+    } catch {
+      setErro("Não consegui atualizar essa atribuição agora.");
+    }
+  }
+
+  async function excluirColaborador(colaboradorRowId, email) {
+    if (!window.confirm(`Remover o acesso de ${email}? Ele deixa de ver qualquer cliente imediatamente.`)) return;
+    try {
+      await removerColaborador(colaboradorRowId);
+      abrirColaboradores();
+    } catch {
+      setErro("Não consegui remover agora.");
+    }
+  }
+
   function exportarClientes() {
     const payload = {
       versao: 1,
@@ -481,6 +562,15 @@ export default function GeradorAtendenteVirtual() {
 
   const listaClientes = Object.values(clientes).sort((a, b) => a.nomeNegocio.localeCompare(b.nomeNegocio));
 
+  const contagemStatus = {
+    active: listaClientes.filter((c) => c.status === "active").length,
+    trial: listaClientes.filter((c) => c.status === "trial").length,
+    suspended: listaClientes.filter((c) => c.status === "suspended").length,
+  };
+  const precisamAtencao = listaClientes
+    .filter((c) => c.status === "suspended" || (c.status === "trial" && diasRestantes(c.trialEndsAt) <= 3))
+    .sort((a, b) => (a.status === "suspended" ? -1 : 1) - (b.status === "suspended" ? -1 : 1));
+
   if (sessao === undefined) {
     return (
       <div className="flex min-h-screen items-center justify-center text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.muted }}>
@@ -491,6 +581,18 @@ export default function GeradorAtendenteVirtual() {
 
   if (!sessao) {
     return <Login />;
+  }
+
+  if (ehColaborador === undefined) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.muted }}>
+        Carregando...
+      </div>
+    );
+  }
+
+  if (ehColaborador) {
+    return <PainelColaborador sessao={sessao} />;
   }
 
   return (
@@ -571,6 +673,12 @@ export default function GeradorAtendenteVirtual() {
           Tudo isso roda como link direto pro WhatsApp — sem API oficial, sem QR Code, sem risco de banimento.
         </p>
         <button
+          onClick={abrirColaboradores}
+          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
+        >
+          <Users size={13} /> Colaboradores
+        </button>
+        <button
           onClick={() => supabase.auth.signOut()}
           className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
         >
@@ -580,11 +688,121 @@ export default function GeradorAtendenteVirtual() {
 
       {/* ---------------- MAIN ---------------- */}
       <main className="flex-1 p-5 md:p-8 overflow-y-auto">
-        {!cliente && (
+        {mostrarColaboradores && (
+          <div className="max-w-2xl mx-auto flex flex-col gap-5">
+            <div>
+              <h1 className="text-lg font-semibold">Colaboradores</h1>
+              <p className="text-sm" style={{ color: TOKENS.muted }}>
+                Convide alguém pra ajudar no atendimento. A pessoa loga com o próprio e-mail e só enxerga os clientes que você atribuir a ela — nunca edita menu, nunca muda status/plano, nunca exclui nada.
+              </p>
+            </div>
+
+            <form onSubmit={convidar} className="rounded-xl border bg-white p-4 flex items-center gap-2" style={{ borderColor: TOKENS.border }}>
+              <input
+                type="email"
+                required
+                value={novoEmailColaborador}
+                onChange={(e) => setNovoEmailColaborador(e.target.value)}
+                placeholder="e-mail da pessoa"
+                className="flex-1 rounded-lg border px-3 py-2 text-sm"
+                style={{ borderColor: TOKENS.border }}
+              />
+              <button type="submit" className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-white" style={{ backgroundColor: TOKENS.teal }}>
+                <Plus size={14} /> Convidar
+              </button>
+            </form>
+
+            {carregandoColaboradores && <p className="text-sm" style={{ color: TOKENS.muted }}>Carregando...</p>}
+            {!carregandoColaboradores && colaboradores.length === 0 && (
+              <p className="text-sm" style={{ color: TOKENS.muted }}>Nenhum colaborador convidado ainda.</p>
+            )}
+
+            {colaboradores.map((colab) => (
+              <div key={colab.id} className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-2">
+                    <span className="font-medium text-sm">{colab.email}</span>
+                    <span
+                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
+                      style={colab.aceito ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal } : { backgroundColor: "#F5EBD8", color: TOKENS.amberDeep }}
+                    >
+                      {colab.aceito ? "ativo" : "convite pendente"}
+                    </span>
+                  </div>
+                  <button onClick={() => excluirColaborador(colab.id, colab.email)} className="text-gray-400 hover:text-red-500" aria-label={"Remover " + colab.email}>
+                    <Trash2 size={14} />
+                  </button>
+                </div>
+                <div className="flex flex-col gap-1.5">
+                  <span className="text-xs font-medium" style={{ color: TOKENS.ink }}>Clientes atribuídos</span>
+                  <div className="flex flex-wrap gap-1.5">
+                    {listaClientes.map((c) => {
+                      const atribuido = colab.clienteIds.includes(c.id);
+                      return (
+                        <button
+                          key={c.id}
+                          onClick={() => alternarAtribuicao(colab.id, c.id, atribuido)}
+                          className="text-xs px-2.5 py-1 rounded-md border"
+                          style={atribuido ? { backgroundColor: TOKENS.tealSoft, borderColor: TOKENS.teal, color: TOKENS.teal } : { borderColor: TOKENS.border, color: TOKENS.muted }}
+                        >
+                          {c.nomeNegocio}
+                        </button>
+                      );
+                    })}
+                    {listaClientes.length === 0 && <span className="text-xs" style={{ color: TOKENS.muted }}>Crie um cliente primeiro pra poder atribuir.</span>}
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {!mostrarColaboradores && !cliente && listaClientes.length === 0 && (
           <div className="max-w-md mx-auto mt-20 text-center flex flex-col items-center gap-3">
             <Building2 size={36} style={{ color: TOKENS.teal }} />
             <h1 className="text-lg font-semibold">Escolha ou crie um cliente</h1>
             <p style={{ color: TOKENS.muted }}>Selecione um cliente na barra lateral ou clique em "Novo cliente" pra montar um assistente virtual do zero.</p>
+          </div>
+        )}
+
+        {!mostrarColaboradores && !cliente && listaClientes.length > 0 && (
+          <div className="max-w-2xl mx-auto mt-10 flex flex-col gap-5">
+            <div>
+              <h1 className="text-lg font-semibold">Visão geral</h1>
+              <p className="text-sm" style={{ color: TOKENS.muted }}>Selecione um cliente na barra lateral pra editar, ou veja o resumo abaixo.</p>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
+                <div className="text-2xl font-semibold" style={{ color: TOKENS.teal }}>{contagemStatus.active}</div>
+                <div className="text-xs" style={{ color: TOKENS.muted }}>ativos</div>
+              </div>
+              <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
+                <div className="text-2xl font-semibold" style={{ color: TOKENS.amberDeep }}>{contagemStatus.trial}</div>
+                <div className="text-xs" style={{ color: TOKENS.muted }}>em teste</div>
+              </div>
+              <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
+                <div className="text-2xl font-semibold" style={{ color: "#9C3B2E" }}>{contagemStatus.suspended}</div>
+                <div className="text-xs" style={{ color: TOKENS.muted }}>suspensos</div>
+              </div>
+            </div>
+            {precisamAtencao.length > 0 && (
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-1" style={{ borderColor: TOKENS.border }}>
+                <h2 className="text-sm font-semibold mb-1">Precisam de atenção</h2>
+                {precisamAtencao.map((c) => (
+                  <button
+                    key={c.id}
+                    onClick={() => escolherCliente(c.id)}
+                    className="text-left text-sm flex items-center justify-between gap-2 border-b last:border-b-0 py-2"
+                    style={{ borderColor: TOKENS.border }}
+                  >
+                    <span>{c.nomeNegocio}</span>
+                    <span className="text-xs" style={{ color: c.status === "suspended" ? "#9C3B2E" : TOKENS.amberDeep }}>
+                      {c.status === "suspended" ? "suspenso" : `teste acaba em ${Math.max(diasRestantes(c.trialEndsAt), 0)}d`}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         )}
 
@@ -619,13 +837,28 @@ export default function GeradorAtendenteVirtual() {
               <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
                 <h2 className="font-semibold flex items-center gap-2"><Globe2 size={16} /> Página simples (opcional)</h2>
                 <p className="text-xs -mt-2" style={{ color: TOKENS.muted }}>
-                  Preencha se o cliente ainda não tem site. Gera uma página própria, com esses dados e o assistente já embutido.
+                  Preencha se o cliente ainda não tem site. Gera uma página própria com esses dados.
                 </p>
                 <CampoTexto textarea label="Sobre o negócio" value={cliente.sobreNegocio} onChange={(v) => atualizarCampo("sobreNegocio", v)} placeholder="Uma frase curta contando o que o negócio faz." />
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CampoTexto label="Horário de funcionamento" value={cliente.horarioFuncionamento} onChange={(v) => atualizarCampo("horarioFuncionamento", v)} placeholder="Seg a sáb, 9h às 18h" />
                   <CampoTexto label="Endereço" value={cliente.endereco} onChange={(v) => atualizarCampo("endereco", v)} placeholder="Rua Exemplo, 123 - Curitiba/PR" />
                 </div>
+                <label className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    className="mt-0.5"
+                    checked={cliente.incluiAssistente}
+                    onChange={(e) => atualizarCampo("incluiAssistente", e.target.checked)}
+                  />
+                  <span>
+                    <span className="font-medium" style={{ color: TOKENS.ink }}>Incluir o assistente (chat) nesta página</span>
+                    <br />
+                    <span className="text-xs" style={{ color: TOKENS.muted }}>
+                      Desmarque pro plano de entrada "Só Página" — fica só as informações e um botão de WhatsApp comum, sem o menu de chat nem métricas.
+                    </span>
+                  </span>
+                </label>
               </div>
 
               <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
@@ -812,9 +1045,27 @@ export default function GeradorAtendenteVirtual() {
                       <span className="text-xs font-medium" style={{ color: TOKENS.ink }}>Contatos captados ({leads.length})</span>
                       {leads.length === 0 && <p className="text-xs" style={{ color: TOKENS.muted }}>Nenhum contato ainda.</p>}
                       {leads.slice(0, 8).map((l) => (
-                        <div key={l.id} className="text-xs flex items-center justify-between gap-2 border-b pb-1" style={{ borderColor: TOKENS.border }}>
-                          <span className="truncate">{l.nome || "(sem nome)"}{l.telefone ? ` · ${l.telefone}` : ""}</span>
-                          <span className="shrink-0" style={{ color: TOKENS.muted }}>{new Date(l.criado_em).toLocaleDateString("pt-BR")}</span>
+                        <div key={l.id} className="text-xs flex flex-col gap-1 border-b pb-2" style={{ borderColor: TOKENS.border }}>
+                          <div className="flex items-center justify-between gap-2">
+                            <span className="truncate">{l.nome || "(sem nome)"}{l.telefone ? ` · ${l.telefone}` : ""}</span>
+                            <span className="shrink-0" style={{ color: TOKENS.muted }}>{new Date(l.criado_em).toLocaleDateString("pt-BR")}</span>
+                          </div>
+                          <textarea
+                            defaultValue={l.nota || ""}
+                            placeholder="Nota do atendimento (opcional)"
+                            rows={1}
+                            className="rounded border px-2 py-1 text-xs"
+                            style={{ borderColor: TOKENS.border }}
+                            onBlur={(e) => salvarNotaLead(l, e.target.value, l.status_atendimento)}
+                          />
+                          <label className="flex items-center gap-1.5" style={{ color: TOKENS.muted }}>
+                            <input
+                              type="checkbox"
+                              checked={l.status_atendimento === "respondido"}
+                              onChange={(e) => salvarNotaLead(l, l.nota, e.target.checked ? "respondido" : "pendente")}
+                            />
+                            respondido
+                          </label>
                         </div>
                       ))}
                     </div>

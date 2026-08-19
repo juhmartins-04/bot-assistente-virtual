@@ -36,6 +36,7 @@ export default function Pagina({ publicId }) {
 
   useEffect(() => {
     if (estado !== "ok") return;
+    if (dados?.incluiAssistente === false) return; // plano "Só Página": sem o widget de chat
     if (document.querySelector("[data-atendente-widget]")) return;
     const script = document.createElement("script");
     script.src = "/atendente-virtual-widget.js";
@@ -43,7 +44,7 @@ export default function Pagina({ publicId }) {
     script.defer = true;
     document.body.appendChild(script);
     return () => { script.remove(); };
-  }, [estado, publicId]);
+  }, [estado, publicId, dados]);
 
   if (estado === "carregando") {
     return (
