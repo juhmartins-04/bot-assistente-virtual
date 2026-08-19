@@ -162,14 +162,20 @@ create policy "leads: dono le" on public.leads
     where c.public_id = leads.public_id and c.user_id = auth.uid()
   ));
 
+-- IMPORTANTE: consulta a view widget_config, não a tabela clientes
+-- diretamente. RLS é aplicada por role em QUALQUER consulta à tabela,
+-- mesmo dentro da subquery de uma policy alheia — e o papel "anon" não
+-- tem select nenhum em "clientes", então um "exists (select ... from
+-- clientes ...)" aqui sempre voltaria vazio e toda inserção seria
+-- rejeitada (foi exatamente esse bug que aconteceu na primeira versão
+-- desta policy). A view já roda com privilégio elevado e já expõe
+-- exatamente "está ativo ou em teste válido", então funciona.
 drop policy if exists "leads: anon insere se cliente ativo" on public.leads;
 create policy "leads: anon insere se cliente ativo" on public.leads
   for insert
   to anon
   with check (exists (
-    select 1 from public.clientes c
-    where c.public_id = leads.public_id
-      and (c.status = 'active' or (c.status = 'trial' and c.trial_ends_at > now()))
+    select 1 from public.widget_config wc where wc.public_id = leads.public_id
   ));
 
 grant select on public.leads to authenticated;
@@ -202,14 +208,15 @@ create policy "eventos: dono le" on public.eventos
     where c.public_id = eventos.public_id and c.user_id = auth.uid()
   ));
 
+-- Mesmo motivo da policy de leads acima: consulta widget_config, nunca
+-- clientes diretamente, porque o papel "anon" não tem select nessa
+-- tabela e o exists() sempre voltaria vazio.
 drop policy if exists "eventos: anon insere se cliente ativo" on public.eventos;
 create policy "eventos: anon insere se cliente ativo" on public.eventos
   for insert
   to anon
   with check (exists (
-    select 1 from public.clientes c
-    where c.public_id = eventos.public_id
-      and (c.status = 'active' or (c.status = 'trial' and c.trial_ends_at > now()))
+    select 1 from public.widget_config wc where wc.public_id = eventos.public_id
   ));
 
 grant select on public.eventos to authenticated;
@@ -345,30 +352,26 @@ where co.colaborador_id = auth.uid();
 
 grant select on public.colaborador_clientes_view to authenticated;
 
+-- IMPORTANTE: consulta colaborador_clientes_view (já roda com
+-- privilégio elevado e já resolve "sou colaborador atribuído a esse
+-- public_id?"), nunca a tabela clientes diretamente — um colaborador
+-- não tem select em "clientes", então um exists() contra ela sempre
+-- voltaria vazio, mesmo com o join correto por colaborador_clientes.
 drop policy if exists "leads: colaborador le atribuidos" on public.leads;
 create policy "leads: colaborador le atribuidos" on public.leads
   for select
   using (exists (
-    select 1 from public.clientes c
-    join public.colaborador_clientes cc on cc.cliente_id = c.id
-    join public.colaboradores co on co.id = cc.colaborador_row_id
-    where c.public_id = leads.public_id and co.colaborador_id = auth.uid()
+    select 1 from public.colaborador_clientes_view v where v.public_id = leads.public_id
   ));
 
 drop policy if exists "leads: colaborador atualiza nota" on public.leads;
 create policy "leads: colaborador atualiza nota" on public.leads
   for update
   using (exists (
-    select 1 from public.clientes c
-    join public.colaborador_clientes cc on cc.cliente_id = c.id
-    join public.colaboradores co on co.id = cc.colaborador_row_id
-    where c.public_id = leads.public_id and co.colaborador_id = auth.uid()
+    select 1 from public.colaborador_clientes_view v where v.public_id = leads.public_id
   ))
   with check (exists (
-    select 1 from public.clientes c
-    join public.colaborador_clientes cc on cc.cliente_id = c.id
-    join public.colaboradores co on co.id = cc.colaborador_row_id
-    where c.public_id = leads.public_id and co.colaborador_id = auth.uid()
+    select 1 from public.colaborador_clientes_view v where v.public_id = leads.public_id
   ));
 
 -- Restringe a escrita (dono e colaborador) só às colunas de nota — nunca
@@ -380,8 +383,5 @@ drop policy if exists "eventos: colaborador le atribuidos" on public.eventos;
 create policy "eventos: colaborador le atribuidos" on public.eventos
   for select
   using (exists (
-    select 1 from public.clientes c
-    join public.colaborador_clientes cc on cc.cliente_id = c.id
-    join public.colaboradores co on co.id = cc.colaborador_row_id
-    where c.public_id = eventos.public_id and co.colaborador_id = auth.uid()
+    select 1 from public.colaborador_clientes_view v where v.public_id = eventos.public_id
   ));
