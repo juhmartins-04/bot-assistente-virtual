@@ -36,7 +36,7 @@ export default function Login() {
       <div className="w-full max-w-sm rounded-xl border bg-white p-6 flex flex-col gap-5" style={{ borderColor: TOKENS.border }}>
         <div className="flex items-center gap-2">
           <Sparkles size={20} style={{ color: TOKENS.amber }} />
-          <h1 className="font-semibold text-base">Gerador de Assistente Virtual</h1>
+          <h1 className="font-semibold text-base">Prontô</h1>
         </div>
 
         {enviado ? (

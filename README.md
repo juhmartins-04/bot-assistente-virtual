@@ -1,4 +1,4 @@
-# Gerador de Assistente Virtual
+# Prontô
 
 Projeto Vite + React que gera um widget de atendimento (menu de respostas
 rápidas, agenda e encaminhamento pro WhatsApp) para o site de cada cliente

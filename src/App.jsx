@@ -507,7 +507,7 @@ export default function GeradorAtendenteVirtual() {
             aria-label="Nome da sua agência"
           />
         </div>
-        <p className="text-xs opacity-60 -mt-3">Gerador de Assistente Virtual</p>
+        <p className="text-xs opacity-60 -mt-3">Prontô</p>
 
         <button
           onClick={iniciarNovoCliente}
