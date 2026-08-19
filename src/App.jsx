@@ -2,28 +2,22 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, Copy, Check, MessageCircle, Calendar,
   Globe2, ChevronDown, ChevronUp, Building2, Save, Sparkles,
-  Download, Upload, ExternalLink
+  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle
 } from "lucide-react";
+import { supabase } from "./utils/supabase";
+import { TOKENS } from "./tokens";
+import Login from "./Login";
 import {
   storageGet,
   storageSet,
   listarClientes,
   salvarClienteRemoto,
   excluirClienteRemoto,
+  atualizarStatusRemoto,
+  estenderTesteRemoto,
+  listarLeads,
+  buscarMetricas,
 } from "./storage";
-
-
-const TOKENS = {
-  ink: "#1C2430",
-  inkSoft: "#2A3441",
-  canvas: "#EEF2F1",
-  amber: "#C98A2E",
-  amberDeep: "#9C6A1E",
-  teal: "#2F6F62",
-  tealSoft: "#E4EDEB",
-  border: "#DDE3E1",
-  muted: "#5B6672"
-};
 
 const TIPOS = [
   { valor: "resposta", label: "Responde na hora (no site)" },
@@ -42,6 +36,9 @@ function clienteEmBranco() {
     corPrimaria: "#21c3cb",
     numeroWhatsApp: "",
     idiomaPadrao: "auto",
+    sobreNegocio: "",
+    endereco: "",
+    horarioFuncionamento: "",
     saudacaoPt: "Olá! 👋 Como posso ajudar?",
     saudacaoEn: "Hi! 👋 How can I help?",
     transferirLabelPt: "Falar com atendente",
@@ -63,45 +60,26 @@ function gerarLinkWhats(numero, mensagem) {
   return "https://wa.me/" + (numero || "SEU_NUMERO") + "?text=" + encodeURIComponent(mensagem || "");
 }
 
-function jsStr(v) {
-  return JSON.stringify(v || "");
-}
-
 function normalizarUrlBase(url) {
   return (url || "").trim().replace(/\/+$/, "");
 }
 
 function gerarCodigo(c, widgetBaseUrl) {
-  const idiomaLinha = c.idiomaPadrao === "auto" ? "null" : jsStr(c.idiomaPadrao);
   const widgetSrc = normalizarUrlBase(widgetBaseUrl) || "COLOQUE_AQUI_A_URL";
-  const opcoesJs = c.opcoes.map((o, i) => {
-    const chave = String(i + 1);
-    let campo = "";
-    if (o.tipo === "resposta") {
-      campo = `resposta: { pt: ${jsStr(o.respostaPt)}, en: ${jsStr(o.respostaEn)} }`;
-    } else if (o.tipo === "whatsapp") {
-      campo = `mensagemWhats: { pt: ${jsStr(o.mensagemWhatsPt)}, en: ${jsStr(o.mensagemWhatsEn)} }`;
-    } else {
-      campo = `linkAgenda: ${jsStr(o.linkAgenda)}`;
-    }
-    return `    { chave: "${chave}", label: { pt: ${jsStr(o.labelPt)}, en: ${jsStr(o.labelEn)} }, tipo: "${o.tipo}",\n      ${campo} }`;
-  }).join(",\n");
+  if (!c.publicId) {
+    return "<!-- Salve o cliente pelo menos uma vez pra gerar o código de instalação. -->";
+  }
+  return `<script src="${widgetSrc}/atendente-virtual-widget.js" data-site="${c.publicId}" defer></script>`;
+}
 
-  return `<script>
-window.ATENDENTE_CONFIG = {
-  nomeNegocio: ${jsStr(c.nomeNegocio)},
-  corPrimaria: ${jsStr(c.corPrimaria)},
-  numeroWhatsApp: ${jsStr(c.numeroWhatsApp)},
-  idiomaPadrao: ${idiomaLinha},
-  saudacao: { pt: ${jsStr(c.saudacaoPt)}, en: ${jsStr(c.saudacaoEn)} },
-  transferirLabel: { pt: ${jsStr(c.transferirLabelPt)}, en: ${jsStr(c.transferirLabelEn)} },
-  transferirMensagemWhats: { pt: ${jsStr(c.transferirMensagemWhatsPt)}, en: ${jsStr(c.transferirMensagemWhatsEn)} },
-  opcoes: [
-${opcoesJs}
-  ]
-};
-</script>
-<script src="${widgetSrc}/atendente-virtual-widget.js"></script>`;
+function diasRestantes(iso) {
+  if (!iso) return 0;
+  return Math.ceil((new Date(iso).getTime() - Date.now()) / 86400000);
+}
+
+function formatarData(iso) {
+  if (!iso) return "";
+  return new Date(iso).toLocaleDateString("pt-BR");
 }
 
 function validarCliente(c) {
@@ -199,6 +177,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
 }
 
 export default function GeradorAtendenteVirtual() {
+  const [sessao, setSessao] = useState(undefined); // undefined = carregando · null = deslogado
   const [agencia, setAgencia] = useState("Sua Agência");
   const [clientes, setClientes] = useState({});
   const [clienteId, setClienteId] = useState(null);
@@ -214,16 +193,49 @@ export default function GeradorAtendenteVirtual() {
   const [validacao, setValidacao] = useState([]);
   const [mostrarAvancado, setMostrarAvancado] = useState(false);
   const [copiado, setCopiado] = useState(false);
+  const [paginaCopiada, setPaginaCopiada] = useState(false);
   const [previewMsgs, setPreviewMsgs] = useState([]);
   const [previewIdioma, setPreviewIdioma] = useState("pt");
+  const [leads, setLeads] = useState([]);
+  const [metricas, setMetricas] = useState(null);
   const importInputRef = useRef(null);
 
   useEffect(() => {
+    if (!cliente?.publicId) {
+      setLeads([]);
+      setMetricas(null);
+      return;
+    }
+    let cancelado = false;
+    Promise.all([listarLeads(cliente.publicId), buscarMetricas(cliente.publicId)])
+      .then(([listaLeads, dadosMetricas]) => {
+        if (cancelado) return;
+        setLeads(listaLeads);
+        setMetricas(dadosMetricas);
+      })
+      .catch(() => {
+        if (cancelado) return;
+        setLeads([]);
+        setMetricas(null);
+      });
+    return () => { cancelado = true; };
+  }, [cliente?.publicId]);
+
+  useEffect(() => {
+    supabase.auth.getSession().then(({ data }) => setSessao(data.session));
+    const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+      setSessao(novaSessao);
+    });
+    return () => assinatura.subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    if (!sessao) return;
     (async () => {
       try {
         const [mapaClientes, rawConfig] = await Promise.all([
           listarClientes(),
-          storageGet("config", null),
+          storageGet(sessao.user.id, "config", null),
         ]);
         setClientes(mapaClientes);
         if (rawConfig) {
@@ -238,16 +250,16 @@ export default function GeradorAtendenteVirtual() {
         setCarregado(true);
       }
     })();
-  }, []);
+  }, [sessao]);
 
   // Salva nome da agência e URL do widget automaticamente (com debounce)
   useEffect(() => {
-    if (!carregado) return;
+    if (!carregado || !sessao) return;
     const timer = setTimeout(() => {
-      storageSet("config", JSON.stringify({ agencia, widgetBaseUrl })).catch(() => {});
+      storageSet(sessao.user.id, "config", JSON.stringify({ agencia, widgetBaseUrl })).catch(() => {});
     }, 600);
     return () => clearTimeout(timer);
-  }, [agencia, widgetBaseUrl, carregado]);
+  }, [agencia, widgetBaseUrl, carregado, sessao]);
 
   function escolherCliente(id) {
     if (!clientes[id]) {
@@ -308,14 +320,38 @@ export default function GeradorAtendenteVirtual() {
     setSalvando(true);
     setErro(null);
     try {
-      await salvarClienteRemoto(cliente);
-      setClientes((prev) => ({ ...prev, [cliente.id]: cliente }));
+      const resultado = await salvarClienteRemoto(cliente, sessao.user.id);
+      const clienteSalvo = { ...cliente, ...resultado };
+      setCliente(clienteSalvo);
+      setClientes((prev) => ({ ...prev, [cliente.id]: clienteSalvo }));
       setAvisoSalvo(true);
       setTimeout(() => setAvisoSalvo(false), 2000);
     } catch {
       setErro("Não consegui salvar agora. Seu texto continua aqui — tente salvar de novo em instantes.");
     }
     setSalvando(false);
+  }
+
+  async function mudarStatusCliente(novoStatus) {
+    if (!cliente?.publicId) return;
+    try {
+      await atualizarStatusRemoto(cliente.id, novoStatus);
+      setCliente((prev) => ({ ...prev, status: novoStatus }));
+      setClientes((prev) => ({ ...prev, [cliente.id]: { ...prev[cliente.id], status: novoStatus } }));
+    } catch {
+      setErro("Não consegui mudar o status agora.");
+    }
+  }
+
+  async function estenderTeste(dias) {
+    if (!cliente?.publicId) return;
+    try {
+      const trialEndsAt = await estenderTesteRemoto(cliente.id, dias);
+      setCliente((prev) => ({ ...prev, status: "trial", trialEndsAt }));
+      setClientes((prev) => ({ ...prev, [cliente.id]: { ...prev[cliente.id], status: "trial", trialEndsAt } }));
+    } catch {
+      setErro("Não consegui estender o teste agora.");
+    }
   }
 
   async function excluirCliente(id) {
@@ -341,6 +377,15 @@ export default function GeradorAtendenteVirtual() {
       await navigator.clipboard.writeText(gerarCodigo(cliente, widgetBaseUrl));
       setCopiado(true);
       setTimeout(() => setCopiado(false), 1800);
+    } catch { /* clipboard indisponível, sem problema */ }
+  }
+
+  async function copiarLinkPagina() {
+    if (!cliente?.publicId) return;
+    try {
+      await navigator.clipboard.writeText(`${window.location.origin}/p/${cliente.publicId}`);
+      setPaginaCopiada(true);
+      setTimeout(() => setPaginaCopiada(false), 1800);
     } catch { /* clipboard indisponível, sem problema */ }
   }
 
@@ -376,8 +421,13 @@ export default function GeradorAtendenteVirtual() {
       }
 
       const listaImportada = Object.values(clientesImportados);
-      await Promise.all(listaImportada.map((c) => salvarClienteRemoto(c)));
-      const atualizados = { ...clientes, ...clientesImportados };
+      const resultados = await Promise.all(
+        listaImportada.map((c) => salvarClienteRemoto(c, sessao.user.id))
+      );
+      const atualizados = { ...clientes };
+      listaImportada.forEach((c, i) => {
+        atualizados[c.id] = { ...c, ...resultados[i] };
+      });
       setClientes(atualizados);
       if (dados.agencia) setAgencia(dados.agencia);
       if (dados.widgetBaseUrl) setWidgetBaseUrl(dados.widgetBaseUrl);
@@ -430,6 +480,18 @@ export default function GeradorAtendenteVirtual() {
   }
 
   const listaClientes = Object.values(clientes).sort((a, b) => a.nomeNegocio.localeCompare(b.nomeNegocio));
+
+  if (sessao === undefined) {
+    return (
+      <div className="flex min-h-screen items-center justify-center text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.muted }}>
+        Carregando...
+      </div>
+    );
+  }
+
+  if (!sessao) {
+    return <Login />;
+  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
@@ -486,11 +548,13 @@ export default function GeradorAtendenteVirtual() {
             <div key={c.id} className="flex items-center gap-1 group">
               <button
                 onClick={() => escolherCliente(c.id)}
-                className="flex-1 text-left px-3 py-2 rounded-lg text-sm truncate"
+                className="flex-1 flex items-center gap-2 text-left px-3 py-2 rounded-lg text-sm truncate"
                 style={{ backgroundColor: clienteId === c.id ? TOKENS.inkSoft : "transparent" }}
               >
-                <span className="inline-block w-2 h-2 rounded-full mr-2 align-middle" style={{ backgroundColor: c.corPrimaria }} />
-                {c.nomeNegocio}
+                <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.corPrimaria }} />
+                <span className="truncate">{c.nomeNegocio}</span>
+                {c.status === "suspended" && <span className="text-[10px] shrink-0 opacity-60">suspenso</span>}
+                {c.status === "trial" && <span className="text-[10px] shrink-0 opacity-60">{Math.max(diasRestantes(c.trialEndsAt), 0)}d</span>}
               </button>
               <button
                 onClick={() => excluirCliente(c.id)}
@@ -506,6 +570,12 @@ export default function GeradorAtendenteVirtual() {
         <p className="text-xs opacity-50 leading-relaxed border-t border-white/10 pt-3">
           Tudo isso roda como link direto pro WhatsApp — sem API oficial, sem QR Code, sem risco de banimento.
         </p>
+        <button
+          onClick={() => supabase.auth.signOut()}
+          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
+        >
+          <LogOut size={13} /> Sair ({sessao.user.email})
+        </button>
       </aside>
 
       {/* ---------------- MAIN ---------------- */}
@@ -543,6 +613,18 @@ export default function GeradorAtendenteVirtual() {
                       <option value="en">Sempre inglês</option>
                     </select>
                   </label>
+                </div>
+              </div>
+
+              <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
+                <h2 className="font-semibold flex items-center gap-2"><Globe2 size={16} /> Página simples (opcional)</h2>
+                <p className="text-xs -mt-2" style={{ color: TOKENS.muted }}>
+                  Preencha se o cliente ainda não tem site. Gera uma página própria, com esses dados e o assistente já embutido.
+                </p>
+                <CampoTexto textarea label="Sobre o negócio" value={cliente.sobreNegocio} onChange={(v) => atualizarCampo("sobreNegocio", v)} placeholder="Uma frase curta contando o que o negócio faz." />
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <CampoTexto label="Horário de funcionamento" value={cliente.horarioFuncionamento} onChange={(v) => atualizarCampo("horarioFuncionamento", v)} placeholder="Seg a sáb, 9h às 18h" />
+                  <CampoTexto label="Endereço" value={cliente.endereco} onChange={(v) => atualizarCampo("endereco", v)} placeholder="Rua Exemplo, 123 - Curitiba/PR" />
                 </div>
               </div>
 
@@ -655,6 +737,92 @@ export default function GeradorAtendenteVirtual() {
               </div>
 
               <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+                <h2 className="font-semibold text-sm">Acesso do cliente</h2>
+                {!cliente.publicId ? (
+                  <p className="text-xs" style={{ color: TOKENS.muted }}>Salve o cliente pelo menos uma vez pra liberar o controle de teste e ativação.</p>
+                ) : (
+                  <>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <span
+                        className="text-xs font-semibold px-2 py-1 rounded-full"
+                        style={
+                          cliente.status === "active"
+                            ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }
+                            : cliente.status === "suspended"
+                            ? { backgroundColor: "#FBE3E0", color: "#9C3B2E" }
+                            : { backgroundColor: "#F5EBD8", color: TOKENS.amberDeep }
+                        }
+                      >
+                        {cliente.status === "active" ? "Ativo" : cliente.status === "suspended" ? "Suspenso" : "Em teste"}
+                      </span>
+                      {cliente.status === "trial" && (
+                        <span className="text-xs" style={{ color: TOKENS.muted }}>
+                          {diasRestantes(cliente.trialEndsAt) > 0
+                            ? `até ${formatarData(cliente.trialEndsAt)} (${diasRestantes(cliente.trialEndsAt)}d restantes)`
+                            : `venceu em ${formatarData(cliente.trialEndsAt)}`}
+                        </span>
+                      )}
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      {cliente.status !== "active" && (
+                        <button onClick={() => mudarStatusCliente("active")} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }}>
+                          <PlayCircle size={13} /> Ativar (cliente assinou)
+                        </button>
+                      )}
+                      {cliente.status !== "suspended" && (
+                        <button onClick={() => mudarStatusCliente("suspended")} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: "#FBE3E0", color: "#9C3B2E" }}>
+                          <Ban size={13} /> Suspender
+                        </button>
+                      )}
+                      <button onClick={() => estenderTeste(14)} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md border" style={{ borderColor: TOKENS.border, color: TOKENS.ink }}>
+                        +14 dias de teste
+                      </button>
+                    </div>
+                    <p className="text-[11px] leading-relaxed" style={{ color: TOKENS.muted }}>
+                      Suspenso ou com teste vencido, o widget some sozinho do site do cliente, sem precisar mexer no código dele de novo.
+                    </p>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+                <h2 className="font-semibold text-sm">Resultados</h2>
+                {!cliente.publicId ? (
+                  <p className="text-xs" style={{ color: TOKENS.muted }}>Salve o cliente pelo menos uma vez pra começar a coletar aberturas, cliques e contatos.</p>
+                ) : (
+                  <>
+                    <div className="grid grid-cols-3 gap-2">
+                      <div className="rounded-lg p-2 text-center" style={{ backgroundColor: TOKENS.tealSoft }}>
+                        <div className="text-lg font-semibold" style={{ color: TOKENS.teal }}>{metricas?.aberturas ?? "–"}</div>
+                        <div className="text-[10px]" style={{ color: TOKENS.muted }}>aberturas</div>
+                      </div>
+                      <div className="rounded-lg p-2 text-center" style={{ backgroundColor: TOKENS.tealSoft }}>
+                        <div className="text-lg font-semibold" style={{ color: TOKENS.teal }}>{metricas?.handoffs ?? "–"}</div>
+                        <div className="text-[10px]" style={{ color: TOKENS.muted }}>foram pro WhatsApp</div>
+                      </div>
+                      <div className="rounded-lg p-2 text-center overflow-hidden" style={{ backgroundColor: TOKENS.tealSoft }}>
+                        <div className="text-xs font-semibold truncate" style={{ color: TOKENS.teal }} title={metricas?.opcaoMaisClicada?.label || ""}>
+                          {metricas?.opcaoMaisClicada?.label || "–"}
+                        </div>
+                        <div className="text-[10px]" style={{ color: TOKENS.muted }}>opção mais clicada</div>
+                      </div>
+                    </div>
+
+                    <div className="flex flex-col gap-1.5">
+                      <span className="text-xs font-medium" style={{ color: TOKENS.ink }}>Contatos captados ({leads.length})</span>
+                      {leads.length === 0 && <p className="text-xs" style={{ color: TOKENS.muted }}>Nenhum contato ainda.</p>}
+                      {leads.slice(0, 8).map((l) => (
+                        <div key={l.id} className="text-xs flex items-center justify-between gap-2 border-b pb-1" style={{ borderColor: TOKENS.border }}>
+                          <span className="truncate">{l.nome || "(sem nome)"}{l.telefone ? ` · ${l.telefone}` : ""}</span>
+                          <span className="shrink-0" style={{ color: TOKENS.muted }}>{new Date(l.criado_em).toLocaleDateString("pt-BR")}</span>
+                        </div>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </div>
+
+              <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="font-semibold text-sm">Publicação</h2>
                   <a
@@ -674,6 +842,25 @@ export default function GeradorAtendenteVirtual() {
                   placeholder="https://seu-dominio.com"
                   dica="Em produção, use a URL pública onde o arquivo atendente-virtual-widget.js será publicado."
                 />
+                {cliente.publicId && (cliente.sobreNegocio || cliente.endereco || cliente.horarioFuncionamento) && (
+                  <div className="rounded-lg border p-3 flex flex-col gap-2" style={{ borderColor: TOKENS.border }}>
+                    <span className="text-xs font-medium" style={{ color: TOKENS.ink }}>Página simples deste cliente</span>
+                    <div className="flex items-center gap-2">
+                      <a
+                        href={`/p/${cliente.publicId}`}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="flex-1 truncate text-xs underline"
+                        style={{ color: TOKENS.teal }}
+                      >
+                        {window.location.origin}/p/{cliente.publicId}
+                      </a>
+                      <button onClick={copiarLinkPagina} className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md shrink-0" style={{ backgroundColor: paginaCopiada ? TOKENS.tealSoft : TOKENS.tealSoft, color: TOKENS.teal }}>
+                        {paginaCopiada ? <Check size={12} /> : <Copy size={12} />} {paginaCopiada ? "Copiado" : "Copiar"}
+                      </button>
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border, backgroundColor: TOKENS.ink }}>
@@ -687,7 +874,7 @@ export default function GeradorAtendenteVirtual() {
 {gerarCodigo(cliente, widgetBaseUrl)}
                 </pre>
                 <p className="text-[11px] text-white/50 leading-relaxed">
-                  Suba o <code>atendente-virtual-widget.js</code> em qualquer hospedagem estática gratuita e troque a URL acima. Cole os dois blocos antes do <code>&lt;/body&gt;</code> do site do cliente.
+                  Suba o <code>atendente-virtual-widget.js</code> em qualquer hospedagem estática gratuita e troque a URL acima. Cole essa linha única antes do <code>&lt;/body&gt;</code> do site do cliente — depois disso, ativar, suspender ou editar o conteúdo acontece só aqui no painel, sem precisar mexer no site dele de novo.
                 </p>
               </div>
             </div>
