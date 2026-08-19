@@ -4,7 +4,7 @@ Projeto Vite + React que gera um widget de atendimento (menu de respostas
 rápidas, agenda e encaminhamento pro WhatsApp) para o site de cada cliente
 da sua agência. Dados ficam no Supabase, atrás de login.
 
-Em produção: https://prontoassistente.vercel.app
+Em produção: https://usarpronto.vercel.app
 
 ## 1. Instalar dependências
 ```bash
