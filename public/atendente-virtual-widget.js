@@ -61,6 +61,9 @@
       telefone: idioma === "en" ? "Your phone (optional)" : "Seu telefone (opcional)",
       continuar: idioma === "en" ? "Continue" : "Continuar",
       pular: idioma === "en" ? "Skip" : "Pular",
+      avisoPrivacidade: idioma === "en"
+        ? "Used only so this business can get back to you."
+        : "Usado só pra esse negócio poder te retornar.",
     };
 
     function t(valor) {
@@ -95,6 +98,7 @@
         .avw-lead-acoes { display: flex; gap: 8px; }
         .avw-lead-continuar { flex: 1; padding: 8px 10px; border-radius: 8px; background: var(--avw-cor); color: #fff; font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; }
         .avw-lead-pular { padding: 8px 10px; border-radius: 8px; background: transparent; color: #5b6672; font-size: 12px; }
+        .avw-lead-aviso { margin: 0; font-size: 11px; line-height: 1.4; color: #5b6672; }
       </style>
       <section class="avw-panel" aria-live="polite">
         <header class="avw-head">
@@ -196,6 +200,7 @@
       caixa.innerHTML = `
         <input type="text" class="avw-lead-nome" placeholder="${textos.nome}" autocomplete="name" />
         <input type="tel" class="avw-lead-telefone" placeholder="${textos.telefone}" autocomplete="tel" />
+        <p class="avw-lead-aviso">${textos.avisoPrivacidade}</p>
         <div class="avw-lead-acoes">
           <a class="avw-lead-continuar" target="_blank" rel="noopener noreferrer"></a>
           <button type="button" class="avw-lead-pular">${textos.pular}</button>
