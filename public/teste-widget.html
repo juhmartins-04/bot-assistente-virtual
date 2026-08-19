@@ -14,13 +14,13 @@
       }
 
       main {
-        max-width: 760px;
+        max-width: 680px;
         padding: 48px 24px;
       }
 
       h1 {
         margin: 0 0 12px;
-        font-size: clamp(28px, 5vw, 44px);
+        font-size: clamp(26px, 5vw, 40px);
       }
 
       p {
@@ -28,63 +28,155 @@
         color: #5b6672;
         line-height: 1.6;
       }
+
+      .caixa {
+        margin-top: 28px;
+        padding: 18px 20px;
+        border: 1px solid #dde3e1;
+        border-radius: 12px;
+        background: #fff;
+      }
+
+      .caixa h2 {
+        font-size: 16px;
+        margin: 0 0 6px;
+      }
+
+      .caixa p {
+        font-size: 14px;
+        margin-bottom: 12px;
+      }
+
+      form {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+      }
+
+      input[type="text"] {
+        flex: 1;
+        min-width: 220px;
+        padding: 9px 11px;
+        border: 1px solid #dde3e1;
+        border-radius: 8px;
+        font-size: 14px;
+      }
+
+      button, a.botao {
+        padding: 9px 16px;
+        border: 0;
+        border-radius: 8px;
+        background: #2f6f62;
+        color: #fff;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        text-decoration: none;
+        display: inline-flex;
+        align-items: center;
+      }
+
+      .modo-atual {
+        display: inline-block;
+        margin-top: 10px;
+        font-size: 12px;
+        font-weight: 600;
+        padding: 3px 9px;
+        border-radius: 999px;
+        background: #e4edeb;
+        color: #2f6f62;
+      }
     </style>
   </head>
   <body>
     <main>
       <h1>Teste do widget</h1>
       <p>
-        Use o botão no canto inferior direito para validar o comportamento real
-        do arquivo <code>atendente-virtual-widget.js</code>.
+        Esta página serve pra testar o cenário de <strong>quem já tem site</strong>
+        (o widget aparece como um balão no canto da tela). Pra testar o cenário de
+        <strong>quem não tem site</strong>, crie um cliente preenchendo "Sobre o
+        negócio", "Horário" ou "Endereço" no painel, salve, e abra o link
+        <code>/p/{public_id}</code> dele que aparece no card "Publicação".
       </p>
+
+      <div class="caixa">
+        <h2>Testar com um cliente real (recomendado)</h2>
+        <p>
+          Cole aqui o <code>public_id</code> de um cliente que você já salvou no
+          painel (aparece no código gerado, depois de <code>data-site="</code>).
+          Isso carrega o widget do jeito que ele realmente se comporta no site de
+          um cliente — incluindo teste, ativação e suspensão.
+        </p>
+        <form>
+          <input type="text" name="site" id="campoSite" placeholder="public_id do cliente" />
+          <button type="submit">Carregar</button>
+        </form>
+      </div>
+
+      <span class="modo-atual" id="indicadorModo"></span>
     </main>
 
     <script>
-      window.ATENDENTE_CONFIG = {
-        nomeNegocio: "Clínica Vida Plena",
-        corPrimaria: "#2f6f62",
-        numeroWhatsApp: "5541999999999",
-        idiomaPadrao: "pt",
-        saudacao: {
-          pt: "Olá! Como posso ajudar?",
-          en: "Hi! How can I help?"
-        },
-        transferirLabel: {
-          pt: "Falar com atendente",
-          en: "Talk to someone"
-        },
-        transferirMensagemWhats: {
-          pt: "Olá! Vim pelo site e gostaria de falar com um atendente.",
-          en: "Hi! I came from the website and would like to talk to someone."
-        },
-        opcoes: [
-          {
-            chave: "1",
-            label: { pt: "Horário de funcionamento", en: "Opening hours" },
-            tipo: "resposta",
-            resposta: {
-              pt: "Funcionamos de segunda a sábado, das 9h às 18h.",
-              en: "We're open Monday to Saturday, 9am to 6pm."
-            }
+      var params = new URLSearchParams(window.location.search);
+      var siteId = params.get("site");
+      var indicador = document.getElementById("indicadorModo");
+
+      if (siteId) {
+        document.getElementById("campoSite").value = siteId;
+        indicador.textContent = "modo produção — carregando cliente real";
+      } else {
+        indicador.textContent = "modo offline — configuração de exemplo, sem banco de dados";
+        // Config de exemplo, só usada quando nenhum "site" está na URL.
+        window.ATENDENTE_CONFIG = {
+          nomeNegocio: "Clínica Vida Plena (exemplo)",
+          corPrimaria: "#2f6f62",
+          numeroWhatsApp: "5541999999999",
+          idiomaPadrao: "pt",
+          saudacao: {
+            pt: "Olá! Como posso ajudar?",
+            en: "Hi! How can I help?"
           },
-          {
-            chave: "2",
-            label: { pt: "Agendar horário", en: "Book an appointment" },
-            tipo: "agenda",
-            linkAgenda: "https://cal.com/seu-estabelecimento"
+          transferirLabel: {
+            pt: "Falar com atendente",
+            en: "Talk to someone"
           },
-          {
-            chave: "3",
-            label: { pt: "Chamar no WhatsApp", en: "Open WhatsApp" },
-            tipo: "whatsapp",
-            mensagemWhats: {
-              pt: "Olá! Vim pelo site e quero saber mais.",
-              en: "Hi! I came from the website and want to know more."
+          transferirMensagemWhats: {
+            pt: "Olá! Vim pelo site e gostaria de falar com um atendente.",
+            en: "Hi! I came from the website and would like to talk to someone."
+          },
+          opcoes: [
+            {
+              label: { pt: "Horário de funcionamento", en: "Opening hours" },
+              tipo: "resposta",
+              resposta: {
+                pt: "Funcionamos de segunda a sábado, das 9h às 18h.",
+                en: "We're open Monday to Saturday, 9am to 6pm."
+              }
+            },
+            {
+              label: { pt: "Agendar horário", en: "Book an appointment" },
+              tipo: "agenda",
+              linkAgenda: "https://cal.com/seu-estabelecimento"
+            },
+            {
+              label: { pt: "Chamar no WhatsApp", en: "Open WhatsApp" },
+              tipo: "whatsapp",
+              mensagemWhats: {
+                pt: "Olá! Vim pelo site e quero saber mais.",
+                en: "Hi! I came from the website and want to know more."
+              }
             }
-          }
-        ]
-      };
+          ]
+        };
+      }
+
+      // Cria a tag do widget dinamicamente, já com "data-site" definido
+      // antes de inserir no DOM — assim o widget lê o atributo certo
+      // desde a primeira execução, sem precisar trocar a tag depois.
+      var scriptWidget = document.createElement("script");
+      scriptWidget.src = "/atendente-virtual-widget.js";
+      if (siteId) scriptWidget.dataset.site = siteId;
+      document.body.appendChild(scriptWidget);
     </script>
-    <script src="/atendente-virtual-widget.js"></script>
   </body>
 </html>
