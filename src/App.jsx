@@ -815,11 +815,14 @@ export default function GeradorAtendenteVirtual() {
                 Depois disso, você pode entrar com e-mail e senha, sem precisar do link mágico toda vez.
               </p>
             </div>
-            <form onSubmit={salvarSenha} className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+            <form onSubmit={salvarSenha} className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }} autoComplete="on">
+              <input type="email" name="email" autoComplete="username" value={sessao.user.email} readOnly hidden />
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-medium">Nova senha</span>
                 <input
                   type="password"
+                  name="new-password"
+                  autoComplete="new-password"
                   required
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
@@ -832,6 +835,8 @@ export default function GeradorAtendenteVirtual() {
                 <span className="font-medium">Confirmar senha</span>
                 <input
                   type="password"
+                  name="confirm-password"
+                  autoComplete="new-password"
                   required
                   value={confirmarSenha}
                   onChange={(e) => setConfirmarSenha(e.target.value)}

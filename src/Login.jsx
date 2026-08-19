@@ -42,8 +42,12 @@ export default function Login() {
       });
       if (error) throw error;
       setEnviado(true);
-    } catch {
-      setErro("Não consegui enviar o link agora. Confira o e-mail e tente de novo.");
+    } catch (err) {
+      if (err?.code === "over_email_send_rate_limit" || err?.status === 429) {
+        setErro("Muitos links pedidos em pouco tempo. Espere alguns minutos e tente de novo (ou entre com senha, se já tiver uma).");
+      } else {
+        setErro("Não consegui enviar o link agora. Confira o e-mail e tente de novo.");
+      }
     }
     setEnviando(false);
   }
@@ -75,11 +79,13 @@ export default function Login() {
             </button>
           </div>
         ) : modo === "senha" ? (
-          <form onSubmit={entrarComSenha} className="flex flex-col gap-3">
+          <form onSubmit={entrarComSenha} className="flex flex-col gap-3" autoComplete="on">
             <label className="flex flex-col gap-1">
               <span className="font-medium">E-mail</span>
               <input
                 type="email"
+                name="email"
+                autoComplete="username"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
@@ -92,6 +98,8 @@ export default function Login() {
               <span className="font-medium">Senha</span>
               <input
                 type="password"
+                name="password"
+                autoComplete="current-password"
                 required
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
@@ -128,6 +136,8 @@ export default function Login() {
               <span className="font-medium">E-mail</span>
               <input
                 type="email"
+                name="email"
+                autoComplete="email"
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
