@@ -70,6 +70,14 @@
       return valor?.[idioma] || valor?.pt || valor?.en || "";
     }
 
+    // O app salva cada texto como dois campos separados (ex: "labelPt" /
+    // "labelEn"), não como um objeto aninhado { pt, en }. Esta função
+    // monta esse objeto a partir do prefixo, pra reusar t() sem mudar
+    // todos os pontos que dependem dele.
+    function tp(objeto, prefixo) {
+      return t({ pt: objeto?.[prefixo + "Pt"], en: objeto?.[prefixo + "En"] });
+    }
+
     function linkWhats(mensagem) {
       var numero = config.numeroWhatsApp || "";
       return "https://wa.me/" + numero + "?text=" + encodeURIComponent(mensagem || "");
@@ -124,7 +132,7 @@
       body.innerHTML = "";
       var saudacao = document.createElement("div");
       saudacao.className = "avw-msg";
-      saudacao.textContent = t(config.saudacao);
+      saudacao.textContent = tp(config, "saudacao");
       body.appendChild(saudacao);
 
       var options = document.createElement("div");
@@ -134,7 +142,7 @@
         var button = document.createElement("button");
         button.type = "button";
         button.className = "avw-option";
-        button.textContent = t(opcao.label);
+        button.textContent = tp(opcao, "label");
         button.addEventListener("click", function () { responder(opcao); });
         options.appendChild(button);
       });
@@ -142,12 +150,12 @@
       var transferir = document.createElement("button");
       transferir.type = "button";
       transferir.className = "avw-option";
-      transferir.textContent = t(config.transferirLabel);
+      transferir.textContent = tp(config, "transferirLabel");
       transferir.addEventListener("click", function () {
         pedirContatoEAbrir(
           textos.whatsapp,
-          linkWhats(t(config.transferirMensagemWhats)),
-          t(config.transferirLabel)
+          linkWhats(tp(config, "transferirMensagemWhats")),
+          tp(config, "transferirLabel")
         );
       });
       options.appendChild(transferir);
@@ -155,18 +163,18 @@
     }
 
     function responder(opcao) {
-      registrarEvento("opcao_clicada", t(opcao.label));
+      registrarEvento("opcao_clicada", tp(opcao, "label"));
 
       if (opcao.tipo === "resposta") {
         var msg = document.createElement("div");
         msg.className = "avw-msg";
-        msg.textContent = t(opcao.resposta);
+        msg.textContent = tp(opcao, "resposta");
         body.appendChild(msg);
         return;
       }
 
       if (opcao.tipo === "whatsapp") {
-        pedirContatoEAbrir(textos.whatsapp, linkWhats(t(opcao.mensagemWhats)), t(opcao.label));
+        pedirContatoEAbrir(textos.whatsapp, linkWhats(tp(opcao, "mensagemWhats")), tp(opcao, "label"));
         return;
       }
 
