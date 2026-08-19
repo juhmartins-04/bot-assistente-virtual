@@ -1,13 +1,33 @@
 import React, { useState } from "react";
-import { Sparkles, Mail } from "lucide-react";
+import { Sparkles, Mail, Lock } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
 
 export default function Login() {
+  const [modo, setModo] = useState("senha"); // "senha" | "link"
   const [email, setEmail] = useState("");
+  const [senha, setSenha] = useState("");
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState(null);
+
+  async function entrarComSenha(e) {
+    e.preventDefault();
+    if (!email.trim() || !senha) return;
+
+    setEnviando(true);
+    setErro(null);
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email: email.trim(),
+        password: senha,
+      });
+      if (error) throw error;
+    } catch {
+      setErro("E-mail ou senha incorretos. Se ainda não definiu uma senha, use \"Entrar por link no e-mail\".");
+    }
+    setEnviando(false);
+  }
 
   async function enviarLink(e) {
     e.preventDefault();
@@ -47,17 +67,62 @@ export default function Login() {
               nesse mesmo navegador pra entrar.
             </p>
             <button
-              onClick={() => setEnviado(false)}
+              onClick={() => { setEnviado(false); setModo("senha"); }}
               className="text-xs font-medium underline self-start mt-1"
               style={{ color: TOKENS.teal }}
             >
-              usar outro e-mail
+              voltar
             </button>
           </div>
+        ) : modo === "senha" ? (
+          <form onSubmit={entrarComSenha} className="flex flex-col gap-3">
+            <label className="flex flex-col gap-1">
+              <span className="font-medium">E-mail</span>
+              <input
+                type="email"
+                required
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="voce@suaagencia.com"
+                className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                style={{ borderColor: TOKENS.border }}
+              />
+            </label>
+            <label className="flex flex-col gap-1">
+              <span className="font-medium">Senha</span>
+              <input
+                type="password"
+                required
+                value={senha}
+                onChange={(e) => setSenha(e.target.value)}
+                placeholder="Sua senha"
+                className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                style={{ borderColor: TOKENS.border }}
+              />
+            </label>
+            <button
+              type="submit"
+              disabled={enviando}
+              className="flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium text-white focus:outline-none focus:ring-2"
+              style={{ backgroundColor: TOKENS.teal }}
+            >
+              <Lock size={16} /> {enviando ? "Entrando..." : "Entrar"}
+            </button>
+            {erro && <span className="text-sm text-red-600">{erro}</span>}
+            <button
+              type="button"
+              onClick={() => { setModo("link"); setErro(null); }}
+              className="text-xs font-medium underline self-start"
+              style={{ color: TOKENS.teal }}
+            >
+              Ainda não tenho senha / esqueci — entrar por link no e-mail
+            </button>
+          </form>
         ) : (
           <form onSubmit={enviarLink} className="flex flex-col gap-3">
             <p style={{ color: TOKENS.muted }}>
-              Entre com seu e-mail. A gente manda um link, sem senha pra guardar.
+              A gente manda um link de acesso pro seu e-mail. Depois de entrar, você
+              pode definir uma senha pra não precisar disso de novo.
             </p>
             <label className="flex flex-col gap-1">
               <span className="font-medium">E-mail</span>
@@ -80,6 +145,14 @@ export default function Login() {
               <Mail size={16} /> {enviando ? "Enviando..." : "Enviar link de acesso"}
             </button>
             {erro && <span className="text-sm text-red-600">{erro}</span>}
+            <button
+              type="button"
+              onClick={() => { setModo("senha"); setErro(null); }}
+              className="text-xs font-medium underline self-start"
+              style={{ color: TOKENS.teal }}
+            >
+              já tenho senha — entrar com senha
+            </button>
           </form>
         )}
       </div>

@@ -2,7 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, Copy, Check, MessageCircle, Calendar,
   Globe2, ChevronDown, ChevronUp, Building2, Save, Sparkles,
-  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle, Users
+  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle, Users, Lock
 } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
@@ -208,6 +208,12 @@ export default function GeradorAtendenteVirtual() {
   const [colaboradores, setColaboradores] = useState([]);
   const [carregandoColaboradores, setCarregandoColaboradores] = useState(false);
   const [novoEmailColaborador, setNovoEmailColaborador] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
+  const [novaSenha, setNovaSenha] = useState("");
+  const [confirmarSenha, setConfirmarSenha] = useState("");
+  const [salvandoSenha, setSalvandoSenha] = useState(false);
+  const [senhaSalva, setSenhaSalva] = useState(false);
+  const [erroSenha, setErroSenha] = useState(null);
   const [previewMsgs, setPreviewMsgs] = useState([]);
   const [previewIdioma, setPreviewIdioma] = useState("pt");
   const [leads, setLeads] = useState([]);
@@ -300,6 +306,7 @@ export default function GeradorAtendenteVirtual() {
       return;
     }
     setMostrarColaboradores(false);
+    setMostrarSenha(false);
     setClienteId(id);
     setCliente(JSON.parse(JSON.stringify(clientes[id])));
     setValidacao([]);
@@ -309,6 +316,7 @@ export default function GeradorAtendenteVirtual() {
   function iniciarNovoCliente() {
     const c = clienteEmBranco();
     setMostrarColaboradores(false);
+    setMostrarSenha(false);
     setClienteId(c.id);
     setCliente(c);
     setValidacao([]);
@@ -427,6 +435,7 @@ export default function GeradorAtendenteVirtual() {
   function abrirColaboradores() {
     setClienteId(null);
     setCliente(null);
+    setMostrarSenha(false);
     setMostrarColaboradores(true);
     setCarregandoColaboradores(true);
     listarColaboradores(sessao.user.id)
@@ -468,6 +477,41 @@ export default function GeradorAtendenteVirtual() {
     } catch {
       setErro("Não consegui remover agora.");
     }
+  }
+
+  function abrirDefinirSenha() {
+    setClienteId(null);
+    setCliente(null);
+    setMostrarColaboradores(false);
+    setMostrarSenha(true);
+    setNovaSenha("");
+    setConfirmarSenha("");
+    setErroSenha(null);
+  }
+
+  async function salvarSenha(e) {
+    e.preventDefault();
+    if (novaSenha.length < 6) {
+      setErroSenha("A senha precisa ter pelo menos 6 caracteres.");
+      return;
+    }
+    if (novaSenha !== confirmarSenha) {
+      setErroSenha("As duas senhas precisam ser iguais.");
+      return;
+    }
+    setSalvandoSenha(true);
+    setErroSenha(null);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: novaSenha });
+      if (error) throw error;
+      setSenhaSalva(true);
+      setNovaSenha("");
+      setConfirmarSenha("");
+      setTimeout(() => setSenhaSalva(false), 2500);
+    } catch {
+      setErroSenha("Não consegui salvar a senha agora. Tente de novo em instantes.");
+    }
+    setSalvandoSenha(false);
   }
 
   function exportarClientes() {
@@ -679,6 +723,12 @@ export default function GeradorAtendenteVirtual() {
           <Users size={13} /> Colaboradores
         </button>
         <button
+          onClick={abrirDefinirSenha}
+          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
+        >
+          <Lock size={13} /> Definir senha
+        </button>
+        <button
           onClick={() => supabase.auth.signOut()}
           className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
         >
@@ -757,7 +807,53 @@ export default function GeradorAtendenteVirtual() {
           </div>
         )}
 
-        {!mostrarColaboradores && !cliente && listaClientes.length === 0 && (
+        {mostrarSenha && (
+          <div className="max-w-sm mx-auto flex flex-col gap-5">
+            <div>
+              <h1 className="text-lg font-semibold">Definir senha</h1>
+              <p className="text-sm" style={{ color: TOKENS.muted }}>
+                Depois disso, você pode entrar com e-mail e senha, sem precisar do link mágico toda vez.
+              </p>
+            </div>
+            <form onSubmit={salvarSenha} className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium">Nova senha</span>
+                <input
+                  type="password"
+                  required
+                  value={novaSenha}
+                  onChange={(e) => setNovaSenha(e.target.value)}
+                  placeholder="Pelo menos 6 caracteres"
+                  className="rounded-lg border px-3 py-2 text-sm"
+                  style={{ borderColor: TOKENS.border }}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                <span className="font-medium">Confirmar senha</span>
+                <input
+                  type="password"
+                  required
+                  value={confirmarSenha}
+                  onChange={(e) => setConfirmarSenha(e.target.value)}
+                  className="rounded-lg border px-3 py-2 text-sm"
+                  style={{ borderColor: TOKENS.border }}
+                />
+              </label>
+              <button
+                type="submit"
+                disabled={salvandoSenha}
+                className="flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium text-white"
+                style={{ backgroundColor: TOKENS.teal }}
+              >
+                {salvandoSenha ? "Salvando..." : "Salvar senha"}
+              </button>
+              {senhaSalva && <span className="text-sm text-center" style={{ color: TOKENS.teal }}>Senha salva — use ela no próximo login.</span>}
+              {erroSenha && <span className="text-sm text-red-600">{erroSenha}</span>}
+            </form>
+          </div>
+        )}
+
+        {!mostrarColaboradores && !mostrarSenha && !cliente && listaClientes.length === 0 && (
           <div className="max-w-md mx-auto mt-20 text-center flex flex-col items-center gap-3">
             <Building2 size={36} style={{ color: TOKENS.teal }} />
             <h1 className="text-lg font-semibold">Escolha ou crie um cliente</h1>
@@ -765,7 +861,7 @@ export default function GeradorAtendenteVirtual() {
           </div>
         )}
 
-        {!mostrarColaboradores && !cliente && listaClientes.length > 0 && (
+        {!mostrarColaboradores && !mostrarSenha && !cliente && listaClientes.length > 0 && (
           <div className="max-w-2xl mx-auto mt-10 flex flex-col gap-5">
             <div>
               <h1 className="text-lg font-semibold">Visão geral</h1>
