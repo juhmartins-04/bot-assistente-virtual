@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { LogOut, MessageCircle, Sparkles } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
+import { useTema } from "./useTema";
+import BotaoTema from "./BotaoTema";
 import { listarClientesAtribuidos, listarLeads, atualizarNotaLead } from "./storage";
 
 // Painel reduzido pra quem foi convidado como colaborador de atendimento:
@@ -9,6 +11,7 @@ import { listarClientesAtribuidos, listarLeads, atualizarNotaLead } from "./stor
 // captados e anotar o que foi combinado/resolvido — nunca edita o menu,
 // muda status/plano, exclui cliente ou convida outra pessoa.
 export default function PainelColaborador({ sessao }) {
+  const { tema, alternar: alternarTema } = useTema();
   const [clientes, setClientes] = useState([]);
   const [carregado, setCarregado] = useState(false);
   const [clienteId, setClienteId] = useState(null);
@@ -51,7 +54,8 @@ export default function PainelColaborador({ sessao }) {
       <aside className="w-full md:w-64 shrink-0 p-5 flex flex-col gap-4 text-white" style={{ backgroundColor: "#1C2430" }}>
         <div className="flex items-center gap-2">
           <Sparkles size={18} style={{ color: "#B57A22" }} />
-          <span className="font-semibold text-base">Prontô</span>
+          <span className="font-semibold text-base flex-1">Prontô</span>
+          <BotaoTema tema={tema} alternar={alternarTema} variante="dark" />
         </div>
         <p className="text-xs opacity-60 -mt-2">Painel de atendimento</p>
 

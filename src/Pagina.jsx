@@ -2,6 +2,8 @@ import React, { useEffect, useState } from "react";
 import { MapPin, Clock, MessageCircle } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
+import { useTema } from "./useTema";
+import BotaoTema from "./BotaoTema";
 
 function gerarLinkWhats(numero, mensagem) {
   return "https://wa.me/" + (numero || "") + "?text=" + encodeURIComponent(mensagem || "");
@@ -12,6 +14,7 @@ function linkMapa(endereco) {
 }
 
 export default function Pagina({ publicId }) {
+  const { tema, alternar: alternarTema } = useTema();
   const [estado, setEstado] = useState("carregando"); // carregando | ok | indisponivel
   const [dados, setDados] = useState(null);
 
@@ -66,6 +69,9 @@ export default function Pagina({ publicId }) {
 
   return (
     <div className="min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
+      <div className="fixed top-4 right-4">
+        <BotaoTema tema={tema} alternar={alternarTema} />
+      </div>
       <div className="max-w-xl mx-auto px-6 py-16 flex flex-col gap-8">
         <header className="flex flex-col items-center gap-3 text-center">
           <div

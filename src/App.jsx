@@ -7,6 +7,8 @@ import {
 } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
+import { useTema } from "./useTema";
+import BotaoTema from "./BotaoTema";
 import Login from "./Login";
 import PainelColaborador from "./PainelColaborador";
 import {
@@ -185,6 +187,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
 }
 
 export default function GeradorAtendenteVirtual() {
+  const { tema, alternar: alternarTema } = useTema();
   const [sessao, setSessao] = useState(undefined); // undefined = carregando · null = deslogado
   const [ehColaborador, setEhColaborador] = useState(undefined); // undefined = verificando
   const [agencia, setAgencia] = useState("Sua Agência");
@@ -657,6 +660,7 @@ export default function GeradorAtendenteVirtual() {
             className="bg-transparent font-semibold text-base outline-none border-b border-transparent focus:border-white/40 w-full"
             aria-label="Nome da sua agência"
           />
+          <BotaoTema tema={tema} alternar={alternarTema} variante="dark" />
         </div>
         <p className="text-xs opacity-60 -mt-3">Prontô</p>
 

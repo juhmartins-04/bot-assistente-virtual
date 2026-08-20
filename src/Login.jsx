@@ -2,8 +2,11 @@ import React, { useState } from "react";
 import { Sparkles, Mail, Lock } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
+import { useTema } from "./useTema";
+import BotaoTema from "./BotaoTema";
 
 export default function Login() {
+  const { tema, alternar: alternarTema } = useTema();
   const [modo, setModo] = useState("senha"); // "senha" | "link"
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
@@ -60,7 +63,8 @@ export default function Login() {
       <div className="w-full max-w-sm card p-6 flex flex-col gap-5">
         <div className="flex items-center gap-2">
           <Sparkles size={20} style={{ color: TOKENS.amber }} />
-          <h1 className="font-semibold text-base">Prontô</h1>
+          <h1 className="font-semibold text-base flex-1">Prontô</h1>
+          <BotaoTema tema={tema} alternar={alternarTema} />
         </div>
 
         {enviado ? (

@@ -32,8 +32,11 @@
   --selection-bg: #2f6f62;
 }
 
+/* Escuro automático (segue o sistema): só entra em vigor se a pessoa não
+   tiver escolhido um tema manualmente pelo botão do site — o :not([data-theme="light"])
+   garante que uma escolha explícita de "claro" vence mesmo com o sistema no escuro. */
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root:not([data-theme="light"]) {
     --ink: #e9eeec;
     --ink-soft: #c3cdca;
     --canvas: #12181b;
@@ -45,10 +48,6 @@
     --muted: #8fa09b;
     --placeholder: #6b7672;
 
-    /* --teal fica claro pra ler bem como texto/ícone sobre o fundo escuro;
-       --teal-solid fica num tom mais fechado, só pra botão preenchido com
-       texto branco em cima, que precisaria de mais contraste que o --teal
-       claro consegue dar. */
     --teal: #6bbba8;
     --teal-solid: #1f6f5c;
     --teal-soft: #17302b;
@@ -66,6 +65,53 @@
     --scrollbar-thumb-hover: rgba(143, 160, 155, 0.44);
     --selection-bg: #6bbba8;
   }
+
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+  }
+}
+
+/* Escuro escolhido manualmente: mesmos valores de cima, mas valendo mesmo
+   se o sistema da pessoa estiver no modo claro. Repetido em vez de reaproveitado
+   porque CSS puro não mistura media query com seletor de atributo numa
+   única regra. */
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --ink: #e9eeec;
+  --ink-soft: #c3cdca;
+  --canvas: #12181b;
+  --surface: #1a2226;
+  --surface-gradient: linear-gradient(180deg, rgba(26, 34, 38, 0.98), rgba(26, 34, 38, 0.9));
+  --preview-bg: #151c1f;
+  --preview-dot: rgba(107, 187, 168, 0.07);
+  --border: #2b3538;
+  --muted: #8fa09b;
+  --placeholder: #6b7672;
+
+  /* --teal fica claro pra ler bem como texto/ícone sobre o fundo escuro;
+     --teal-solid fica num tom mais fechado, só pra botão preenchido com
+     texto branco em cima, que precisaria de mais contraste que o --teal
+     claro consegue dar. */
+  --teal: #6bbba8;
+  --teal-solid: #1f6f5c;
+  --teal-soft: #17302b;
+  --amber: #d6a344;
+  --amber-deep: #e0ac63;
+  --amber-wash: #302818;
+  --crimson: #e58275;
+  --crimson-wash: #331a17;
+
+  --body-bg-radial: rgba(107, 187, 168, 0.08);
+  --body-bg-1: #12181b;
+  --body-bg-2: #161e21;
+  --body-bg-3: #0f1416;
+  --scrollbar-thumb: rgba(143, 160, 155, 0.28);
+  --scrollbar-thumb-hover: rgba(143, 160, 155, 0.44);
+  --selection-bg: #6bbba8;
+}
+
+:root[data-theme="light"] {
+  color-scheme: light;
 }
 
 @layer base {
@@ -338,6 +384,38 @@
     background: var(--teal-soft);
     color: var(--teal);
     flex-shrink: 0;
+  }
+
+  /* ---------- Botão de trocar tema claro/escuro ---------- */
+  .theme-toggle {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 2rem;
+    height: 2rem;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: var(--surface);
+    color: var(--muted);
+    flex-shrink: 0;
+  }
+  .theme-toggle:hover:not(:disabled) {
+    color: var(--teal);
+    border-color: var(--teal);
+  }
+
+  /* variante pra usar sobre a barra lateral, que é sempre escura e não
+     troca de cor com --surface/--border (por isso não pode usar os
+     tokens normais aqui, senão o botão sumiria contra o próprio fundo). */
+  .theme-toggle-dark {
+    border-color: rgba(255, 255, 255, 0.15);
+    background: transparent;
+    color: rgba(255, 255, 255, 0.7);
+  }
+  .theme-toggle-dark:hover:not(:disabled) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.1);
+    border-color: rgba(255, 255, 255, 0.3);
   }
 }
 
