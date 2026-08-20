@@ -98,6 +98,18 @@ function formatarData(iso) {
   return new Date(iso).toLocaleDateString("pt-BR");
 }
 
+// Aviso de vencimento pro cliente: em vez de mandar automático (exigiria
+// e-mail com domínio próprio, ou API oficial do WhatsApp — nenhum dos dois
+// gratuito nem alinhado com a proposta do Prontô), gera um link de
+// WhatsApp já com a mensagem escrita, pra você só clicar e enviar.
+function mensagemLembreteWhats(cliente) {
+  if (cliente.status === "suspended") {
+    return `Oi! Vi que o Prontô do ${cliente.nomeNegocio} está suspenso. Quer reativar? É só confirmar comigo que eu já libero de novo.`;
+  }
+  const dias = Math.max(diasRestantes(cliente.trialEndsAt), 0);
+  return `Oi! O teste do Prontô do ${cliente.nomeNegocio} acaba em ${dias === 0 ? "breve" : dias + " dia" + (dias === 1 ? "" : "s")}. Quer continuar? É só confirmar comigo que eu já ativo.`;
+}
+
 function validarCliente(c) {
   const erros = [];
   if (!c.nomeNegocio.trim()) erros.push("Informe o nome do estabelecimento.");
@@ -987,17 +999,24 @@ export default function GeradorAtendenteVirtual() {
               <div className="card p-4 flex flex-col gap-1">
                 <h2 className="text-sm font-semibold mb-1">Precisam de atenção</h2>
                 {precisamAtencao.map((c) => (
-                  <button
-                    key={c.id}
-                    onClick={() => escolherCliente(c.id)}
-                    className="text-left text-sm flex items-center justify-between gap-2 border-b last:border-b-0 py-2"
-                    style={{ borderColor: TOKENS.border }}
-                  >
-                    <span>{c.nomeNegocio}</span>
-                    <span className="text-xs" style={{ color: c.status === "suspended" ? TOKENS.crimson : TOKENS.amberDeep }}>
-                      {c.status === "suspended" ? "suspenso" : `teste acaba em ${Math.max(diasRestantes(c.trialEndsAt), 0)}d`}
-                    </span>
-                  </button>
+                  <div key={c.id} className="flex items-center justify-between gap-2 border-b last:border-b-0 py-2 text-sm" style={{ borderColor: TOKENS.border }}>
+                    <button onClick={() => escolherCliente(c.id)} className="text-left flex-1 flex items-center justify-between gap-2">
+                      <span>{c.nomeNegocio}</span>
+                      <span className="text-xs" style={{ color: c.status === "suspended" ? TOKENS.crimson : TOKENS.amberDeep }}>
+                        {c.status === "suspended" ? "suspenso" : `teste acaba em ${Math.max(diasRestantes(c.trialEndsAt), 0)}d`}
+                      </span>
+                    </button>
+                    <a
+                      href={gerarLinkWhats(c.numeroWhatsApp, mensagemLembreteWhats(c))}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      onClick={(e) => e.stopPropagation()}
+                      className="btn btn-soft-amber text-xs px-2 py-1 shrink-0"
+                      aria-label={"Lembrar " + c.nomeNegocio + " por WhatsApp"}
+                    >
+                      <MessageCircle size={12} />
+                    </a>
+                  </div>
                 ))}
               </div>
             )}
@@ -1307,6 +1326,16 @@ export default function GeradorAtendenteVirtual() {
                       <button onClick={() => estenderTeste(14)} className="btn btn-outline text-xs px-2.5 py-1.5">
                         +14 dias de teste
                       </button>
+                      {(cliente.status === "suspended" || (cliente.status === "trial" && diasRestantes(cliente.trialEndsAt) <= 3)) && (
+                        <a
+                          href={gerarLinkWhats(cliente.numeroWhatsApp, mensagemLembreteWhats(cliente))}
+                          target="_blank"
+                          rel="noopener noreferrer"
+                          className="btn btn-soft-amber text-xs px-2.5 py-1.5"
+                        >
+                          <MessageCircle size={13} /> Lembrar cliente por WhatsApp
+                        </a>
+                      )}
                     </div>
                     <p className="text-[11px] leading-relaxed" style={{ color: TOKENS.muted }}>
                       Suspenso ou com teste vencido, o widget some sozinho do site do cliente, sem precisar mexer no código dele de novo.
