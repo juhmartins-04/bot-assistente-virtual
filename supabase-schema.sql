@@ -385,3 +385,45 @@ create policy "eventos: colaborador le atribuidos" on public.eventos
   using (exists (
     select 1 from public.colaborador_clientes_view v where v.public_id = eventos.public_id
   ));
+
+-- ---------------------------------------------------------------------
+-- Bucket "logos": logo/foto opcional de cada cliente, usada na Página
+-- simples (avatar) no lugar da inicial colorida. Bucket público pra
+-- leitura (a página do cliente é pública mesmo, sem login), mas só o
+-- dono autenticado pode escrever/apagar dentro da própria pasta —
+-- o caminho do arquivo é sempre "{auth.uid()}/{algo}.png", e
+-- storage.foldername(name) extrai esse primeiro pedaço pra comparar.
+-- Limite de 2MB e só imagens comuns, pra não estourar a cota gratuita.
+-- ---------------------------------------------------------------------
+insert into storage.buckets (id, name, public, file_size_limit, allowed_mime_types)
+values ('logos', 'logos', true, 2097152, array['image/png','image/jpeg','image/webp'])
+on conflict (id) do nothing;
+
+drop policy if exists "logos_leitura_publica" on storage.objects;
+create policy "logos_leitura_publica"
+  on storage.objects for select
+  using (bucket_id = 'logos');
+
+drop policy if exists "logos_upload_proprio" on storage.objects;
+create policy "logos_upload_proprio"
+  on storage.objects for insert
+  with check (
+    bucket_id = 'logos'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "logos_update_proprio" on storage.objects;
+create policy "logos_update_proprio"
+  on storage.objects for update
+  using (
+    bucket_id = 'logos'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );
+
+drop policy if exists "logos_delete_proprio" on storage.objects;
+create policy "logos_delete_proprio"
+  on storage.objects for delete
+  using (
+    bucket_id = 'logos'
+    and auth.uid()::text = (storage.foldername(name))[1]
+  );

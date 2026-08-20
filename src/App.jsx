@@ -222,6 +222,9 @@ export default function GeradorAtendenteVirtual() {
   const [erroSenha, setErroSenha] = useState(null);
   const [previewMsgs, setPreviewMsgs] = useState([]);
   const [previewIdioma, setPreviewIdioma] = useState("pt");
+  const [enviandoLogo, setEnviandoLogo] = useState(false);
+  const [erroLogo, setErroLogo] = useState(null);
+  const logoInputRef = useRef(null);
   const [leads, setLeads] = useState([]);
   const [metricas, setMetricas] = useState(null);
   const importInputRef = useRef(null);
@@ -329,6 +332,13 @@ export default function GeradorAtendenteVirtual() {
     setPreviewMsgs([]);
   }
 
+  function irParaVisaoGeral() {
+    setMostrarColaboradores(false);
+    setMostrarSenha(false);
+    setClienteId(null);
+    setCliente(null);
+  }
+
   function atualizarCampo(campo, valor) {
     setCliente((prev) => ({ ...prev, [campo]: valor }));
     setValidacao([]);
@@ -378,6 +388,37 @@ export default function GeradorAtendenteVirtual() {
 
   function removerItemCardapio(idx) {
     setCliente((prev) => ({ ...prev, itensCardapio: (prev.itensCardapio || []).filter((_, i) => i !== idx) }));
+  }
+
+  async function enviarLogo(arquivo) {
+    if (!arquivo || !cliente) return;
+    const tiposAceitos = ["image/png", "image/jpeg", "image/webp"];
+    if (!tiposAceitos.includes(arquivo.type)) {
+      setErroLogo("Envie uma imagem PNG, JPG ou WEBP.");
+      return;
+    }
+    if (arquivo.size > 2 * 1024 * 1024) {
+      setErroLogo("A imagem precisa ter até 2MB.");
+      return;
+    }
+
+    setEnviandoLogo(true);
+    setErroLogo(null);
+    try {
+      const extensao = arquivo.name.split(".").pop();
+      const caminho = `${sessao.user.id}/${cliente.id}-${Date.now()}.${extensao}`;
+      const { error: erroUpload } = await supabase.storage.from("logos").upload(caminho, arquivo, { upsert: true });
+      if (erroUpload) throw erroUpload;
+      const { data } = supabase.storage.from("logos").getPublicUrl(caminho);
+      atualizarCampo("logoUrl", data.publicUrl);
+    } catch {
+      setErroLogo("Não consegui enviar a imagem agora. Tente de novo em instantes.");
+    }
+    setEnviandoLogo(false);
+  }
+
+  function removerLogo() {
+    atualizarCampo("logoUrl", "");
   }
 
   async function salvarCliente() {
@@ -699,6 +740,16 @@ export default function GeradorAtendenteVirtual() {
           <Plus size={16} /> Novo cliente
         </button>
 
+        {precisamAtencao.length > 0 && (
+          <button
+            onClick={irParaVisaoGeral}
+            className="flex items-center gap-1.5 rounded-lg px-3 py-2 text-xs font-medium text-left"
+            style={{ backgroundColor: "#331A17", color: "#E58275" }}
+          >
+            <Ban size={13} /> {precisamAtencao.length} {precisamAtencao.length === 1 ? "cliente precisa" : "clientes precisam"} de atenção
+          </button>
+        )}
+
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={exportarClientes}
@@ -987,6 +1038,41 @@ export default function GeradorAtendenteVirtual() {
                   Preencha se o cliente ainda não tem site. Gera uma página própria com esses dados.
                 </p>
                 <CampoTexto textarea label="Sobre o negócio" value={cliente.sobreNegocio} onChange={(v) => atualizarCampo("sobreNegocio", v)} placeholder="Uma frase curta contando o que o negócio faz." />
+
+                <div className="flex flex-col gap-1.5 text-sm">
+                  <span className="font-medium">Logo ou foto (opcional)</span>
+                  <div className="flex items-center gap-3">
+                    <div
+                      className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden"
+                      style={{ backgroundColor: cliente.corPrimaria }}
+                    >
+                      {cliente.logoUrl
+                        ? <img src={cliente.logoUrl} alt="" className="w-full h-full object-cover" />
+                        : (cliente.nomeNegocio || "?").charAt(0)}
+                    </div>
+                    <button
+                      onClick={() => logoInputRef.current?.click()}
+                      disabled={enviandoLogo}
+                      className="btn btn-outline text-xs px-3 py-2"
+                    >
+                      <Upload size={13} /> {enviandoLogo ? "Enviando..." : cliente.logoUrl ? "Trocar" : "Enviar imagem"}
+                    </button>
+                    {cliente.logoUrl && (
+                      <button onClick={removerLogo} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 text-xs">
+                        Remover
+                      </button>
+                    )}
+                    <input
+                      ref={logoInputRef}
+                      type="file"
+                      accept="image/png,image/jpeg,image/webp"
+                      onChange={(e) => enviarLogo(e.target.files?.[0])}
+                      className="hidden"
+                    />
+                  </div>
+                  {erroLogo && <span className="text-xs text-red-600 dark:text-red-400">{erroLogo}</span>}
+                  <span className="text-xs" style={{ color: TOKENS.muted }}>PNG, JPG ou WEBP, até 2MB. Sem logo, a página usa a inicial do nome na cor escolhida.</span>
+                </div>
 
                 <label className="flex flex-col gap-1 text-sm">
                   <span className="font-medium">Modelo de layout da página</span>

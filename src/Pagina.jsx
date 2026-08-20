@@ -79,6 +79,27 @@ export default function Pagina({ publicId }) {
   }, [publicId]);
 
   useEffect(() => {
+    if (estado !== "ok" || !dados?.nomeNegocio) return;
+    const tituloAnterior = document.title;
+    document.title = dados.nomeNegocio;
+
+    // Só ajuda o título da aba e o resultado de busca (crawlers que rodam
+    // JS, como o do Google) — a prévia de link do WhatsApp/Instagram não
+    // executa JS, então continua mostrando "Prontô" até essas tags virem
+    // do próprio HTML da resposta (implementação futura, mais trabalhosa).
+    let metaDescricao = document.querySelector('meta[name="description"]');
+    const descricaoAnterior = metaDescricao?.getAttribute("content");
+    if (dados.sobreNegocio && metaDescricao) {
+      metaDescricao.setAttribute("content", dados.sobreNegocio);
+    }
+
+    return () => {
+      document.title = tituloAnterior;
+      if (metaDescricao && descricaoAnterior != null) metaDescricao.setAttribute("content", descricaoAnterior);
+    };
+  }, [estado, dados?.nomeNegocio, dados?.sobreNegocio]);
+
+  useEffect(() => {
     if (estado !== "ok") return;
     if (dados?.incluiAssistente === false) return; // plano "Só Página": sem o widget de chat
     if (document.querySelector("[data-atendente-widget]")) return;
@@ -119,10 +140,12 @@ export default function Pagina({ publicId }) {
       <div className="max-w-xl mx-auto px-6 py-16 flex flex-col gap-8">
         <header className="flex flex-col items-center gap-3 text-center">
           <div
-            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold"
+            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden"
             style={{ backgroundColor: cor }}
           >
-            {(dados.nomeNegocio || "?").charAt(0)}
+            {dados.logoUrl
+              ? <img src={dados.logoUrl} alt="" className="w-full h-full object-cover" />
+              : (dados.nomeNegocio || "?").charAt(0)}
           </div>
           <h1 className="text-2xl font-semibold">{dados.nomeNegocio}</h1>
           {dados.sobreNegocio && (
