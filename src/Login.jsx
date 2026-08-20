@@ -57,7 +57,7 @@ export default function Login() {
       className="flex min-h-screen items-center justify-center p-5 font-sans text-sm"
       style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}
     >
-      <div className="w-full max-w-sm rounded-xl border bg-white p-6 flex flex-col gap-5" style={{ borderColor: TOKENS.border }}>
+      <div className="w-full max-w-sm card p-6 flex flex-col gap-5">
         <div className="flex items-center gap-2">
           <Sparkles size={20} style={{ color: TOKENS.amber }} />
           <h1 className="font-semibold text-base">Prontô</h1>
@@ -90,7 +90,7 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="voce@suaagencia.com"
-                className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
             </label>
@@ -104,15 +104,14 @@ export default function Login() {
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
                 placeholder="Sua senha"
-                className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
             </label>
             <button
               type="submit"
               disabled={enviando}
-              className="flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium text-white focus:outline-none focus:ring-2"
-              style={{ backgroundColor: TOKENS.teal }}
+              className="btn btn-primary py-2.5"
             >
               <Lock size={16} /> {enviando ? "Entrando..." : "Entrar"}
             </button>
@@ -142,15 +141,14 @@ export default function Login() {
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="voce@suaagencia.com"
-                className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
+                className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
             </label>
             <button
               type="submit"
               disabled={enviando}
-              className="flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium text-white focus:outline-none focus:ring-2"
-              style={{ backgroundColor: TOKENS.teal }}
+              className="btn btn-primary py-2.5"
             >
               <Mail size={16} /> {enviando ? "Enviando..." : "Enviar link de acesso"}
             </button>

@@ -81,7 +81,7 @@ export default function Pagina({ publicId }) {
         </header>
 
         {(dados.horarioFuncionamento || dados.endereco) && (
-          <div className="rounded-xl border bg-white p-5 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+          <div className="card p-5 flex flex-col gap-3">
             {dados.horarioFuncionamento && (
               <div className="flex items-center gap-2">
                 <Clock size={16} style={{ color: cor }} />

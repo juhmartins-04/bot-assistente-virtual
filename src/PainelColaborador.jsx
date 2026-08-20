@@ -44,10 +44,13 @@ export default function PainelColaborador({ sessao }) {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
-      {/* Fundo fixo (não usa TOKENS.ink): mesma barra lateral sempre escura do painel principal. */}
+      {/* Cores fixas (não usam TOKENS) nesta barra lateral: mesmo fundo
+          sempre escuro do painel principal, então os acentos aqui dentro
+          também precisam de valores fixos, não dos tokens que trocam de
+          tom no modo escuro do site. */}
       <aside className="w-full md:w-64 shrink-0 p-5 flex flex-col gap-4 text-white" style={{ backgroundColor: "#1C2430" }}>
         <div className="flex items-center gap-2">
-          <Sparkles size={18} style={{ color: TOKENS.amber }} />
+          <Sparkles size={18} style={{ color: "#B57A22" }} />
           <span className="font-semibold text-base">Prontô</span>
         </div>
         <p className="text-xs opacity-60 -mt-2">Painel de atendimento</p>
@@ -62,7 +65,7 @@ export default function PainelColaborador({ sessao }) {
               key={c.id}
               onClick={() => setClienteId(c.id)}
               className="text-left px-3 py-2 rounded-lg text-sm truncate"
-              style={{ backgroundColor: clienteId === c.id ? TOKENS.inkSoft : "transparent" }}
+              style={{ backgroundColor: clienteId === c.id ? "#2A3441" : "transparent" }}
             >
               {c.nome_negocio}
             </button>
@@ -71,7 +74,7 @@ export default function PainelColaborador({ sessao }) {
 
         <button
           onClick={() => supabase.auth.signOut()}
-          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
+          className="btn btn-ghost-dark justify-start px-1.5 py-1.5 text-xs border-t border-white/10 pt-3 mt-1"
         >
           <LogOut size={13} /> Sair ({sessao.user.email})
         </button>
@@ -91,7 +94,7 @@ export default function PainelColaborador({ sessao }) {
             <h1 className="text-lg font-semibold">{clienteSelecionado.nome_negocio}</h1>
             {leads.length === 0 && <p style={{ color: TOKENS.muted }}>Nenhum contato ainda.</p>}
             {leads.map((lead) => (
-              <div key={lead.id} className="rounded-xl border bg-white p-4 flex flex-col gap-2" style={{ borderColor: TOKENS.border }}>
+              <div key={lead.id} className="card p-4 flex flex-col gap-2">
                 <div className="flex items-center justify-between text-sm">
                   <span className="font-medium">
                     {lead.nome || "(sem nome)"}{lead.telefone ? ` · ${lead.telefone}` : ""}

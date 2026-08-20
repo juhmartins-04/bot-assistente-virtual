@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, Copy, Check, MessageCircle, Calendar,
   Globe2, ChevronDown, ChevronUp, Building2, Save, Sparkles,
-  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle, Users, Lock
+  Download, Upload, ExternalLink, LogOut, Ban, PlayCircle, Users, Lock,
+  LayoutGrid, Clock, Eye, BarChart3, Rocket, Code2, Settings2
 } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
@@ -127,10 +128,8 @@ function CampoTexto({ label, value, onChange, placeholder, textarea, dica }) {
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={textarea ? 2 : undefined}
-        className="rounded-lg border px-3 py-2 text-sm focus:outline-none focus:ring-2"
-        style={{ borderColor: TOKENS.border, boxShadow: "none" }}
-        onFocus={(e) => (e.target.style.boxShadow = `0 0 0 2px ${TOKENS.teal}55`)}
-        onBlur={(e) => (e.target.style.boxShadow = "none")}
+        className="rounded-lg border px-3 py-2 text-sm"
+        style={{ borderColor: TOKENS.border }}
       />
       {dica && <span className="text-xs" style={{ color: TOKENS.muted }}>{dica}</span>}
     </label>
@@ -139,7 +138,7 @@ function CampoTexto({ label, value, onChange, placeholder, textarea, dica }) {
 
 function CardOpcao({ opcao, indice, onChange, onRemover }) {
   return (
-    <div className="rounded-xl border p-4 flex flex-col gap-3 bg-white" style={{ borderColor: TOKENS.border }}>
+    <div className="card p-4 flex flex-col gap-3">
       <div className="flex items-center justify-between">
         <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: TOKENS.muted }}>
           Opção {indice + 1}
@@ -647,8 +646,11 @@ export default function GeradorAtendenteVirtual() {
           claro ou escuro o tema do sistema, por isso o texto branco fixo
           combinado só funciona com uma cor de fundo igualmente fixa. */}
       <aside className="w-full md:w-72 shrink-0 p-5 flex flex-col gap-5 text-white" style={{ backgroundColor: "#1C2430" }}>
+        {/* Cores fixas (não usam TOKENS) daqui até o fim da barra lateral:
+            ela é sempre escura, então os acentos precisam de valores fixos
+            em vez dos tokens que trocam de tom no modo escuro do site. */}
         <div className="flex items-center gap-2">
-          <Sparkles size={18} style={{ color: TOKENS.amber }} />
+          <Sparkles size={18} style={{ color: "#B57A22" }} />
           <input
             value={agencia}
             onChange={(e) => setAgencia(e.target.value)}
@@ -660,8 +662,8 @@ export default function GeradorAtendenteVirtual() {
 
         <button
           onClick={iniciarNovoCliente}
-          className="flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium text-sm focus:outline-none focus:ring-2 focus:ring-white/50"
-          style={{ backgroundColor: TOKENS.amber, color: TOKENS.ink }}
+          className="btn py-2.5 text-sm focus:ring-2 focus:ring-white/50"
+          style={{ backgroundColor: "#B57A22", color: "#1C2430" }}
         >
           <Plus size={16} /> Novo cliente
         </button>
@@ -669,13 +671,13 @@ export default function GeradorAtendenteVirtual() {
         <div className="grid grid-cols-2 gap-2">
           <button
             onClick={exportarClientes}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 px-2 py-2 text-xs font-medium text-white/85 hover:bg-white/10"
+            className="btn btn-ghost-dark border border-white/10 px-2 py-2 text-xs"
           >
             <Download size={14} /> Exportar
           </button>
           <button
             onClick={() => importInputRef.current?.click()}
-            className="flex items-center justify-center gap-1.5 rounded-lg border border-white/10 px-2 py-2 text-xs font-medium text-white/85 hover:bg-white/10"
+            className="btn btn-ghost-dark border border-white/10 px-2 py-2 text-xs"
           >
             <Upload size={14} /> Importar
           </button>
@@ -697,8 +699,11 @@ export default function GeradorAtendenteVirtual() {
             <div key={c.id} className="flex items-center gap-1 group">
               <button
                 onClick={() => escolherCliente(c.id)}
-                className="flex-1 flex items-center gap-2 text-left px-3 py-2 rounded-lg text-sm truncate"
-                style={{ backgroundColor: clienteId === c.id ? TOKENS.inkSoft : "transparent" }}
+                className="flex-1 flex items-center gap-2 text-left px-3 py-2 rounded-lg text-sm truncate border-l-2"
+                style={{
+                  backgroundColor: clienteId === c.id ? "#2A3441" : "transparent",
+                  borderColor: clienteId === c.id ? c.corPrimaria : "transparent",
+                }}
               >
                 <span className="inline-block w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: c.corPrimaria }} />
                 <span className="truncate">{c.nomeNegocio}</span>
@@ -719,24 +724,26 @@ export default function GeradorAtendenteVirtual() {
         <p className="text-xs opacity-50 leading-relaxed border-t border-white/10 pt-3">
           Tudo isso roda como link direto pro WhatsApp — sem API oficial, sem QR Code, sem risco de banimento.
         </p>
-        <button
-          onClick={abrirColaboradores}
-          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
-        >
-          <Users size={13} /> Colaboradores
-        </button>
-        <button
-          onClick={abrirDefinirSenha}
-          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
-        >
-          <Lock size={13} /> Definir senha
-        </button>
-        <button
-          onClick={() => supabase.auth.signOut()}
-          className="flex items-center gap-1.5 text-xs font-medium text-white/60 hover:text-white"
-        >
-          <LogOut size={13} /> Sair ({sessao.user.email})
-        </button>
+        <div className="flex flex-col gap-1 border-t border-white/10 pt-3">
+          <button
+            onClick={abrirColaboradores}
+            className="btn btn-ghost-dark justify-start px-1.5 py-1.5 text-xs"
+          >
+            <Users size={13} /> Colaboradores
+          </button>
+          <button
+            onClick={abrirDefinirSenha}
+            className="btn btn-ghost-dark justify-start px-1.5 py-1.5 text-xs"
+          >
+            <Lock size={13} /> Definir senha
+          </button>
+          <button
+            onClick={() => supabase.auth.signOut()}
+            className="btn btn-ghost-dark justify-start px-1.5 py-1.5 text-xs"
+          >
+            <LogOut size={13} /> Sair ({sessao.user.email})
+          </button>
+        </div>
       </aside>
 
       {/* ---------------- MAIN ---------------- */}
@@ -744,13 +751,15 @@ export default function GeradorAtendenteVirtual() {
         {mostrarColaboradores && (
           <div className="max-w-2xl mx-auto flex flex-col gap-5">
             <div>
-              <h1 className="text-lg font-semibold">Colaboradores</h1>
-              <p className="text-sm" style={{ color: TOKENS.muted }}>
+              <h1 className="text-lg font-semibold flex items-center gap-2">
+                <span className="icon-chip"><Users size={14} /></span> Colaboradores
+              </h1>
+              <p className="text-sm mt-1" style={{ color: TOKENS.muted }}>
                 Convide alguém pra ajudar no atendimento. A pessoa loga com o próprio e-mail e só enxerga os clientes que você atribuir a ela — nunca edita menu, nunca muda status/plano, nunca exclui nada.
               </p>
             </div>
 
-            <form onSubmit={convidar} className="rounded-xl border bg-white p-4 flex items-center gap-2" style={{ borderColor: TOKENS.border }}>
+            <form onSubmit={convidar} className="card p-4 flex items-center gap-2">
               <input
                 type="email"
                 required
@@ -760,7 +769,7 @@ export default function GeradorAtendenteVirtual() {
                 className="flex-1 rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
-              <button type="submit" className="flex items-center gap-1 rounded-lg px-3 py-2 text-sm font-medium text-white" style={{ backgroundColor: TOKENS.teal }}>
+              <button type="submit" className="btn btn-primary px-3 py-2 text-sm">
                 <Plus size={14} /> Convidar
               </button>
             </form>
@@ -771,14 +780,11 @@ export default function GeradorAtendenteVirtual() {
             )}
 
             {colaboradores.map((colab) => (
-              <div key={colab.id} className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+              <div key={colab.id} className="card p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-2">
                   <div className="flex items-center gap-2">
                     <span className="font-medium text-sm">{colab.email}</span>
-                    <span
-                      className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                      style={colab.aceito ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal } : { backgroundColor: TOKENS.amberWash, color: TOKENS.amberDeep }}
-                    >
+                    <span className={"badge text-[10px] px-2 py-0.5 " + (colab.aceito ? "badge-teal" : "badge-amber")}>
                       {colab.aceito ? "ativo" : "convite pendente"}
                     </span>
                   </div>
@@ -813,12 +819,14 @@ export default function GeradorAtendenteVirtual() {
         {mostrarSenha && (
           <div className="max-w-sm mx-auto flex flex-col gap-5">
             <div>
-              <h1 className="text-lg font-semibold">Definir senha</h1>
-              <p className="text-sm" style={{ color: TOKENS.muted }}>
+              <h1 className="text-lg font-semibold flex items-center gap-2">
+                <span className="icon-chip"><Lock size={14} /></span> Definir senha
+              </h1>
+              <p className="text-sm mt-1" style={{ color: TOKENS.muted }}>
                 Depois disso, você pode entrar com e-mail e senha, sem precisar do link mágico toda vez.
               </p>
             </div>
-            <form onSubmit={salvarSenha} className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }} autoComplete="on">
+            <form onSubmit={salvarSenha} className="card p-4 flex flex-col gap-3" autoComplete="on">
               <input type="email" name="email" autoComplete="username" value={sessao.user.email} readOnly hidden />
               <label className="flex flex-col gap-1 text-sm">
                 <span className="font-medium">Nova senha</span>
@@ -850,8 +858,7 @@ export default function GeradorAtendenteVirtual() {
               <button
                 type="submit"
                 disabled={salvandoSenha}
-                className="flex items-center justify-center gap-2 rounded-lg py-2.5 font-medium text-white"
-                style={{ backgroundColor: TOKENS.teal }}
+                className="btn btn-primary py-2.5"
               >
                 {salvandoSenha ? "Salvando..." : "Salvar senha"}
               </button>
@@ -872,25 +879,30 @@ export default function GeradorAtendenteVirtual() {
         {!mostrarColaboradores && !mostrarSenha && !cliente && listaClientes.length > 0 && (
           <div className="max-w-2xl mx-auto mt-10 flex flex-col gap-5">
             <div>
-              <h1 className="text-lg font-semibold">Visão geral</h1>
-              <p className="text-sm" style={{ color: TOKENS.muted }}>Selecione um cliente na barra lateral pra editar, ou veja o resumo abaixo.</p>
+              <h1 className="text-lg font-semibold flex items-center gap-2">
+                <span className="icon-chip"><LayoutGrid size={14} /></span> Visão geral
+              </h1>
+              <p className="text-sm mt-1" style={{ color: TOKENS.muted }}>Selecione um cliente na barra lateral pra editar, ou veja o resumo abaixo.</p>
             </div>
             <div className="grid grid-cols-3 gap-3">
-              <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-4 text-center flex flex-col items-center gap-1">
+                <PlayCircle size={16} style={{ color: TOKENS.teal }} />
                 <div className="text-2xl font-semibold" style={{ color: TOKENS.teal }}>{contagemStatus.active}</div>
                 <div className="text-xs" style={{ color: TOKENS.muted }}>ativos</div>
               </div>
-              <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-4 text-center flex flex-col items-center gap-1">
+                <Clock size={16} style={{ color: TOKENS.amberDeep }} />
                 <div className="text-2xl font-semibold" style={{ color: TOKENS.amberDeep }}>{contagemStatus.trial}</div>
                 <div className="text-xs" style={{ color: TOKENS.muted }}>em teste</div>
               </div>
-              <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-4 text-center flex flex-col items-center gap-1">
+                <Ban size={16} style={{ color: TOKENS.crimson }} />
                 <div className="text-2xl font-semibold" style={{ color: TOKENS.crimson }}>{contagemStatus.suspended}</div>
                 <div className="text-xs" style={{ color: TOKENS.muted }}>suspensos</div>
               </div>
             </div>
             {precisamAtencao.length > 0 && (
-              <div className="rounded-xl border bg-white p-4 flex flex-col gap-1" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-4 flex flex-col gap-1">
                 <h2 className="text-sm font-semibold mb-1">Precisam de atenção</h2>
                 {precisamAtencao.map((c) => (
                   <button
@@ -916,8 +928,8 @@ export default function GeradorAtendenteVirtual() {
             {/* -------- FORM -------- */}
             <div className="flex flex-col gap-5">
 
-              <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
-                <h2 className="font-semibold flex items-center gap-2"><Building2 size={16} /> Identidade</h2>
+              <div className="card p-5 flex flex-col gap-4">
+                <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Building2 size={14} /></span> Identidade</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CampoTexto label="Nome do estabelecimento" value={cliente.nomeNegocio} onChange={(v) => atualizarCampo("nomeNegocio", v)} placeholder="Ex: Clínica Vida Plena" />
                   <label className="flex flex-col gap-1 text-sm">
@@ -938,8 +950,8 @@ export default function GeradorAtendenteVirtual() {
                 </div>
               </div>
 
-              <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
-                <h2 className="font-semibold flex items-center gap-2"><Globe2 size={16} /> Página simples (opcional)</h2>
+              <div className="card p-5 flex flex-col gap-4">
+                <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Globe2 size={14} /></span> Página simples (opcional)</h2>
                 <p className="text-xs -mt-2" style={{ color: TOKENS.muted }}>
                   Preencha se o cliente ainda não tem site. Gera uma página própria com esses dados.
                 </p>
@@ -965,18 +977,18 @@ export default function GeradorAtendenteVirtual() {
                 </label>
               </div>
 
-              <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
-                <h2 className="font-semibold flex items-center gap-2"><MessageCircle size={16} /> Saudação inicial</h2>
+              <div className="card p-5 flex flex-col gap-4">
+                <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><MessageCircle size={14} /></span> Saudação inicial</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CampoTexto textarea label="Português" value={cliente.saudacaoPt} onChange={(v) => atualizarCampo("saudacaoPt", v)} />
                   <CampoTexto textarea label="English" value={cliente.saudacaoEn} onChange={(v) => atualizarCampo("saudacaoEn", v)} />
                 </div>
               </div>
 
-              <div className="rounded-xl border bg-white p-5 flex flex-col gap-4" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-5 flex flex-col gap-4">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold flex items-center gap-2"><Calendar size={16} /> Opções do menu</h2>
-                  <button onClick={adicionarOpcao} className="flex items-center gap-1 text-sm font-medium px-3 py-1.5 rounded-lg" style={{ backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }}>
+                  <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Calendar size={14} /></span> Opções do menu</h2>
+                  <button onClick={adicionarOpcao} className="btn btn-soft-teal text-sm px-3 py-1.5">
                     <Plus size={14} /> Adicionar
                   </button>
                 </div>
@@ -988,9 +1000,9 @@ export default function GeradorAtendenteVirtual() {
                 </div>
               </div>
 
-              <div className="rounded-xl border bg-white p-5" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-5">
                 <button onClick={() => setMostrarAvancado(!mostrarAvancado)} className="w-full flex items-center justify-between font-semibold">
-                  Configurações avançadas
+                  <span className="flex items-center gap-2"><span className="icon-chip"><Settings2 size={14} /></span> Configurações avançadas</span>
                   {mostrarAvancado ? <ChevronUp size={16} /> : <ChevronDown size={16} />}
                 </button>
                 {mostrarAvancado && (
@@ -1007,8 +1019,7 @@ export default function GeradorAtendenteVirtual() {
                 <button
                   onClick={salvarCliente}
                   disabled={salvando}
-                  className="flex items-center gap-2 rounded-lg px-4 py-2.5 font-medium text-white focus:outline-none focus:ring-2"
-                  style={{ backgroundColor: TOKENS.teal }}
+                  className="btn btn-primary px-4 py-2.5"
                 >
                   <Save size={16} /> {salvando ? "Salvando..." : "Salvar cliente"}
                 </button>
@@ -1028,19 +1039,18 @@ export default function GeradorAtendenteVirtual() {
             {/* -------- PREVIEW + CÓDIGO -------- */}
             <div className="flex flex-col gap-5 xl:sticky xl:top-6 self-start">
 
-              <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-sm">Pré-visualização</h2>
+                  <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><Eye size={14} /></span> Pré-visualização</h2>
                   <button
                     onClick={alternarPreviewIdioma}
-                    className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md"
-                    style={{ backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }}
+                    className="btn btn-soft-teal text-xs px-2 py-1"
                   >
                     <Globe2 size={12} /> {previewIdioma === "pt" ? "EN" : "PT"}
                   </button>
                 </div>
 
-                <div className="rounded-lg overflow-hidden border" style={{ borderColor: TOKENS.border }}>
+                <div className="preview-frame">
                   <div className="px-3 py-2 flex items-center gap-2 text-white" style={{ backgroundColor: cliente.corPrimaria }}>
                     <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
                       {(cliente.nomeNegocio || "?").charAt(0)}
@@ -1073,21 +1083,17 @@ export default function GeradorAtendenteVirtual() {
                 </div>
               </div>
 
-              <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
-                <h2 className="font-semibold text-sm">Acesso do cliente</h2>
+              <div className="card p-4 flex flex-col gap-3">
+                <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><Lock size={14} /></span> Acesso do cliente</h2>
                 {!cliente.publicId ? (
                   <p className="text-xs" style={{ color: TOKENS.muted }}>Salve o cliente pelo menos uma vez pra liberar o controle de teste e ativação.</p>
                 ) : (
                   <>
                     <div className="flex flex-wrap items-center gap-2">
                       <span
-                        className="text-xs font-semibold px-2 py-1 rounded-full"
-                        style={
-                          cliente.status === "active"
-                            ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }
-                            : cliente.status === "suspended"
-                            ? { backgroundColor: TOKENS.crimsonWash, color: TOKENS.crimson }
-                            : { backgroundColor: TOKENS.amberWash, color: TOKENS.amberDeep }
+                        className={
+                          "badge text-xs px-2 py-1 " +
+                          (cliente.status === "active" ? "badge-teal" : cliente.status === "suspended" ? "badge-crimson" : "badge-amber")
                         }
                       >
                         {cliente.status === "active" ? "Ativo" : cliente.status === "suspended" ? "Suspenso" : "Em teste"}
@@ -1102,16 +1108,16 @@ export default function GeradorAtendenteVirtual() {
                     </div>
                     <div className="flex flex-wrap items-center gap-2">
                       {cliente.status !== "active" && (
-                        <button onClick={() => mudarStatusCliente("active")} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }}>
+                        <button onClick={() => mudarStatusCliente("active")} className="btn btn-soft-teal text-xs px-2.5 py-1.5">
                           <PlayCircle size={13} /> Ativar (cliente assinou)
                         </button>
                       )}
                       {cliente.status !== "suspended" && (
-                        <button onClick={() => mudarStatusCliente("suspended")} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: TOKENS.crimsonWash, color: TOKENS.crimson }}>
+                        <button onClick={() => mudarStatusCliente("suspended")} className="btn btn-soft-crimson text-xs px-2.5 py-1.5">
                           <Ban size={13} /> Suspender
                         </button>
                       )}
-                      <button onClick={() => estenderTeste(14)} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md border" style={{ borderColor: TOKENS.border, color: TOKENS.ink }}>
+                      <button onClick={() => estenderTeste(14)} className="btn btn-outline text-xs px-2.5 py-1.5">
                         +14 dias de teste
                       </button>
                     </div>
@@ -1122,8 +1128,8 @@ export default function GeradorAtendenteVirtual() {
                 )}
               </div>
 
-              <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
-                <h2 className="font-semibold text-sm">Resultados</h2>
+              <div className="card p-4 flex flex-col gap-3">
+                <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><BarChart3 size={14} /></span> Resultados</h2>
                 {!cliente.publicId ? (
                   <p className="text-xs" style={{ color: TOKENS.muted }}>Salve o cliente pelo menos uma vez pra começar a coletar aberturas, cliques e contatos.</p>
                 ) : (
@@ -1177,9 +1183,9 @@ export default function GeradorAtendenteVirtual() {
                 )}
               </div>
 
-              <div className="rounded-xl border bg-white p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border }}>
+              <div className="card p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between gap-3">
-                  <h2 className="font-semibold text-sm">Publicação</h2>
+                  <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><Rocket size={14} /></span> Publicação</h2>
                   <a
                     href="/teste-widget.html"
                     target="_blank"
@@ -1210,7 +1216,7 @@ export default function GeradorAtendenteVirtual() {
                       >
                         {window.location.origin}/p/{cliente.publicId}
                       </a>
-                      <button onClick={copiarLinkPagina} className="flex items-center gap-1 text-xs font-medium px-2 py-1 rounded-md shrink-0" style={{ backgroundColor: paginaCopiada ? TOKENS.tealSoft : TOKENS.tealSoft, color: TOKENS.teal }}>
+                      <button onClick={copiarLinkPagina} className="btn btn-soft-teal text-xs px-2 py-1 shrink-0">
                         {paginaCopiada ? <Check size={12} /> : <Copy size={12} />} {paginaCopiada ? "Copiado" : "Copiar"}
                       </button>
                     </div>
@@ -1218,12 +1224,13 @@ export default function GeradorAtendenteVirtual() {
                 )}
               </div>
 
-              {/* Fundo fixo (não usa TOKENS.ink): painel de código é sempre
-                  escuro, com destaque de sintaxe pensado pra esse contraste. */}
-              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border, backgroundColor: "#1C2430" }}>
+              {/* Cores fixas (não usam TOKENS): painel de código é sempre
+                  escuro, com destaque de sintaxe pensado pra esse contraste,
+                  então nem fundo, borda ou botão devem trocar com o tema. */}
+              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: "rgba(255,255,255,0.1)", backgroundColor: "#1C2430" }}>
                 <div className="flex items-center justify-between">
-                  <h2 className="font-semibold text-sm text-white">Código pra colar no site</h2>
-                  <button onClick={copiarCodigo} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: copiado ? TOKENS.teal : TOKENS.amber, color: copiado ? "white" : TOKENS.ink }}>
+                  <h2 className="font-semibold text-sm text-white flex items-center gap-2"><Code2 size={14} className="opacity-70" /> Código pra colar no site</h2>
+                  <button onClick={copiarCodigo} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: copiado ? "#2F6F62" : "#B57A22", color: copiado ? "#fff" : "#1C2430" }}>
                     {copiado ? <Check size={13} /> : <Copy size={13} />} {copiado ? "Copiado" : "Copiar"}
                   </button>
                 </div>
