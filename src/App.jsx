@@ -1057,7 +1057,7 @@ export default function GeradorAtendenteVirtual() {
                     </div>
                     <span className="text-xs font-semibold">{cliente.nomeNegocio}</span>
                   </div>
-                  <div className="p-3 flex flex-col gap-2 bg-gray-50" style={{ minHeight: 160, maxHeight: 260, overflowY: "auto" }}>
+                  <div className="p-3 flex flex-col gap-2 preview-body" style={{ minHeight: 160, maxHeight: 260, overflowY: "auto" }}>
                     {previewMsgs.length === 0 && (
                       <button onClick={iniciarPreview} className="text-xs font-medium underline self-start" style={{ color: TOKENS.teal }}>
                         ▶ simular abertura do chat
