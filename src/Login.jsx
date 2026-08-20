@@ -116,7 +116,7 @@ export default function Login() {
             >
               <Lock size={16} /> {enviando ? "Entrando..." : "Entrar"}
             </button>
-            {erro && <span className="text-sm text-red-600">{erro}</span>}
+            {erro && <span className="text-sm text-red-600 dark:text-red-400">{erro}</span>}
             <button
               type="button"
               onClick={() => { setModo("link"); setErro(null); }}
@@ -154,7 +154,7 @@ export default function Login() {
             >
               <Mail size={16} /> {enviando ? "Enviando..." : "Enviar link de acesso"}
             </button>
-            {erro && <span className="text-sm text-red-600">{erro}</span>}
+            {erro && <span className="text-sm text-red-600 dark:text-red-400">{erro}</span>}
             <button
               type="button"
               onClick={() => { setModo("senha"); setErro(null); }}

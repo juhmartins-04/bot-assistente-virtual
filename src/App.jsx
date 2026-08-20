@@ -144,7 +144,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
         <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: TOKENS.muted }}>
           Opção {indice + 1}
         </span>
-        <button onClick={onRemover} className="text-gray-400 hover:text-red-500" aria-label="Remover opção">
+        <button onClick={onRemover} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" aria-label="Remover opção">
           <Trash2 size={16} />
         </button>
       </div>
@@ -159,7 +159,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
         <select
           value={opcao.tipo}
           onChange={(e) => onChange("tipo", e.target.value)}
-          className="rounded-lg border px-3 py-2 text-sm bg-white"
+          className="rounded-lg border px-3 py-2 text-sm"
           style={{ borderColor: TOKENS.border }}
         >
           {TIPOS.map((t) => <option key={t.valor} value={t.valor}>{t.label}</option>)}
@@ -643,7 +643,10 @@ export default function GeradorAtendenteVirtual() {
     <div className="flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
 
       {/* ---------------- SIDEBAR ---------------- */}
-      <aside className="w-full md:w-72 shrink-0 p-5 flex flex-col gap-5 text-white" style={{ backgroundColor: TOKENS.ink }}>
+      {/* Fundo fixo (não usa TOKENS.ink): a barra lateral é sempre escura,
+          claro ou escuro o tema do sistema, por isso o texto branco fixo
+          combinado só funciona com uma cor de fundo igualmente fixa. */}
+      <aside className="w-full md:w-72 shrink-0 p-5 flex flex-col gap-5 text-white" style={{ backgroundColor: "#1C2430" }}>
         <div className="flex items-center gap-2">
           <Sparkles size={18} style={{ color: TOKENS.amber }} />
           <input
@@ -774,12 +777,12 @@ export default function GeradorAtendenteVirtual() {
                     <span className="font-medium text-sm">{colab.email}</span>
                     <span
                       className="text-[10px] font-semibold px-2 py-0.5 rounded-full"
-                      style={colab.aceito ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal } : { backgroundColor: "#F5EBD8", color: TOKENS.amberDeep }}
+                      style={colab.aceito ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal } : { backgroundColor: TOKENS.amberWash, color: TOKENS.amberDeep }}
                     >
                       {colab.aceito ? "ativo" : "convite pendente"}
                     </span>
                   </div>
-                  <button onClick={() => excluirColaborador(colab.id, colab.email)} className="text-gray-400 hover:text-red-500" aria-label={"Remover " + colab.email}>
+                  <button onClick={() => excluirColaborador(colab.id, colab.email)} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" aria-label={"Remover " + colab.email}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -853,7 +856,7 @@ export default function GeradorAtendenteVirtual() {
                 {salvandoSenha ? "Salvando..." : "Salvar senha"}
               </button>
               {senhaSalva && <span className="text-sm text-center" style={{ color: TOKENS.teal }}>Senha salva — use ela no próximo login.</span>}
-              {erroSenha && <span className="text-sm text-red-600">{erroSenha}</span>}
+              {erroSenha && <span className="text-sm text-red-600 dark:text-red-400">{erroSenha}</span>}
             </form>
           </div>
         )}
@@ -882,7 +885,7 @@ export default function GeradorAtendenteVirtual() {
                 <div className="text-xs" style={{ color: TOKENS.muted }}>em teste</div>
               </div>
               <div className="rounded-xl border bg-white p-4 text-center" style={{ borderColor: TOKENS.border }}>
-                <div className="text-2xl font-semibold" style={{ color: "#9C3B2E" }}>{contagemStatus.suspended}</div>
+                <div className="text-2xl font-semibold" style={{ color: TOKENS.crimson }}>{contagemStatus.suspended}</div>
                 <div className="text-xs" style={{ color: TOKENS.muted }}>suspensos</div>
               </div>
             </div>
@@ -897,7 +900,7 @@ export default function GeradorAtendenteVirtual() {
                     style={{ borderColor: TOKENS.border }}
                   >
                     <span>{c.nomeNegocio}</span>
-                    <span className="text-xs" style={{ color: c.status === "suspended" ? "#9C3B2E" : TOKENS.amberDeep }}>
+                    <span className="text-xs" style={{ color: c.status === "suspended" ? TOKENS.crimson : TOKENS.amberDeep }}>
                       {c.status === "suspended" ? "suspenso" : `teste acaba em ${Math.max(diasRestantes(c.trialEndsAt), 0)}d`}
                     </span>
                   </button>
@@ -926,7 +929,7 @@ export default function GeradorAtendenteVirtual() {
                   <CampoTexto label="Número de WhatsApp" value={cliente.numeroWhatsApp} onChange={(v) => atualizarCampo("numeroWhatsApp", v)} placeholder="5541999999999" dica="55 + DDD + número, só dígitos." />
                   <label className="flex flex-col gap-1 text-sm">
                     <span className="font-medium">Idioma</span>
-                    <select value={cliente.idiomaPadrao} onChange={(e) => atualizarCampo("idiomaPadrao", e.target.value)} className="rounded-lg border px-3 py-2 bg-white" style={{ borderColor: TOKENS.border }}>
+                    <select value={cliente.idiomaPadrao} onChange={(e) => atualizarCampo("idiomaPadrao", e.target.value)} className="rounded-lg border px-3 py-2" style={{ borderColor: TOKENS.border }}>
                       <option value="auto">Detectar automaticamente</option>
                       <option value="pt">Sempre português</option>
                       <option value="en">Sempre inglês</option>
@@ -1010,10 +1013,10 @@ export default function GeradorAtendenteVirtual() {
                   <Save size={16} /> {salvando ? "Salvando..." : "Salvar cliente"}
                 </button>
                 {avisoSalvo && <span className="text-sm flex items-center gap-1" style={{ color: TOKENS.teal }}><Check size={14} /> Salvo</span>}
-                {erro && <span className="text-sm text-red-600">{erro}</span>}
+                {erro && <span className="text-sm text-red-600 dark:text-red-400">{erro}</span>}
               </div>
               {validacao.length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700">
+                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
                   <p className="font-semibold">Antes de salvar:</p>
                   <ul className="mt-1 list-disc pl-5">
                     {validacao.map((item) => <li key={item}>{item}</li>)}
@@ -1051,8 +1054,8 @@ export default function GeradorAtendenteVirtual() {
                       </button>
                     )}
                     {previewMsgs.map((m, i) => (
-                      <div key={i} className={"max-w-[85%] rounded-lg px-2.5 py-1.5 text-xs whitespace-pre-wrap " + (m.autor === "user" ? "self-end text-white" : "self-start bg-white border")}
-                        style={m.autor === "user" ? { backgroundColor: cliente.corPrimaria } : { borderColor: TOKENS.border }}>
+                      <div key={i} className={"max-w-[85%] rounded-lg px-2.5 py-1.5 text-xs whitespace-pre-wrap " + (m.autor === "user" ? "self-end text-white" : "self-start border")}
+                        style={m.autor === "user" ? { backgroundColor: cliente.corPrimaria } : { borderColor: TOKENS.border, backgroundColor: TOKENS.surface }}>
                         {m.link ? <a href={m.link.url} target="_blank" rel="noopener noreferrer" className="underline font-medium" style={{ color: TOKENS.amberDeep }}>{m.link.label}</a> : m.texto}
                       </div>
                     ))}
@@ -1083,8 +1086,8 @@ export default function GeradorAtendenteVirtual() {
                           cliente.status === "active"
                             ? { backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }
                             : cliente.status === "suspended"
-                            ? { backgroundColor: "#FBE3E0", color: "#9C3B2E" }
-                            : { backgroundColor: "#F5EBD8", color: TOKENS.amberDeep }
+                            ? { backgroundColor: TOKENS.crimsonWash, color: TOKENS.crimson }
+                            : { backgroundColor: TOKENS.amberWash, color: TOKENS.amberDeep }
                         }
                       >
                         {cliente.status === "active" ? "Ativo" : cliente.status === "suspended" ? "Suspenso" : "Em teste"}
@@ -1104,7 +1107,7 @@ export default function GeradorAtendenteVirtual() {
                         </button>
                       )}
                       {cliente.status !== "suspended" && (
-                        <button onClick={() => mudarStatusCliente("suspended")} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: "#FBE3E0", color: "#9C3B2E" }}>
+                        <button onClick={() => mudarStatusCliente("suspended")} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: TOKENS.crimsonWash, color: TOKENS.crimson }}>
                           <Ban size={13} /> Suspender
                         </button>
                       )}
@@ -1215,7 +1218,9 @@ export default function GeradorAtendenteVirtual() {
                 )}
               </div>
 
-              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border, backgroundColor: TOKENS.ink }}>
+              {/* Fundo fixo (não usa TOKENS.ink): painel de código é sempre
+                  escuro, com destaque de sintaxe pensado pra esse contraste. */}
+              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: TOKENS.border, backgroundColor: "#1C2430" }}>
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-sm text-white">Código pra colar no site</h2>
                   <button onClick={copiarCodigo} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: copiado ? TOKENS.teal : TOKENS.amber, color: copiado ? "white" : TOKENS.ink }}>

@@ -44,7 +44,8 @@ export default function PainelColaborador({ sessao }) {
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
-      <aside className="w-full md:w-64 shrink-0 p-5 flex flex-col gap-4 text-white" style={{ backgroundColor: TOKENS.ink }}>
+      {/* Fundo fixo (não usa TOKENS.ink): mesma barra lateral sempre escura do painel principal. */}
+      <aside className="w-full md:w-64 shrink-0 p-5 flex flex-col gap-4 text-white" style={{ backgroundColor: "#1C2430" }}>
         <div className="flex items-center gap-2">
           <Sparkles size={18} style={{ color: TOKENS.amber }} />
           <span className="font-semibold text-base">Prontô</span>

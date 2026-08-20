@@ -1,12 +1,74 @@
 ﻿@import "tailwindcss";
 
+:root {
+  color-scheme: light dark;
+
+  --ink: #1c2430;
+  --ink-soft: #2a3441;
+  --canvas: #f3f6f4;
+  --surface: #ffffff;
+  --surface-gradient: linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.94));
+  --preview-bg: #f8faf9;
+  --preview-dot: rgba(47, 111, 98, 0.06);
+  --border: #dce4e0;
+  --muted: #5b6672;
+  --placeholder: #87929e;
+
+  --teal: #2f6f62;
+  --teal-soft: #e1eeea;
+  --amber: #b57a22;
+  --amber-deep: #8a5e1a;
+  --amber-wash: #f5ead6;
+  --crimson: #9c3b2e;
+  --crimson-wash: #fbe3e0;
+
+  --body-bg-radial: rgba(47, 111, 98, 0.12);
+  --body-bg-1: #f6f8f7;
+  --body-bg-2: #eef2f1;
+  --body-bg-3: #e6ecea;
+  --scrollbar-thumb: rgba(91, 102, 114, 0.28);
+  --scrollbar-thumb-hover: rgba(91, 102, 114, 0.44);
+  --selection-bg: #2f6f62;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --ink: #e9eeec;
+    --ink-soft: #c3cdca;
+    --canvas: #12181b;
+    --surface: #1a2226;
+    --surface-gradient: linear-gradient(180deg, rgba(26, 34, 38, 0.98), rgba(26, 34, 38, 0.9));
+    --preview-bg: #151c1f;
+    --preview-dot: rgba(107, 187, 168, 0.07);
+    --border: #2b3538;
+    --muted: #8fa09b;
+    --placeholder: #6b7672;
+
+    --teal: #6bbba8;
+    --teal-soft: #17302b;
+    --amber: #d6a344;
+    --amber-deep: #e0ac63;
+    --amber-wash: #302818;
+    --crimson: #e58275;
+    --crimson-wash: #331a17;
+
+    --body-bg-radial: rgba(107, 187, 168, 0.08);
+    --body-bg-1: #12181b;
+    --body-bg-2: #161e21;
+    --body-bg-3: #0f1416;
+    --scrollbar-thumb: rgba(143, 160, 155, 0.28);
+    --scrollbar-thumb-hover: rgba(143, 160, 155, 0.44);
+    --selection-bg: #6bbba8;
+  }
+}
+
 @layer base {
   :root {
     font-family:
       Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont,
       "Segoe UI", sans-serif;
-    color: #1c2430;
-    background: #eef2f1;
+    color: var(--ink);
+    background: var(--canvas);
     font-synthesis: none;
     text-rendering: optimizeLegibility;
     -webkit-font-smoothing: antialiased;
@@ -27,8 +89,8 @@
     min-height: 100vh;
     margin: 0;
     background:
-      radial-gradient(circle at top left, rgba(47, 111, 98, 0.12), transparent 34rem),
-      linear-gradient(135deg, #f6f8f7 0%, #eef2f1 48%, #e6ecea 100%);
+      radial-gradient(circle at top left, var(--body-bg-radial), transparent 34rem),
+      linear-gradient(135deg, var(--body-bg-1) 0%, var(--body-bg-2) 48%, var(--body-bg-3) 100%);
   }
 
   button,
@@ -65,8 +127,8 @@
   input,
   textarea,
   select {
-    color: #1c2430;
-    background-color: #ffffff;
+    color: var(--ink);
+    background-color: var(--surface);
     transition:
       border-color 160ms ease,
       box-shadow 160ms ease,
@@ -79,7 +141,7 @@
 
   input::placeholder,
   textarea::placeholder {
-    color: #87929e;
+    color: var(--placeholder);
   }
 
   input:focus,
@@ -90,7 +152,7 @@
 
   ::selection {
     color: #ffffff;
-    background: #2f6f62;
+    background: var(--selection-bg);
   }
 
   ::-webkit-scrollbar {
@@ -103,14 +165,14 @@
   }
 
   ::-webkit-scrollbar-thumb {
-    background: rgba(91, 102, 114, 0.28);
+    background: var(--scrollbar-thumb);
     border: 3px solid transparent;
     border-radius: 999px;
     background-clip: content-box;
   }
 
   ::-webkit-scrollbar-thumb:hover {
-    background-color: rgba(91, 102, 114, 0.44);
+    background-color: var(--scrollbar-thumb-hover);
   }
 }
 
@@ -123,8 +185,7 @@
   }
 
   .rounded-xl.border.bg-white {
-    background:
-      linear-gradient(180deg, rgba(255, 255, 255, 0.98), rgba(255, 255, 255, 0.94));
+    background: var(--surface-gradient);
   }
 
   .rounded-xl.border.p-4.flex.flex-col.gap-3.bg-white {
@@ -137,8 +198,8 @@
 
   .bg-gray-50 {
     background:
-      radial-gradient(circle at 18px 18px, rgba(47, 111, 98, 0.06) 0 2px, transparent 2px),
-      #f8faf9;
+      radial-gradient(circle at 18px 18px, var(--preview-dot) 0 2px, transparent 2px),
+      var(--preview-bg);
     background-size: 18px 18px;
   }
 
