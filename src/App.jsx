@@ -51,6 +51,10 @@ function clienteEmBranco() {
     endereco: "",
     horarioFuncionamento: "",
     incluiAssistente: true,
+    layout: "classico", // "classico" | "cartao" | "servicos" | "cardapio"
+    instagramUrl: "",
+    servicos: ["", "", "", ""],
+    itensCardapio: [{ nome: "", preco: "" }, { nome: "", preco: "" }, { nome: "", preco: "" }],
     saudacaoPt: "Olá! 👋 Como posso ajudar?",
     saudacaoEn: "Hi! 👋 How can I help?",
     transferirLabelPt: "Falar com atendente",
@@ -351,6 +355,29 @@ export default function GeradorAtendenteVirtual() {
   function removerOpcao(idx) {
     setCliente((prev) => ({ ...prev, opcoes: prev.opcoes.filter((_, i) => i !== idx) }));
     setValidacao([]);
+  }
+
+  function atualizarServico(idx, valor) {
+    setCliente((prev) => {
+      const servicos = [...(prev.servicos || ["", "", "", ""])];
+      servicos[idx] = valor;
+      return { ...prev, servicos };
+    });
+  }
+
+  function atualizarItemCardapio(idx, campo, valor) {
+    setCliente((prev) => {
+      const itensCardapio = (prev.itensCardapio || []).map((item, i) => (i === idx ? { ...item, [campo]: valor } : item));
+      return { ...prev, itensCardapio };
+    });
+  }
+
+  function adicionarItemCardapio() {
+    setCliente((prev) => ({ ...prev, itensCardapio: [...(prev.itensCardapio || []), { nome: "", preco: "" }] }));
+  }
+
+  function removerItemCardapio(idx) {
+    setCliente((prev) => ({ ...prev, itensCardapio: (prev.itensCardapio || []).filter((_, i) => i !== idx) }));
   }
 
   async function salvarCliente() {
@@ -960,6 +987,76 @@ export default function GeradorAtendenteVirtual() {
                   Preencha se o cliente ainda não tem site. Gera uma página própria com esses dados.
                 </p>
                 <CampoTexto textarea label="Sobre o negócio" value={cliente.sobreNegocio} onChange={(v) => atualizarCampo("sobreNegocio", v)} placeholder="Uma frase curta contando o que o negócio faz." />
+
+                <label className="flex flex-col gap-1 text-sm">
+                  <span className="font-medium">Modelo de layout da página</span>
+                  <select
+                    value={cliente.layout || "classico"}
+                    onChange={(e) => atualizarCampo("layout", e.target.value)}
+                    className="rounded-lg border px-3 py-2"
+                    style={{ borderColor: TOKENS.border }}
+                  >
+                    <option value="classico">Clássico — nome, sobre, horário e endereço</option>
+                    <option value="cartao">Cartão de contato — bem enxuto, pra quem trabalha sozinho</option>
+                    <option value="servicos">Serviços em grade — até 4 serviços em destaque</option>
+                    <option value="cardapio">Cardápio — lista de item e preço</option>
+                  </select>
+                </label>
+
+                {(cliente.layout === "cartao" || cliente.layout === "classico" || !cliente.layout) && (
+                  <CampoTexto label="Instagram (opcional)" value={cliente.instagramUrl || ""} onChange={(v) => atualizarCampo("instagramUrl", v)} placeholder="https://instagram.com/seunegocio" />
+                )}
+
+                {cliente.layout === "servicos" && (
+                  <div className="flex flex-col gap-2">
+                    <span className="font-medium text-sm">Serviços em destaque (até 4)</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {(cliente.servicos || ["", "", "", ""]).map((servico, i) => (
+                        <input
+                          key={i}
+                          value={servico}
+                          onChange={(e) => atualizarServico(i, e.target.value)}
+                          placeholder={`Serviço ${i + 1}`}
+                          className="rounded-lg border px-3 py-2 text-sm"
+                          style={{ borderColor: TOKENS.border }}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {cliente.layout === "cardapio" && (
+                  <div className="flex flex-col gap-2">
+                    <div className="flex items-center justify-between">
+                      <span className="font-medium text-sm">Itens do cardápio</span>
+                      <button onClick={adicionarItemCardapio} className="btn btn-soft-teal text-xs px-2 py-1">
+                        <Plus size={12} /> Adicionar
+                      </button>
+                    </div>
+                    {(cliente.itensCardapio || []).map((item, i) => (
+                      <div key={i} className="flex gap-2">
+                        <input
+                          value={item.nome}
+                          onChange={(e) => atualizarItemCardapio(i, "nome", e.target.value)}
+                          placeholder="Nome do item"
+                          className="flex-1 rounded-lg border px-3 py-2 text-sm"
+                          style={{ borderColor: TOKENS.border }}
+                        />
+                        <input
+                          value={item.preco}
+                          onChange={(e) => atualizarItemCardapio(i, "preco", e.target.value)}
+                          placeholder="R$ 0,00"
+                          className="w-28 rounded-lg border px-3 py-2 text-sm"
+                          style={{ borderColor: TOKENS.border }}
+                        />
+                        <button onClick={() => removerItemCardapio(i)} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 p-2" aria-label="Remover item">
+                          <Trash2 size={14} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CampoTexto label="Horário de funcionamento" value={cliente.horarioFuncionamento} onChange={(v) => atualizarCampo("horarioFuncionamento", v)} placeholder="Seg a sáb, 9h às 18h" />
                   <CampoTexto label="Endereço" value={cliente.endereco} onChange={(v) => atualizarCampo("endereco", v)} placeholder="Rua Exemplo, 123 - Curitiba/PR" />

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { MapPin, Clock, MessageCircle } from "lucide-react";
+import { MapPin, Clock, MessageCircle, Instagram } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
 import { useTema } from "./useTema";
@@ -11,6 +11,47 @@ function gerarLinkWhats(numero, mensagem) {
 
 function linkMapa(endereco) {
   return "https://www.google.com/maps/search/?api=1&query=" + encodeURIComponent(endereco);
+}
+
+function IconeCircular({ href, cor, children, label }) {
+  return (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      aria-label={label}
+      className="w-10 h-10 rounded-full flex items-center justify-center"
+      style={{ backgroundColor: cor, color: "#fff" }}
+    >
+      {children}
+    </a>
+  );
+}
+
+function BlocoHorarioEndereco({ dados, cor }) {
+  if (!dados.horarioFuncionamento && !dados.endereco) return null;
+  return (
+    <div className="card p-5 flex flex-col gap-3">
+      {dados.horarioFuncionamento && (
+        <div className="flex items-center gap-2">
+          <Clock size={16} style={{ color: cor }} />
+          <span>{dados.horarioFuncionamento}</span>
+        </div>
+      )}
+      {dados.endereco && (
+        <a
+          href={linkMapa(dados.endereco)}
+          target="_blank"
+          rel="noopener noreferrer"
+          className="flex items-center gap-2 underline"
+          style={{ color: TOKENS.ink }}
+        >
+          <MapPin size={16} style={{ color: cor }} />
+          <span>{dados.endereco}</span>
+        </a>
+      )}
+    </div>
+  );
 }
 
 export default function Pagina({ publicId }) {
@@ -66,6 +107,9 @@ export default function Pagina({ publicId }) {
   }
 
   const cor = dados.corPrimaria || TOKENS.teal;
+  const layout = dados.layout || "classico";
+  const servicos = (dados.servicos || []).filter((s) => s && s.trim());
+  const itensCardapio = (dados.itensCardapio || []).filter((i) => i?.nome && i.nome.trim());
 
   return (
     <div className="min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
@@ -86,26 +130,47 @@ export default function Pagina({ publicId }) {
           )}
         </header>
 
-        {(dados.horarioFuncionamento || dados.endereco) && (
+        {/* Cartão de contato: bem enxuto, troca o card de horário/endereço
+            por uma linha de ícones (Instagram/Maps), sem cartão nenhum. */}
+        {layout === "cartao" ? (
+          (dados.instagramUrl || dados.endereco) && (
+            <div className="flex items-center justify-center gap-3">
+              {dados.instagramUrl && (
+                <IconeCircular href={dados.instagramUrl} cor={cor} label="Instagram">
+                  <Instagram size={18} />
+                </IconeCircular>
+              )}
+              {dados.endereco && (
+                <IconeCircular href={linkMapa(dados.endereco)} cor={cor} label="Ver no mapa">
+                  <MapPin size={18} />
+                </IconeCircular>
+              )}
+            </div>
+          )
+        ) : (
+          <BlocoHorarioEndereco dados={dados} cor={cor} />
+        )}
+
+        {layout === "servicos" && servicos.length > 0 && (
+          <div className="card p-5">
+            <div className="grid grid-cols-2 gap-2.5">
+              {servicos.map((s, i) => (
+                <div key={i} className="rounded-lg p-3 text-center text-sm font-medium" style={{ backgroundColor: TOKENS.tealSoft, color: TOKENS.teal }}>
+                  {s}
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {layout === "cardapio" && itensCardapio.length > 0 && (
           <div className="card p-5 flex flex-col gap-3">
-            {dados.horarioFuncionamento && (
-              <div className="flex items-center gap-2">
-                <Clock size={16} style={{ color: cor }} />
-                <span>{dados.horarioFuncionamento}</span>
+            {itensCardapio.map((item, i) => (
+              <div key={i} className="flex items-center justify-between gap-3 pb-3 border-b last:border-b-0 last:pb-0" style={{ borderColor: TOKENS.border }}>
+                <span>{item.nome}</span>
+                {item.preco && <strong>{item.preco}</strong>}
               </div>
-            )}
-            {dados.endereco && (
-              <a
-                href={linkMapa(dados.endereco)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center gap-2 underline"
-                style={{ color: TOKENS.ink }}
-              >
-                <MapPin size={16} style={{ color: cor }} />
-                <span>{dados.endereco}</span>
-              </a>
-            )}
+            ))}
           </div>
         )}
 
