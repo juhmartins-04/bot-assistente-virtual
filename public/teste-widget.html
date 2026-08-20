@@ -102,13 +102,14 @@
       <div class="caixa">
         <h2>Testar com um cliente real (recomendado)</h2>
         <p>
-          Cole aqui o <code>public_id</code> de um cliente que você já salvou no
-          painel (aparece no código gerado, depois de <code>data-site="</code>).
-          Isso carrega o widget do jeito que ele realmente se comporta no site de
-          um cliente — incluindo teste, ativação e suspensão.
+          Cole aqui o código gerado no painel (o <code>&lt;script ...&gt;</code>
+          inteiro) <strong>ou</strong> só o <code>public_id</code> — os dois
+          funcionam, a página reconhece sozinha. Isso carrega o widget do jeito
+          que ele realmente se comporta no site de um cliente — incluindo
+          teste, ativação e suspensão.
         </p>
         <form>
-          <input type="text" name="site" id="campoSite" placeholder="public_id do cliente" />
+          <input type="text" name="site" id="campoSite" placeholder="cole o código gerado ou só o public_id" />
           <button type="submit">Carregar</button>
         </form>
       </div>
@@ -117,8 +118,22 @@
     </main>
 
     <script>
+      // Aceita tanto o public_id sozinho quanto o snippet inteiro colado
+      // por engano (<script ... data-site="...">) — extrai o id de
+      // qualquer um dos dois formatos, em vez de exigir que a pessoa
+      // recorte só o pedaço certo.
+      function extrairPublicId(texto) {
+        if (!texto) return null;
+        var t = texto.trim();
+        var doAtributo = t.match(/data-site=["']([0-9a-fA-F-]{36})["']/);
+        if (doAtributo) return doAtributo[1];
+        var soloUuid = t.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
+        if (soloUuid) return soloUuid[0];
+        return t;
+      }
+
       var params = new URLSearchParams(window.location.search);
-      var siteId = params.get("site");
+      var siteId = extrairPublicId(params.get("site"));
       var indicador = document.getElementById("indicadorModo");
 
       if (siteId) {
