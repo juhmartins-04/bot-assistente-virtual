@@ -133,23 +133,34 @@ export default function Pagina({ publicId }) {
   const itensCardapio = (dados.itensCardapio || []).filter((i) => i?.nome && i.nome.trim());
 
   return (
-    <div className="min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
+    <div
+      className="min-h-screen font-sans text-sm"
+      style={{
+        backgroundColor: TOKENS.canvas,
+        color: TOKENS.ink,
+        backgroundImage: `radial-gradient(circle at 50% 0%, ${cor}26, transparent 45%)`,
+      }}
+    >
       <div className="fixed top-4 right-4">
         <BotaoTema tema={tema} alternar={alternarTema} />
       </div>
-      <div className="max-w-xl mx-auto px-6 py-16 flex flex-col gap-8">
-        <header className="flex flex-col items-center gap-3 text-center">
+      <div className="max-w-xl mx-auto px-6 pb-16 flex flex-col gap-8">
+        <header className="flex flex-col items-center text-center">
           <div
-            className="w-14 h-14 rounded-full flex items-center justify-center text-white text-xl font-bold overflow-hidden"
-            style={{ backgroundColor: cor }}
+            className="w-full h-24 rounded-b-3xl"
+            style={{ background: `linear-gradient(135deg, ${cor}, ${cor}99)`, marginTop: 0 }}
+          />
+          <div
+            className="w-24 h-24 rounded-full flex items-center justify-center text-white text-3xl font-bold overflow-hidden -mt-12 border-4 shadow-lg"
+            style={{ backgroundColor: cor, borderColor: TOKENS.canvas }}
           >
             {dados.logoUrl
               ? <img src={dados.logoUrl} alt="" className="w-full h-full object-cover" />
               : (dados.nomeNegocio || "?").charAt(0)}
           </div>
-          <h1 className="text-2xl font-semibold">{dados.nomeNegocio}</h1>
+          <h1 className="text-2xl font-semibold mt-4 tracking-tight">{dados.nomeNegocio}</h1>
           {dados.sobreNegocio && (
-            <p className="max-w-md" style={{ color: TOKENS.muted }}>{dados.sobreNegocio}</p>
+            <p className="max-w-md mt-1.5" style={{ color: TOKENS.muted }}>{dados.sobreNegocio}</p>
           )}
         </header>
 
@@ -201,10 +212,10 @@ export default function Pagina({ publicId }) {
           href={gerarLinkWhats(dados.numeroWhatsApp, dados.transferirMensagemWhatsPt)}
           target="_blank"
           rel="noopener noreferrer"
-          className="flex items-center justify-center gap-2 rounded-xl py-3.5 font-medium text-white"
-          style={{ backgroundColor: cor }}
+          className="flex items-center justify-center gap-2 rounded-xl py-4 font-semibold text-white text-base transition-transform hover:scale-[1.02]"
+          style={{ backgroundColor: cor, boxShadow: `0 12px 28px -8px ${cor}80` }}
         >
-          <MessageCircle size={18} /> Falar no WhatsApp
+          <MessageCircle size={19} /> Falar no WhatsApp
         </a>
       </div>
     </div>
