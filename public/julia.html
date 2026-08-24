@@ -1,0 +1,94 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Julia Martins · Dev</title>
+<meta name="description" content="Julia Martins, dev — criadora do Prontô, assistente digital pra pequenos negócios." />
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@600;700;800&family=Work+Sans:wght@400;500;600;700&display=swap">
+<style>
+  :root {
+    --canvas: #F3F6F4;
+    --surface: #FFFFFF;
+    --ink: #1C2430;
+    --muted: #5B6672;
+    --border: #DCE4E0;
+    --teal: #2F6F62;
+    --teal-soft: #E1EEEA;
+    --amber: #B57A22;
+    --shadow: 0 1px 2px rgba(28,36,48,.05), 0 14px 32px -18px rgba(28,36,48,.22);
+  }
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --canvas: #12181B; --surface: #1A2226; --ink: #E9EEEC; --muted: #8FA09B;
+      --border: #2B3538; --teal: #6BBBA8; --teal-soft: #17302B; --amber: #DDAE5E;
+      --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 32px -18px rgba(0,0,0,.7);
+    }
+  }
+  :root[data-theme="dark"] {
+    --canvas: #12181B; --surface: #1A2226; --ink: #E9EEEC; --muted: #8FA09B;
+    --border: #2B3538; --teal: #6BBBA8; --teal-soft: #17302B; --amber: #DDAE5E;
+    --shadow: 0 1px 2px rgba(0,0,0,.4), 0 14px 32px -18px rgba(0,0,0,.7);
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; background: var(--canvas); color: var(--ink);
+    font-family: "Work Sans", system-ui, sans-serif; -webkit-font-smoothing: antialiased;
+    display: flex; align-items: center; justify-content: center; padding: 32px 18px;
+  }
+  main { width: 100%; max-width: 400px; display: flex; flex-direction: column; align-items: center; gap: 22px; }
+  .avatar {
+    width: 76px; height: 76px; border-radius: 50%; background: var(--teal); color: #fff;
+    display: flex; align-items: center; justify-content: center;
+    font-family: Sora, sans-serif; font-size: 2rem; font-weight: 800;
+  }
+  h1 { font-family: Sora, sans-serif; font-size: 1.4rem; font-weight: 700; margin: 0; text-align: center; }
+  .papel { font-size: .85rem; font-weight: 600; letter-spacing: .04em; text-transform: uppercase; color: var(--teal); }
+  p.bio { text-align: center; font-size: .95rem; color: var(--muted); max-width: 34ch; margin: 0; line-height: 1.5; }
+
+  .links { width: 100%; display: flex; flex-direction: column; gap: 12px; margin-top: 6px; }
+  a.link {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    padding: 15px 20px; border-radius: 14px; font-weight: 700; font-size: .98rem;
+    text-decoration: none; box-shadow: var(--shadow); transition: transform .15s ease;
+  }
+  a.link:active { transform: scale(.98); }
+  a.link.principal { background: var(--teal); color: #fff; }
+  a.link.secundario { background: var(--surface); color: var(--ink); border: 1px solid var(--border); }
+  a.link.terciario { background: var(--teal-soft); color: var(--teal); }
+  a.link .icone { font-size: 1.1rem; }
+
+  footer { font-size: .78rem; color: var(--muted); text-align: center; margin-top: 4px; }
+</style>
+</head>
+<body>
+  <main>
+    <div class="avatar">J</div>
+    <div style="display:flex; flex-direction:column; align-items:center; gap:4px;">
+      <span class="papel">Dev · Curitiba</span>
+      <h1>Julia Martins</h1>
+    </div>
+    <p class="bio">
+      Crio o <strong>Prontô</strong> — um assistente digital que responde seus clientes
+      na hora pelo WhatsApp, mesmo fora do expediente. Simples de montar, sem app oficial,
+      sem risco pro seu número.
+    </p>
+
+    <div class="links">
+      <a class="link principal" href="https://usarpronto.vercel.app/p/4677019b-8703-4fcc-8b75-dd83b63487c3" target="_blank" rel="noopener noreferrer">
+        <span class="icone">💬</span> Ver o Prontô funcionando
+      </a>
+      <a class="link secundario" href="https://wa.me/5541995472287" target="_blank" rel="noopener noreferrer">
+        <span class="icone">📱</span> Falar comigo no WhatsApp
+      </a>
+      <a class="link terciario" href="https://claude.ai/code/artifact/caeef0e6-be6c-43f2-8ffb-9f4e5700608f" target="_blank" rel="noopener noreferrer">
+        <span class="icone">📄</span> Conhecer o Prontô
+      </a>
+    </div>
+
+    <footer>usarpronto.vercel.app</footer>
+  </main>
+</body>
+</html>
