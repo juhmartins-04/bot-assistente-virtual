@@ -272,9 +272,17 @@ export default function GeradorAtendenteVirtual() {
   }
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data }) => setSessao(data.session));
-    const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+    function atualizarSessao(novaSessao) {
       setSessao(novaSessao);
+      // Links mágicos antigos voltam à raiz, que agora apresenta o produto.
+      // Depois que o Supabase conclui o login, mantém o painel em sua rota.
+      if (novaSessao && window.location.pathname === "/") {
+        window.history.replaceState(null, "", "/painel");
+      }
+    }
+    supabase.auth.getSession().then(({ data }) => atualizarSessao(data.session));
+    const { data: assinatura } = supabase.auth.onAuthStateChange((_evento, novaSessao) => {
+      atualizarSessao(novaSessao);
     });
     return () => assinatura.subscription.unsubscribe();
   }, []);

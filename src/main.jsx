@@ -1,13 +1,25 @@
-import React from 'react'
+import React, { lazy, Suspense } from 'react'
 import ReactDOM from 'react-dom/client'
-import App from './App.jsx'
-import Pagina from './Pagina.jsx'
-import './index.css' // Esta linha é crucial para o visual (Tailwind) funcionar!
+import Landing from './Landing.jsx'
+import { resolverRota } from './routes'
+import './index.css'
 
-const paginaCliente = window.location.pathname.match(/^\/p\/([^/]+)\/?$/)
+const App = lazy(() => import('./App.jsx'))
+const Pagina = lazy(() => import('./Pagina.jsx'))
+const DemoPage = lazy(() => import('./DemoPage.jsx'))
+const rota = resolverRota(window.location)
+
+function Conteudo() {
+  if (rota.tipo === 'cliente') return <Pagina publicId={rota.publicId} />
+  if (rota.tipo === 'demo') return <DemoPage />
+  if (rota.tipo === 'painel') return <App />
+  return <Landing />
+}
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    {paginaCliente ? <Pagina publicId={paginaCliente[1]} /> : <App />}
+    <Suspense fallback={<p role="status" style={{ padding: '2rem', textAlign: 'center' }}>Carregando Prontô...</p>}>
+      <Conteudo />
+    </Suspense>
   </React.StrictMode>,
 )

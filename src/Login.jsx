@@ -66,6 +66,9 @@ export default function Login() {
           <h1 className="font-semibold text-base flex-1">Prontô</h1>
           <BotaoTema tema={tema} alternar={alternarTema} />
         </div>
+        <a href="/" className="text-xs underline" style={{ color: TOKENS.teal }}>
+          Voltar à página do Prontô
+        </a>
 
         {enviado ? (
           <div className="flex flex-col gap-2">

@@ -51,7 +51,10 @@
   function montar(config) {
     if (!config || document.querySelector("[data-atendente-widget]")) return;
 
-    var idioma = config.idiomaPadrao || ((navigator.language || "pt").toLowerCase().startsWith("en") ? "en" : "pt");
+    var idioma = config.idiomaPadrao;
+    if (idioma !== "pt" && idioma !== "en") {
+      idioma = (navigator.language || "pt").toLowerCase().startsWith("en") ? "en" : "pt";
+    }
     var cor = config.corPrimaria || "#2f6f62";
     var textos = {
       fechar: idioma === "en" ? "Close" : "Fechar",
@@ -125,15 +128,16 @@
         .avw-lead-continuar { flex: 1; padding: 8px 10px; border-radius: 8px; background: var(--avw-cor); color: #fff; font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; }
         .avw-lead-pular { padding: 8px 10px; border-radius: 8px; background: transparent; color: var(--avw-muted); font-size: 12px; }
         .avw-lead-aviso { margin: 0; font-size: 11px; line-height: 1.4; color: var(--avw-muted); }
+        [data-atendente-widget] :focus-visible { outline: 3px solid var(--avw-cor); outline-offset: 3px; }
       </style>
-      <section class="avw-panel" aria-live="polite">
+      <section class="avw-panel" id="pronto-chat-panel" aria-live="polite">
         <header class="avw-head">
           <h2 class="avw-title"></h2>
           <button class="avw-close" type="button" aria-label="${textos.fechar}">x</button>
         </header>
         <div class="avw-body"></div>
       </section>
-      <button class="avw-fab" type="button">${textos.iniciar}</button>
+      <button class="avw-fab" type="button" aria-controls="pronto-chat-panel" aria-expanded="false">${textos.iniciar}</button>
     `;
     // Cor aplicada via propriedade CSS customizada (não como texto do
     // <style>): um valor malicioso em corPrimaria não tem como escapar
@@ -145,6 +149,7 @@
     var fab = root.querySelector(".avw-fab");
     var close = root.querySelector(".avw-close");
     root.querySelector(".avw-title").textContent = config.nomeNegocio || "Atendente virtual";
+    panel.setAttribute("aria-label", config.nomeNegocio || "Atendente virtual");
 
     function renderInicio() {
       body.innerHTML = "";
@@ -188,6 +193,7 @@
         msg.className = "avw-msg";
         msg.textContent = tp(opcao, "resposta");
         body.appendChild(msg);
+        body.scrollTop = body.scrollHeight;
         return;
       }
 
@@ -220,6 +226,12 @@
     // telefone — assim quem desiste de mandar a mensagem no fim não
     // some sem deixar contato nenhum pro dono do negócio.
     function pedirContatoEAbrir(label, url, opcaoLabel) {
+      // A demonstração usa o mesmo widget, mas não solicita contato.
+      if (config.capturarContato === false) {
+        registrarEvento("handoff_whatsapp", opcaoLabel);
+        abrirLink(label, url);
+        return;
+      }
       var seguro = urlSegura(url);
       var caixa = document.createElement("div");
       caixa.className = "avw-lead";
@@ -276,19 +288,35 @@
       body.scrollTop = body.scrollHeight;
     }
 
-    fab.addEventListener("click", function () {
+    function abrirConversa(focar) {
       panel.classList.add("is-open");
       fab.style.display = "none";
+      fab.setAttribute("aria-expanded", "true");
       renderInicio();
+      var primeiraOpcao = body.querySelector(".avw-option");
+      if (focar && primeiraOpcao) primeiraOpcao.focus();
       registrarEvento("abertura");
-    });
+    }
+    fab.addEventListener("click", function () { abrirConversa(true); });
 
-    close.addEventListener("click", function () {
+    function fecharConversa() {
       panel.classList.remove("is-open");
       fab.style.display = "inline-flex";
+      fab.setAttribute("aria-expanded", "false");
+      fab.focus();
+    }
+    close.addEventListener("click", fecharConversa);
+    root.addEventListener("keydown", function (evento) {
+      if (evento.key === "Escape" && panel.classList.contains("is-open")) {
+        evento.preventDefault();
+        fecharConversa();
+      }
     });
 
     document.body.appendChild(root);
+    // Na demonstração embutida, mostra o menu sem roubar o foco nem
+    // rolar a página comercial automaticamente para o iframe.
+    if (config.abertoInicialmente === true) abrirConversa(false);
   }
 
   // Modo local/preview: window.ATENDENTE_CONFIG já pronto na página

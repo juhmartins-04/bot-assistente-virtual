@@ -6,6 +6,27 @@ da sua agência. Dados ficam no Supabase, atrás de login.
 
 Em produção: https://usarpronto.vercel.app
 
+## Página comercial e demonstração
+
+- `/`: apresentação comercial, planos e contato com Julia pelo WhatsApp.
+- `/demo`: demonstração usando o próprio widget com dados fictícios. Aceita
+  `?segmento=beleza`, `?segmento=pet` ou `?segmento=servicos`; `&embed=1`
+  usa a versão embutida na página comercial. Não consulta nem grava dados no
+  Supabase e não solicita nome ou telefone.
+- `/painel` (ou `/login`): o painel existente, com autenticação.
+- `/p/{public_id}`: as páginas públicas dos clientes continuam iguais.
+
+Links mágicos e recuperação de senha enviados para a raiz continuam chegando
+ao app de autenticação. Depois do login, o endereço passa a `/painel`, sem
+alterar a configuração de Redirect URLs do Supabase.
+
+Contato e preços da página comercial ficam em `src/comercial.js`. O contato
+foi reaproveitado de `public/julia.html`. Os preços seguem o guia comercial:
+R$ 97, R$ 147 e R$ 197 por mês. A demonstração usa dados explicitamente
+fictícios; seu botão de WhatsApp abre uma conversa sobre o Prontô com Julia.
+
+Para verificar o roteamento, os retornos de login e o widget, rode `npm test`.
+
 ## 1. Instalar dependências
 ```bash
 npm install
@@ -90,7 +111,11 @@ o widget usa, então ativar/suspender o cliente afeta os dois juntos.
 │   ├── atendente-virtual-widget.js   ← widget publicado no site do cliente
 │   └── teste-widget.html             ← preview local do widget
 └── src/
-    ├── main.jsx       ← roteamento simples: /p/:id vai pra Pagina.jsx
+    ├── main.jsx       ← carrega cada página e o painel sob demanda
+    ├── routes.js      ← rotas comerciais, públicas e retorno de login
+    ├── Landing.jsx    ← página comercial
+    ├── DemoPage.jsx   ← demonstração pública sem cadastro
+    ├── comercial.js   ← contato, planos e exemplos de demonstração
     ├── App.jsx        ← painel principal
     ├── Pagina.jsx     ← página pública do cliente (/p/{public_id})
     ├── Login.jsx      ← tela de acesso (link mágico por e-mail)
