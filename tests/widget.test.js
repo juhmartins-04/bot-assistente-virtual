@@ -22,6 +22,52 @@ function abrirWidget(overrides = {}, language = 'pt-BR', clicar = true) {
   return { dom, document: dom.window.document, chamadas }
 }
 
+async function abrirWidgetRemoto(t, overrides = {}) {
+  const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://exemplo.com', runScripts: 'outside-only' })
+  t.after(() => dom.window.close())
+  const script = dom.window.document.createElement('script')
+  script.dataset.site = '00000000-0000-4000-8000-000000000001'
+  Object.defineProperty(dom.window.document, 'currentScript', { value: script })
+  const chamadas = []
+  dom.window.fetch = async (url, options) => {
+    if (options?.method === 'POST') chamadas.push({ url, body: JSON.parse(options.body) })
+    return { ok: true, json: async () => [{ dados: { ...config, ...overrides } }] }
+  }
+  dom.window.eval(codigo)
+  await new Promise(resolve => setImmediate(resolve))
+  const document = dom.window.document
+  document.querySelector('.avw-fab').click()
+  ;[...document.querySelectorAll('.avw-option')].at(-1).click()
+  document.addEventListener('click', event => {
+    if (event.target.closest('a')) event.preventDefault()
+  })
+  return { document, chamadas }
+}
+
+test('pular a coleta não conta WhatsApp até o clique no link', async (t) => {
+  const { document, chamadas } = await abrirWidgetRemoto(t)
+  document.querySelector('.avw-lead-pular').click()
+  assert.equal(chamadas.filter(c => c.body.tipo === 'handoff_whatsapp').length, 0)
+  document.querySelector('.avw-link-btn').click()
+  assert.equal(chamadas.filter(c => c.body.tipo === 'handoff_whatsapp').length, 1)
+  assert.equal(chamadas.filter(c => c.url.endsWith('/leads')).length, 0)
+})
+
+test('continuar com contato conta um clique e preserva a captura opcional', async (t) => {
+  const { document, chamadas } = await abrirWidgetRemoto(t)
+  document.querySelector('.avw-lead-nome').value = 'Pessoa fictícia'
+  document.querySelector('.avw-lead-continuar').click()
+  assert.equal(chamadas.filter(c => c.body.tipo === 'handoff_whatsapp').length, 1)
+  assert.equal(chamadas.filter(c => c.url.endsWith('/leads')).length, 1)
+})
+
+test('sem coleta, apresentar o botão não conta como clique no WhatsApp', async (t) => {
+  const { document, chamadas } = await abrirWidgetRemoto(t, { capturarContato: false })
+  assert.equal(chamadas.filter(c => c.body.tipo === 'handoff_whatsapp').length, 0)
+  document.querySelector('.avw-link-btn').click()
+  assert.equal(chamadas.filter(c => c.body.tipo === 'handoff_whatsapp').length, 1)
+})
+
 test('idioma automático usa o inglês do navegador e responde em inglês', (t) => {
   const { dom, document } = abrirWidget({}, 'en-US'); t.after(() => dom.window.close())
   assert.equal(document.querySelector('.avw-msg').textContent, 'Hello!')

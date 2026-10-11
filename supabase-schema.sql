@@ -133,7 +133,11 @@ where status = 'active'
    or (status = 'trial' and trial_ends_at > now());
 
 grant usage on schema public to anon;
+-- As permissões padrão do projeto incluem escrita em views novas.
+-- Restrinja explicitamente: GRANT SELECT sozinho não remove esses grants.
+revoke all privileges on public.widget_config from anon, authenticated;
 grant select on public.widget_config to anon;
+grant select on public.widget_config to authenticated;
 
 -- ---------------------------------------------------------------------
 -- leads: nome/telefone captados pelo widget antes do encaminhamento pro
@@ -350,6 +354,7 @@ join public.colaborador_clientes cc on cc.cliente_id = c.id
 join public.colaboradores co on co.id = cc.colaborador_row_id
 where co.colaborador_id = auth.uid();
 
+revoke all privileges on public.colaborador_clientes_view from anon, authenticated;
 grant select on public.colaborador_clientes_view to authenticated;
 
 -- IMPORTANTE: consulta colaborador_clientes_view (já roda com
@@ -377,6 +382,7 @@ create policy "leads: colaborador atualiza nota" on public.leads
 -- Restringe a escrita (dono e colaborador) só às colunas de nota — nunca
 -- dá pra alterar nome, telefone ou qualquer outra coluna do lead por
 -- essa via, mesmo que a linha esteja liberada por RLS.
+revoke update on public.leads from authenticated;
 grant update (nota, status_atendimento) on public.leads to authenticated;
 
 drop policy if exists "eventos: colaborador le atribuidos" on public.eventos;

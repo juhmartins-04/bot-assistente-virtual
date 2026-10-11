@@ -27,6 +27,15 @@ fictícios; seu botão de WhatsApp abre uma conversa sobre o Prontô com Julia.
 
 Para verificar o roteamento, os retornos de login e o widget, rode `npm test`.
 
+As métricas de WhatsApp registram cliques no link, sem confirmar envio de mensagem
+ou venda. Registros anteriores à correção de outubro/2026 podem incluir visitantes
+que apenas pularam o formulário. O painel atual ainda mostra um total acumulado
+limitado pela consulta; não é um relatório mensal com filtro de período.
+
+O schema revoga explicitamente os grants padrão das views públicas antes de
+liberar somente leitura. Em `leads`, a atualização autenticada fica restrita às
+colunas de nota/status, inclusive para o dono da conta.
+
 ## 1. Instalar dependências
 ```bash
 npm install

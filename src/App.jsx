@@ -1365,7 +1365,7 @@ export default function GeradorAtendenteVirtual() {
                       </div>
                       <div className="rounded-lg p-2 text-center" style={{ backgroundColor: TOKENS.tealSoft }}>
                         <div className="text-lg font-semibold" style={{ color: TOKENS.teal }}>{metricas?.handoffs ?? "–"}</div>
-                        <div className="text-[10px]" style={{ color: TOKENS.muted }}>foram pro WhatsApp</div>
+                        <div className="text-[10px]" style={{ color: TOKENS.muted }}>cliques no WhatsApp</div>
                       </div>
                       <div className="rounded-lg p-2 text-center overflow-hidden" style={{ backgroundColor: TOKENS.tealSoft }}>
                         <div className="text-xs font-semibold truncate" style={{ color: TOKENS.teal }} title={metricas?.opcaoMaisClicada?.label || ""}>

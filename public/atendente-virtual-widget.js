@@ -205,7 +205,7 @@
       abrirLink(idioma === "en" ? "Open calendar" : "Abrir agenda", opcao.linkAgenda);
     }
 
-    function abrirLink(label, url) {
+    function abrirLink(label, url, aoClicar) {
       var seguro = urlSegura(url);
       var msg = document.createElement("div");
       msg.className = "avw-msg";
@@ -218,6 +218,7 @@
       var link = msg.querySelector("a");
       link.href = seguro;
       link.textContent = label;
+      if (aoClicar) link.addEventListener("click", aoClicar);
       body.appendChild(msg);
       body.scrollTop = body.scrollHeight;
     }
@@ -228,8 +229,9 @@
     function pedirContatoEAbrir(label, url, opcaoLabel) {
       // A demonstração usa o mesmo widget, mas não solicita contato.
       if (config.capturarContato === false) {
-        registrarEvento("handoff_whatsapp", opcaoLabel);
-        abrirLink(label, url);
+        abrirLink(label, url, function () {
+          registrarEvento("handoff_whatsapp", opcaoLabel);
+        });
         return;
       }
       var seguro = urlSegura(url);
@@ -255,8 +257,10 @@
       continuar.textContent = label;
       continuar.href = seguro || "#";
 
-      function seguirParaWhats() {
-        registrarEvento("handoff_whatsapp", opcaoLabel);
+      function seguirParaWhats(clicouNoLink) {
+        // Mostrar o botão ou pular o formulário não confirma um clique.
+        // Também não temos acesso ao envio da mensagem dentro do WhatsApp.
+        if (clicouNoLink && seguro) registrarEvento("handoff_whatsapp", opcaoLabel);
         caixa.remove();
         var msg = document.createElement("div");
         msg.className = "avw-msg";
@@ -267,6 +271,9 @@
           link.rel = "noopener noreferrer";
           link.href = seguro;
           link.textContent = label;
+          link.addEventListener("click", function () {
+            registrarEvento("handoff_whatsapp", opcaoLabel);
+          });
           msg.appendChild(link);
         } else {
           msg.textContent = label;
@@ -277,7 +284,7 @@
 
       continuar.addEventListener("click", function () {
         registrarLead(nomeInput.value.trim(), telefoneInput.value.trim(), opcaoLabel);
-        seguirParaWhats();
+        seguirParaWhats(true);
       });
       pular.addEventListener("click", function (e) {
         e.preventDefault();
