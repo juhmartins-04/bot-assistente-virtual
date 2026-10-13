@@ -4,6 +4,7 @@ import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
 import { useTema } from "./useTema";
 import BotaoTema from "./BotaoTema";
+import Resultados from "./Resultados";
 import { listarClientesAtribuidos, listarLeads, atualizarNotaLead } from "./storage";
 
 // Painel reduzido pra quem foi convidado como colaborador de atendimento:
@@ -15,35 +16,16 @@ export default function PainelColaborador({ sessao }) {
   const [clientes, setClientes] = useState([]);
   const [carregado, setCarregado] = useState(false);
   const [clienteId, setClienteId] = useState(null);
-  const [leads, setLeads] = useState([]);
+  const [erro, setErro] = useState("");
 
   useEffect(() => {
     listarClientesAtribuidos()
       .then(setClientes)
-      .catch(() => setClientes([]))
+      .catch(() => setErro("Não foi possível carregar seus clientes atribuídos."))
       .finally(() => setCarregado(true));
   }, []);
 
   const clienteSelecionado = clientes.find((c) => c.id === clienteId) || null;
-
-  useEffect(() => {
-    if (!clienteSelecionado) {
-      setLeads([]);
-      return;
-    }
-    listarLeads(clienteSelecionado.public_id)
-      .then(setLeads)
-      .catch(() => setLeads([]));
-  }, [clienteSelecionado]);
-
-  async function salvarNota(lead, nota, statusAtendimento) {
-    try {
-      await atualizarNotaLead(lead.id, nota, statusAtendimento);
-      setLeads((prev) => prev.map((l) => (l.id === lead.id ? { ...l, nota, status_atendimento: statusAtendimento } : l)));
-    } catch {
-      /* falha ao salvar nota: sem toast dedicado, tentativa silenciosa */
-    }
-  }
 
   return (
     <div className="flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
@@ -85,6 +67,7 @@ export default function PainelColaborador({ sessao }) {
       </aside>
 
       <main className="flex-1 p-6 md:p-8 overflow-y-auto">
+        {erro && <p role="alert">{erro}</p>}
         {!clienteSelecionado && (
           <div className="max-w-md mx-auto mt-20 text-center flex flex-col items-center gap-3">
             <MessageCircle size={32} style={{ color: TOKENS.teal }} />
@@ -96,38 +79,7 @@ export default function PainelColaborador({ sessao }) {
         {clienteSelecionado && (
           <div className="max-w-2xl mx-auto flex flex-col gap-4">
             <h1 className="text-lg font-semibold">{clienteSelecionado.nome_negocio}</h1>
-            {leads.length === 0 && <p style={{ color: TOKENS.muted }}>Nenhum contato ainda.</p>}
-            {leads.map((lead) => (
-              <div key={lead.id} className="card p-4 flex flex-col gap-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="font-medium">
-                    {lead.nome || "(sem nome)"}{lead.telefone ? ` · ${lead.telefone}` : ""}
-                  </span>
-                  <span className="text-xs" style={{ color: TOKENS.muted }}>
-                    {new Date(lead.criado_em).toLocaleDateString("pt-BR")}
-                  </span>
-                </div>
-                {lead.opcao_label && (
-                  <p className="text-xs" style={{ color: TOKENS.muted }}>Opção escolhida: {lead.opcao_label}</p>
-                )}
-                <textarea
-                  defaultValue={lead.nota || ""}
-                  placeholder="O que foi combinado ou resolvido nessa conversa"
-                  rows={2}
-                  className="rounded-lg border px-3 py-2 text-sm"
-                  style={{ borderColor: TOKENS.border }}
-                  onBlur={(e) => salvarNota(lead, e.target.value, lead.status_atendimento)}
-                />
-                <label className="flex items-center gap-2 text-xs" style={{ color: TOKENS.muted }}>
-                  <input
-                    type="checkbox"
-                    checked={lead.status_atendimento === "respondido"}
-                    onChange={(e) => salvarNota(lead, lead.nota, e.target.checked ? "respondido" : "pendente")}
-                  />
-                  Já respondido
-                </label>
-              </div>
-            ))}
+            <Resultados key={clienteSelecionado.public_id} publicId={clienteSelecionado.public_id} nome={clienteSelecionado.nome_negocio} />
           </div>
         )}
       </main>

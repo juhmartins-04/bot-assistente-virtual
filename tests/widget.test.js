@@ -26,6 +26,8 @@ async function abrirWidgetRemoto(t, overrides = {}) {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://exemplo.com', runScripts: 'outside-only' })
   t.after(() => dom.window.close())
   const script = dom.window.document.createElement('script')
+  script.src = 'https://usarpronto.vercel.app/atendente-virtual-widget.js'
+  dom.window.document.body.appendChild(script)
   script.dataset.site = '00000000-0000-4000-8000-000000000001'
   Object.defineProperty(dom.window.document, 'currentScript', { value: script })
   const chamadas = []

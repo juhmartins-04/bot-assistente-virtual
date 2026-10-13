@@ -41,7 +41,7 @@ export default function Login() {
     try {
       const { error } = await supabase.auth.signInWithOtp({
         email: email.trim(),
-        options: { emailRedirectTo: window.location.origin },
+        options: { shouldCreateUser: false, emailRedirectTo: window.location.origin + "/painel" },
       });
       if (error) throw error;
       setEnviado(true);

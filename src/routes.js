@@ -3,6 +3,7 @@ export function resolverRota({ pathname = '/', search = '', hash = '' }) {
   const caminho = pathname.replace(/\/+$/, '') || '/'
   const paginaCliente = caminho.match(/^\/p\/([^/]+)$/)
   if (paginaCliente) return { tipo: 'cliente', publicId: paginaCliente[1] }
+  if (caminho === '/privacidade') return { tipo: 'privacidade' }
   if (caminho === '/demo') return { tipo: 'demo' }
 
   const parametros = new URLSearchParams(search)

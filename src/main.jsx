@@ -6,11 +6,13 @@ import './index.css'
 
 const App = lazy(() => import('./App.jsx'))
 const Pagina = lazy(() => import('./Pagina.jsx'))
+const Privacidade = lazy(() => import('./Privacidade.jsx'))
 const DemoPage = lazy(() => import('./DemoPage.jsx'))
 const rota = resolverRota(window.location)
 
 function Conteudo() {
   if (rota.tipo === 'cliente') return <Pagina publicId={rota.publicId} />
+  if (rota.tipo === 'privacidade') return <Privacidade />
   if (rota.tipo === 'demo') return <DemoPage />
   if (rota.tipo === 'painel') return <App />
   return <Landing />
