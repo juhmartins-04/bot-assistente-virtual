@@ -38,3 +38,24 @@ await test('relatório solo agrega eventos da página e mais de 5000 eventos do 
     assert.equal((await db.query(reportSql, [PUB])).rows[0].r.aberturas, 0);
   } finally { await db.close(); }
 });
+
+await test('coleta solo valida contatos e protege eventos e contadores privados', async () => {
+  const db = await database({ full: false });
+  try {
+    await login(db, '', 'anon');
+    await assert.rejects(db.query('insert into public.leads(public_id,nome) values($1,$2)', [PUB, 'x'.repeat(121)]));
+    await assert.rejects(db.query("insert into public.leads(public_id,nome,telefone) values($1,'   ','   ')", [PUB]));
+    await assert.rejects(db.query("insert into public.leads(public_id,telefone) values($1,'invalid-phone')", [PUB]));
+    await db.query("insert into public.leads(public_id,nome,nota,status_atendimento,criado_em) values($1,' Pessoa ','forged','respondido','2000-01-01')", [PUB]);
+    for (let i=0;i<60;i++) await db.query("insert into public.pagina_eventos(public_id,tipo) values($1,'pagina_visualizada')", [PUB]);
+    await assert.rejects(db.query("insert into public.pagina_eventos(public_id,tipo) values($1,'pagina_visualizada')", [PUB]));
+    await assert.rejects(db.exec('select * from private.solo_public_limits'));
+    await login(db, OWNER);
+    const lead=(await db.query('select nome,nota,status_atendimento,criado_em from public.leads')).rows[0];
+    assert.equal(lead.nome,'Pessoa'); assert.equal(lead.nota,null); assert.equal(lead.status_atendimento,'pendente');
+    assert.ok(new Date(lead.criado_em)>new Date('2026-01-01'));
+    await db.exec("update public.clientes set status='suspended' where id='test'");
+    await login(db, '', 'anon');
+    await assert.rejects(db.query("insert into public.pagina_eventos(public_id,tipo) values($1,'pagina_whatsapp')", [PUB]));
+  } finally { await db.close(); }
+});

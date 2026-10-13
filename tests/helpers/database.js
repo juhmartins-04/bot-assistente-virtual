@@ -26,6 +26,7 @@ export async function database({full=true}={}) {
  await db.exec(`insert into public.clientes(id,user_id,nome_negocio,dados,public_id,status) values('test','${OWNER}','Teste','{"nomeNegocio":"Teste"}','${PUB}','active');insert into public.app_storage(key,value) values('config','{"agencia":"Legado"}');`)
  await db.exec(await readFile(new URL('../../supabase/migrations/20261013202422_account_config_and_reports.sql',import.meta.url),'utf8'))
  await db.exec(await readFile(new URL('../../supabase/migrations/20261013212700_solo_operator_authorization.sql',import.meta.url),'utf8'))
+ await db.exec(await readFile(new URL('../../supabase/migrations/20261013230715_solo_public_collection_guard.sql',import.meta.url),'utf8'))
  if(full) await db.exec(await readFile(new URL('../../supabase/optional/operations_full_reference.sql',import.meta.url),'utf8'))
  await db.exec(`insert into auth.users values('${OTHER}','other@example.test',now()),('${CLIENT}','client@example.test',now()),('${STAFF}','staff@example.test',now());`)
  return db

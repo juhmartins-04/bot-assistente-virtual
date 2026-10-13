@@ -8,7 +8,7 @@ A edição atual usa `OPERACAO_COMPLETA = false`. Não mudar esse marcador antes
 
 Configurações privadas foram migradas para `account_config`, com chave `(user_id,key)` e RLS por conta. As linhas antigas de `app_storage` foram preservadas. O CRM e os recebimentos manuais usam essa tabela, sem copiar dados financeiros para a configuração pública do widget. Uma referência de comprovante repetida é rejeitada pela chave única.
 
-Foram confirmadas as migrações de configurações/relatórios e `20261013212700_solo_operator_authorization.sql`. Esta última reserva criação/administração dos negócios às contas de operadoras existentes, sem editar os negócios e históricos. O schema na raiz é a referência histórica usada nas fixtures; não deve ser reaplicado sobre produção. `supabase/optional` contém protótipos pendentes de revisão; não é a lista de migrações publicadas. A tentativa ampla foi recusada pela revisão automática, sem justificativa detalhada; a tentativa menor e a proteção de coleta separada foram interrompidas.
+Foram confirmadas as migrações de configurações/relatórios e `20261013212700_solo_operator_authorization.sql`. A autorização reserva criação/administração dos negócios às contas de operadoras existentes. Também foi confirmada a migração 20261013230715_solo_public_collection_guard.sql, que valida e limita a coleta pública. As três preservam os negócios e históricos existentes. O schema na raiz é a referência histórica usada nas fixtures; não deve ser reaplicado sobre produção. `supabase/optional` contém protótipos pendentes de revisão; não é a lista de migrações publicadas. A tentativa ampla foi recusada pela revisão automática, sem justificativa detalhada; a tentativa menor foi interrompida. A proteção de coleta separada foi posteriormente aplicada e verificada.
 
 ## Implantação e cobrança
 
@@ -26,7 +26,7 @@ O relatório filtra datas de Curitiba e agrega no banco, sem o antigo limite de 
 
 O botão Exportar produz cópia operacional com configurações, contatos, eventos de página/menu, vínculos visíveis da conta e imagens disponíveis. Não contém senhas, contas Auth ou segredos. Na edição solo, restauração é um procedimento técnico revisado; guardar o arquivo não significa recuperação automática testada em produção. Salvar cópia antes de qualquer migração e pelo menos semanalmente, com acesso restrito e uma cópia separada do computador.
 
-Não usar a exclusão de uma linha em clientes para cumprir retenção: o banco atual ainda tem histórico sem cascata. O botão foi desabilitado. Pedidos de correção/exclusão de dados pessoais devem ser tratados pela Julia em revisão técnica, inclusive contatos, eventos, imagens e cópias aplicáveis. Revisar os dados operacionais 30 dias após encerramento; obrigações fiscais têm tratamento separado. Há limitação de tamanho no formulário do widget, mas o limitador de requisições no banco ainda depende da migração pendente.
+Não usar a exclusão de uma linha em clientes para cumprir retenção: o banco atual ainda tem histórico sem cascata. O botão foi desabilitado. Pedidos de correção/exclusão de dados pessoais devem ser tratados pela Julia em revisão técnica, inclusive contatos, eventos, imagens e cópias aplicáveis. Revisar os dados operacionais 30 dias após encerramento; obrigações fiscais têm tratamento separado. A coleta agora também é validada no banco: contatos vazios ou excessivos são rejeitados, notas/status enviados por visitantes são normalizados e envios repetidos são limitados. Os contadores privados têm limpeza após 24 horas, executada na nova coleta. Os três gatilhos protegem leads, eventos do menu e eventos da página.
 
 ## Hospedagem sem mensalidade
 
@@ -51,7 +51,7 @@ Separar mais 2 horas semanais para estudar e aplicar uma pequena melhoria. No co
 
 A edição solo já reserva a administração às operadoras autorizadas no banco. Os papéis adicionais de titular/portal permanecem pendentes; não abrir cadastro de autosserviço. Desativar cadastros públicos no Supabase Auth enquanto não há autosserviço. Preparar SMTP somente quando houver necessidade real de novos logins; o servidor padrão não é apropriado para enviar a qualquer cliente em produção.
 
-Revisar restauração com os IDs originais, correção/exclusão de contatos, proteção da coleta, retenção e validade no servidor. A integração de cobrança está em código de referência e não foi publicada nem configurada. Confirmar custos e taxas antes de escolher um provedor.
+Revisar restauração com os IDs originais, correção/exclusão de contatos, retenção e validade no servidor. A integração de cobrança está em código de referência e não foi publicada nem configurada. Confirmar custos e taxas antes de escolher um provedor.
 
 ## Validação
 
@@ -68,3 +68,11 @@ Revisar restauração com os IDs originais, correção/exclusão de contatos, pr
 - https://supabase.com/pricing
 - https://supabase.com/docs/guides/platform/free-project-pausing
 - https://supabase.com/docs/guides/auth/auth-smtp
+
+A proteção de coleta foi verificada também no banco de produção com uma transação revertida: rejeitou contato excessivo e a 61ª interação da mesma janela, preservando todos os registros anteriores. O CLI foi bloqueado pela revisão automática por telemetria externa; a migração foi preparada localmente e aplicada pela conexão autorizada do Supabase.
+
+## Autorização contínua para manutenção
+
+Julia autorizou correções, testes, commits/push no GitHub e atualização da Vercel sem pedir confirmação a cada etapa. A operação deve continuar sem contratar serviços pagos até haver lucro e uma nova decisão de investimento. Essa preferência não altera as exigências de autenticação e revisão das plataformas.
+
+O aviso do advisor para private.solo_public_limits (RLS sem política) é intencional: a tabela não tem acesso público e é utilizada somente pelo gatilho interno. As views públicas existentes usam privilégios do criador com filtros de publicação/atribuição e grants exclusivos de leitura; não devem ser convertidas para invoker sem adaptar o fluxo público. A proteção de senhas vazadas do Auth permanece desativada e deve ser avaliada respeitando o plano gratuito.
