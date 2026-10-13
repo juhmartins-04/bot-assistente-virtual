@@ -32,7 +32,7 @@ Não usar a exclusão de uma linha em clientes para cumprir retenção: o banco 
 
 Supabase permanece Free. Não foram contratados serviços, domínios ou APIs pagos. O plano Hobby da Vercel é restrito a uso não comercial. O plano atual da equipe não foi confirmado; não tratar o domínio Vercel como solução comercial gratuita garantida.
 
-O front-end está preparado para Cloudflare Pages Free: `npm run build`, saída `dist`, ramo `main`, Node 22. Os arquivos `_redirects` e `_headers` seguem em `public`. Não adicionar Pages Functions, cartão ou upgrade. Usar o subdomínio gratuito `pages.dev`; domínio próprio pode esperar.
+O front-end está preparado para Cloudflare Pages Free: `npm run build`, saída `dist`, ramo `main`, Node 22. Os arquivos `_redirects` e `_headers` seguem em `public`. Não adicionar Pages Functions, cartão ou upgrade. O build usa CF_PAGES_URL para manter as imagens/metadados sociais na própria hospedagem; VITE_PUBLIC_SITE_URL permite informar uma origem pública explícita. Usar o subdomínio gratuito `pages.dev`; domínio próprio pode esperar.
 
 A conta Cloudflare ainda precisa ser conectada/criada pela titular. Depois da primeira publicação: autorizar a nova origem no Auth do Supabase para `/painel`, mudar a URL-base do widget nas configurações, verificar `/`, `/demo`, `/painel`, `/privacidade` e um `/p/:id`, e atualizar os links divulgados. Widgets externos devem apontar para a nova origem. Não é preciso alterar o banco nem duplicar dados. A prévia personalizada para crawlers em `middleware.js` é específica da Vercel; na hospedagem estática a prévia compartilhada pode mostrar a marca Prontô até implementar equivalente gratuito.
 
