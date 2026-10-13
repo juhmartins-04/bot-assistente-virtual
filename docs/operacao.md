@@ -8,7 +8,7 @@ A edição atual usa `OPERACAO_COMPLETA = false`. Não mudar esse marcador antes
 
 Configurações privadas foram migradas para `account_config`, com chave `(user_id,key)` e RLS por conta. As linhas antigas de `app_storage` foram preservadas. O CRM e os recebimentos manuais usam essa tabela, sem copiar dados financeiros para a configuração pública do widget. Uma referência de comprovante repetida é rejeitada pela chave única.
 
-Apenas a migração em `supabase/migrations/20261013202422_account_config_and_reports.sql` foi confirmada aplicada nesta entrega. O schema na raiz é a referência histórica usada nas fixtures; não deve ser reaplicado sobre produção. `supabase/optional` contém protótipos pendentes de revisão; não é a lista de migrações publicadas. A tentativa ampla foi recusada pela revisão automática, sem justificativa detalhada; a tentativa menor foi interrompida.
+Foram confirmadas as migrações de configurações/relatórios e `20261013212700_solo_operator_authorization.sql`. Esta última reserva criação/administração dos negócios às contas de operadoras existentes, sem editar os negócios e históricos. O schema na raiz é a referência histórica usada nas fixtures; não deve ser reaplicado sobre produção. `supabase/optional` contém protótipos pendentes de revisão; não é a lista de migrações publicadas. A tentativa ampla foi recusada pela revisão automática, sem justificativa detalhada; a tentativa menor e a proteção de coleta separada foram interrompidas.
 
 ## Implantação e cobrança
 
@@ -49,7 +49,7 @@ Separar mais 2 horas semanais para estudar e aplicar uma pequena melhoria. No co
 
 ## Pendências antes de cadastro público e automação
 
-Revisar/aplicar papéis e RLS que reservem a operação à conta autorizada; hoje a interface reconhece a titular por negócios existentes e não abre criação de conta por OTP. Isso não substitui a regra no banco. Desativar cadastros públicos no Supabase Auth enquanto não há autosserviço. Preparar SMTP somente quando houver necessidade real de novos logins; o servidor padrão não é apropriado para enviar a qualquer cliente em produção.
+A edição solo já reserva a administração às operadoras autorizadas no banco. Os papéis adicionais de titular/portal permanecem pendentes; não abrir cadastro de autosserviço. Desativar cadastros públicos no Supabase Auth enquanto não há autosserviço. Preparar SMTP somente quando houver necessidade real de novos logins; o servidor padrão não é apropriado para enviar a qualquer cliente em produção.
 
 Revisar restauração com os IDs originais, correção/exclusão de contatos, proteção da coleta, retenção e validade no servidor. A integração de cobrança está em código de referência e não foi publicada nem configurada. Confirmar custos e taxas antes de escolher um provedor.
 
