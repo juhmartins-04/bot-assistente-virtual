@@ -1,0 +1,6 @@
+import test from 'node:test'
+import assert from 'node:assert/strict'
+import {periodoMes,csv,urlSegura,caminhoLogo} from '../src/negocio.js'
+test('período mensal lida com fevereiro e virada do ano',()=>{assert.deepEqual(periodoMes('2024-02'),{inicio:'2024-02-01',fim:'2024-02-29'});assert.deepEqual(periodoMes('2026-12'),{inicio:'2026-12-01',fim:'2026-12-31'});assert.throws(()=>periodoMes('2026-13'))})
+test('CSV preserva conteúdo e impede fórmulas em planilhas',()=>{const r=csv([['=CMD()','Nome; Sobrenome','"texto"']]);assert.ok(r.includes('"\'=CMD()"'));assert.ok(r.includes('""texto""'));assert.ok(r.startsWith('\uFEFF'))})
+test('links e logos só usam protocolo e origem permitidos',()=>{assert.equal(urlSegura('javascript:alert(1)'),null);assert.equal(urlSegura('https://instagram.com/exemplo'),'https://instagram.com/exemplo');assert.equal(caminhoLogo('https://db.example/storage/v1/object/public/logos/owner/logo.png','owner','https://db.example'),'owner/logo.png');assert.equal(caminhoLogo('https://other.example/storage/v1/object/public/logos/owner/logo.png','owner','https://db.example'),null);assert.equal(caminhoLogo('https://db.example/storage/v1/object/public/logos/other/logo.png','owner','https://db.example'),null)})

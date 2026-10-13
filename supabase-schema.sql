@@ -1,3 +1,5 @@
+-- REFERÊNCIA HISTÓRICA / FIXTURES LOCAIS. Não reaplicar sobre produção.
+-- Migrações confirmadas estão em supabase/migrations; ver docs/operacao.md.
 -- =====================================================================
 -- Este arquivo reflete o schema já aplicado no projeto Supabase em uso
 -- (rodado diretamente via MCP em 2026-08-18). É seguro rodar de novo —

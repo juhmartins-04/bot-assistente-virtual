@@ -1,6 +1,9 @@
+import { OPERACAO_COMPLETA } from './operacao';
 import React, { useState } from 'react'
 import { ArrowRight, Check, Clock3, Globe2, MessageCircle, Play, Sparkles } from 'lucide-react'
 import { CONTATO, linkComercial, PLANOS, SEGMENTOS } from './comercial'
+import { MODELOS } from './negocio'
+import { useEffect } from 'react'
 import './landing.css'
 
 const PERGUNTAS = [
@@ -9,8 +12,8 @@ const PERGUNTAS = [
   ['Ele responde dentro do WhatsApp?', 'As respostas automáticas aparecem no site ou na página do Prontô. Quando o cliente quer conversar, ele abre o seu WhatsApp com uma mensagem pronta e você segue o atendimento por lá.'],
   ['As respostas são feitas por inteligência artificial?', 'O menu usa respostas que você aprova: horários, serviços, valores e outras dúvidas frequentes. Você sabe exatamente quais informações serão mostradas.'],
   ['Preciso entender de tecnologia?', 'Eu cuido da configuração e da instalação. Você me conta sobre seu negócio e aprova as informações antes de começar.'],
-  ['O que está incluído nas atualizações?', 'Atualizações das informações e das respostas do seu negócio. Mudanças no visual, novas funcionalidades e serviços adicionais são combinados à parte.'],
-  ['Posso cancelar quando quiser?', 'Sim. Os planos são mensais, sem fidelidade e sem multa de cancelamento.'],
+  ['O que está incluído nas atualizações?', 'Incluímos até duas solicitações agrupadas de atualização de conteúdo por mês e até cinco perguntas essenciais no assistente. Prazo e informações são combinados e aprovados com você. Redesign, novas funções, tradução e atendimento humano são serviços à parte.'],
+  ['Posso cancelar quando quiser?', 'Sim. Os planos são mensais, sem fidelidade e sem multa. O cancelamento encerra a renovação e você mantém acesso até o fim do período já pago. Solicite diretamente à Julia pelo WhatsApp.'],
 ]
 
 function BotaoContato({ children = 'Quero testar por 14 dias', plano, secundario = false }) {
@@ -24,6 +27,7 @@ function BotaoContato({ children = 'Quero testar por 14 dias', plano, secundario
 
 function Demonstracao() {
   const [segmento, setSegmento] = useState('beleza')
+  const [modelo, setModelo] = useState('servicos')
   return (
     <div className="pr-demo" id="demonstracao">
       <div className="pr-demo-tabs" role="group" aria-label="Escolha um exemplo de negócio">
@@ -34,13 +38,14 @@ function Demonstracao() {
           </button>
         ))}
       </div>
+      <div className="pr-demo-models"><label>Modelo da página <select value={modelo} onChange={e => setModelo(e.target.value)} aria-label="Modelo da demonstração">{Object.entries(MODELOS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></label></div>
       <div className="pr-browser">
         <div className="pr-browser-bar">
           <span className="pr-browser-dots" aria-hidden="true"><i /><i /><i /></span>
-          <span>seunegocio.com.br</span>
+          <span>página do seu negócio</span>
           <Globe2 size={14} aria-hidden="true" />
         </div>
-        <iframe key={segmento} src={`/demo?segmento=${segmento}&embed=1`}
+        <iframe key={`${segmento}-${modelo}`} src={`/demo?segmento=${segmento}&modelo=${modelo}&embed=1`}
           title={`Experimente o assistente: ${SEGMENTOS[segmento].nome}`} className="pr-demo-frame" />
       </div>
       <div className="pr-demo-caption"><span className="pr-status-dot" />Demonstração interativa · negócios fictícios</div>
@@ -50,6 +55,19 @@ function Demonstracao() {
 }
 
 export default function Landing() {
+  useEffect(() => {
+    if (!OPERACAO_COMPLETA) return;
+    function clique(event) {
+      const a = event.target.closest?.('a[href]'); if (!a) return;
+      const u = new URL(a.href); if (u.hostname !== 'wa.me' || u.pathname !== `/${CONTATO.whatsapp}`) return;
+      const mensagem = u.searchParams.get('text') || '';
+      const plano = mensagem.includes('Só Página') ? 'pagina' : mensagem.includes('Site + Assistente') ? 'completo' : mensagem.includes('Assistente') ? 'assistente' : 'geral';
+      const utm = new URLSearchParams(window.location.search).get('utm_source')?.toLowerCase();
+      const origem = ['instagram','google','indicacao'].includes(utm) ? utm : utm ? 'outro' : 'direto';
+      fetch('https://rnlgvlmwwncfrfywszaf.supabase.co/rest/v1/rpc/registrar_interesse', { method:'POST',keepalive:true,headers:{apikey:'sb_publishable_x40vbDCMSrdE7uiNGK0U8Q_ODc99VlB','Content-Type':'application/json'},body:JSON.stringify({p_plano:plano,p_origem:origem}) }).catch(() => {});
+    }
+    document.addEventListener('click', clique); return () => document.removeEventListener('click', clique);
+  }, []);
   return (
     <div className="pr-site">
       <a className="pr-skip" href="#conteudo">Pular para o conteúdo</a>
@@ -118,6 +136,8 @@ export default function Landing() {
           <p className="pr-pricing-note">Precisa de acompanhamento humano no atendimento? A gente combina o escopo e o valor à parte.</p>
         </section>
 
+        <section className="pr-section pr-container" aria-labelledby="titulo-implantacao"><div className="pr-section-heading"><p className="pr-eyebrow">DA CONFIGURAÇÃO AO PRIMEIRO DIA</p><h2 id="titulo-implantacao">Você aprova.<br /><em>Eu deixo pronto.</em></h2><p>Você envia marca, serviços, horários e contatos. Eu preparo a página ou o menu, você confere e combinamos a publicação. Os 14 dias começam quando o teste é publicado.</p></div><div className="pr-report-sample"><div><span className="pr-tag">RELATÓRIO FICTÍCIO · EXEMPLO</span><h3>Entenda o que está sendo usado.</h3><p>Relatório por período, com exportação. Acompanhe cliques e dúvidas frequentes para ajustar suas informações.</p></div><dl><div><dt>Visitas da página</dt><dd>240</dd></div><div><dt>Aberturas do assistente</dt><dd>68</dd></div><div><dt>Cliques no WhatsApp</dt><dd>21</dd></div></dl><p className="pr-micro">Números ilustrativos. Cliques não comprovam mensagens, agendamentos ou vendas.</p></div></section>
+
         <section className="pr-faq pr-container" aria-labelledby="titulo-duvidas">
           <div className="pr-section-heading"><p className="pr-eyebrow">PODE PERGUNTAR</p><h2 id="titulo-duvidas">Antes de começar,<br /><em>vamos tirar as dúvidas.</em></h2><a className="pr-text-link" href={linkComercial()} target="_blank" rel="noopener noreferrer">Prefiro conversar com a Julia<ArrowRight size={16} aria-hidden="true" /></a></div>
           <div className="pr-faq-items">{PERGUNTAS.map(([pergunta, resposta]) => <details key={pergunta}><summary>{pergunta}<span aria-hidden="true">+</span></summary><p>{resposta}</p></details>)}</div>
@@ -125,7 +145,7 @@ export default function Landing() {
 
         <section className="pr-final-cta pr-container" aria-labelledby="titulo-teste"><div><p className="pr-eyebrow">PRONTÔ PARA O PRÓXIMO PASSO?</p><h2 id="titulo-teste">Seu atendimento<br />pode começar aqui.</h2><p>Me conte sobre o seu negócio. Eu te mostro como o Prontô pode ajudar.</p></div><div><BotaoContato /><p className="pr-cta-note">Configuração comigo. Teste no seu ritmo.</p></div></section>
       </main>
-      <footer className="pr-footer pr-container"><a href="/" className="pr-brand">Prontô<span className="pr-brand-dot">.</span></a><p>Atendimento digital simples.<br />Feito por Julia Martins · Curitiba</p><nav aria-label="Links do rodapé"><a href={CONTATO.instagram} target="_blank" rel="noopener noreferrer">Instagram</a><a href="/demo">Demonstração</a><a href="/painel">Acessar painel</a></nav></footer>
+      <footer className="pr-footer pr-container"><a href="/" className="pr-brand">Prontô<span className="pr-brand-dot">.</span></a><p>Atendimento digital simples.<br />Feito por Julia Martins · Curitiba</p><nav aria-label="Links do rodapé"><a href={CONTATO.instagram} target="_blank" rel="noopener noreferrer">Instagram</a><a href="/demo">Demonstração</a><a href="/privacidade">Privacidade</a><a href="/cliente">Área do cliente</a><a href="/painel">Acessar painel</a></nav></footer>
     </div>
   )
 }

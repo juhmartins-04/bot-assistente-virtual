@@ -29,8 +29,7 @@ Para verificar o roteamento, os retornos de login e o widget, rode `npm test`.
 
 As métricas de WhatsApp registram cliques no link, sem confirmar envio de mensagem
 ou venda. Registros anteriores à correção de outubro/2026 podem incluir visitantes
-que apenas pularam o formulário. O painel atual ainda mostra um total acumulado
-limitado pela consulta; não é um relatório mensal com filtro de período.
+que apenas pularam o formulário. O painel agora filtra períodos e agrega os eventos no banco, incluindo visitas e cliques das páginas.
 
 O schema revoga explicitamente os grants padrão das views públicas antes de
 liberar somente leitura. Em `leads`, a atualização autenticada fica restrita às
@@ -149,3 +148,8 @@ o widget usa, então ativar/suspender o cliente afeta os dois juntos.
   aceita se o `public_id` pertencer a um cliente ativo ou em teste
   válido (mesma condição de `widget_config`), e a leitura dessas
   tabelas é restrita ao dono do cliente correspondente.
+
+
+## Edição solo gratuita
+
+Veja [operação, limitações e implantação gratuita](docs/operacao.md). A versão publicada usa registro manual de Pix, CRM privado e renovações conferidas pela operadora. `supabase/optional` é código pendente de revisão, sem aplicação automática. O plano Hobby da Vercel não autoriza uso comercial; o front-end está preparado para migração estática ao Cloudflare Pages Free antes da venda.

@@ -10,6 +10,7 @@
 
   var scriptAtual = document.currentScript;
   var siteId = scriptAtual && scriptAtual.dataset.site;
+  if (scriptAtual && scriptAtual.isConnected === false) return;
 
   function urlSegura(url) {
     if (!url) return null;
@@ -31,7 +32,7 @@
         "Content-Type": "application/json",
       },
       body: JSON.stringify(corpo),
-    }).catch(function () { /* falha de rede: não interrompe a conversa */ });
+    }).then(function (r) { if (!r.ok) console.warn("Prontô: interação não registrada (" + r.status + ")."); }).catch(function () { /* falha de rede: não interrompe a conversa */ });
   }
 
   function registrarEvento(tipo, opcaoLabel) {
@@ -49,7 +50,7 @@
   }
 
   function montar(config) {
-    if (!config || document.querySelector("[data-atendente-widget]")) return;
+    if (!config || config.incluiAssistente === false || (scriptAtual && scriptAtual.isConnected === false) || document.querySelector("[data-atendente-widget]")) return;
 
     var idioma = config.idiomaPadrao;
     if (idioma !== "pt" && idioma !== "en") {
@@ -238,8 +239,8 @@
       var caixa = document.createElement("div");
       caixa.className = "avw-lead";
       caixa.innerHTML = `
-        <input type="text" class="avw-lead-nome" placeholder="${textos.nome}" autocomplete="name" />
-        <input type="tel" class="avw-lead-telefone" placeholder="${textos.telefone}" autocomplete="tel" />
+        <input type="text" maxlength="120" aria-label="${textos.nome}" class="avw-lead-nome" placeholder="${textos.nome}" autocomplete="name" />
+        <input type="tel" maxlength="30" aria-label="${textos.telefone}" class="avw-lead-telefone" placeholder="${textos.telefone}" autocomplete="tel" />
         <p class="avw-lead-aviso">${textos.avisoPrivacidade}</p>
         <div class="avw-lead-acoes">
           <a class="avw-lead-continuar" target="_blank" rel="noopener noreferrer"></a>
@@ -254,6 +255,12 @@
       // rótulo do botão) — nunca interpolar em innerHTML, sempre por
       // textContent, senão uma tag embutida no texto executaria no site
       // do cliente pra qualquer visitante.
+      var privacidade = document.createElement("a");
+      privacidade.textContent = idioma === "en" ? "Privacy" : "Privacidade";
+      privacidade.href = new URL("/privacidade" + (siteId ? "?negocio=" + encodeURIComponent(siteId) : ""), scriptAtual && scriptAtual.src ? scriptAtual.src : window.location.href).href;
+      privacidade.target = "_blank"; privacidade.rel = "noopener noreferrer";
+      caixa.querySelector(".avw-lead-aviso").appendChild(document.createTextNode(" "));
+      caixa.querySelector(".avw-lead-aviso").appendChild(privacidade);
       continuar.textContent = label;
       continuar.href = seguro || "#";
 
