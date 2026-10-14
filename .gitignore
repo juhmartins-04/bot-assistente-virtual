@@ -10,3 +10,4 @@ supabase/.temp/
 
 # Contratos/documentos gerados com dados reais de clientes: nunca versionar.
 documentos/
+.wrangler/
