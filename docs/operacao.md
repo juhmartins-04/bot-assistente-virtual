@@ -80,3 +80,14 @@ Julia autorizou correções, testes, commits/push no GitHub e atualização da V
 O aviso do advisor para private.solo_public_limits (RLS sem política) é intencional: a tabela não tem acesso público e é utilizada somente pelo gatilho interno. As views públicas existentes usam privilégios do criador com filtros de publicação/atribuição e grants exclusivos de leitura; não devem ser convertidas para invoker sem adaptar o fluxo público. A proteção de senhas vazadas do Auth permanece desativada e deve ser avaliada respeitando o plano gratuito.
 
 A titular autorizou a migração da hospedagem para Cloudflare em 13/10/2026. As próximas publicações de produção acompanham o GitHub `main` na Cloudflare; não comprar domínio ou plano sem nova autorização.
+
+
+## Revisão visual em 14/10/2026
+
+Os temas claro e escuro compartilham uma preferência entre páginas, painel, abas e demonstração. Sem escolha manual, seguem o sistema. O carregamento inicial aplica a preferência antes da renderização e o bloqueio de localStorage não impede a troca. A paleta pública preserva o verde e o creme; o escuro usa verde profundo e superfícies legíveis. Texto preto ou branco é escolhido pela luminância da cor da marca nos botões públicos, widget e prévia do painel.
+
+O painel recebeu busca por nome, botão de visão geral, barra fixa de salvamento e aviso ao abandonar alterações não salvas. A lista de clientes tem rolagem limitada no celular. Login tem exibição opcional da senha, erros anunciados e descrição do acesso. Relatórios e acompanhamento comercial usam cores de erro do tema. Demonstração tem abertura em tela inteira. Erros de rede na página pública oferecem nova tentativa.
+
+Validação: 34 testes automáticos, build e dry-run do Workers. Os controles novos do painel foram exercitados em DOM local com dados fictícios e sem rede (busca, edição, salvamento, proteção de rascunho e tema). Esse teste não substitui o acesso autenticado da titular em produção, ainda pendente. Não foi alterado o banco nem contratado serviço nesta revisão.
+
+Próximas melhorias de produto, a avaliar após os primeiros testes com clientes: checklist de implantação por negócio, resumo de renovações e tarefas da semana e modelos por nicho com conteúdo aprovado. Priorizar a rotina real de operação antes de habilitar recursos opcionais de cobrança automática ou portal.

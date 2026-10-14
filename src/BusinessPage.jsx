@@ -2,8 +2,12 @@ import React from 'react'
 import { Clock3, MapPin, Instagram, ArrowUpRight, MessageCircle, Sparkles } from 'lucide-react'
 import { urlSegura } from './negocio'
 import './business.css'
+import { textoSobreCor } from './cores'
+import BotaoTema from './BotaoTema'
+import { useTema } from './useTema'
 
 export default function BusinessPage({ dados, demonstracao = false, onWhatsApp }) {
+  const { tema, alternar } = useTema()
   const layout = dados.layout || 'classico'
   const cor = /^#[0-9a-f]{6}$/i.test(dados.corPrimaria || '') ? dados.corPrimaria : '#386951'
   const whats = /^\d{10,15}$/.test(dados.numeroWhatsApp || '') ? `https://wa.me/${dados.numeroWhatsApp}?text=${encodeURIComponent(dados.transferirMensagemWhatsPt || '')}` : null
@@ -11,9 +15,9 @@ export default function BusinessPage({ dados, demonstracao = false, onWhatsApp }
   const itens = (dados.itensCardapio || []).filter(i => i?.nome?.trim())
   const instagram = urlSegura(dados.instagramUrl)
   return (
-    <div className={`biz-page biz-${layout}`} style={{ '--biz-color': cor }}>
+    <div className={`biz-page biz-${layout}`} style={{ '--biz-color': cor, '--biz-on-brand': textoSobreCor(cor) }}>
       <a className="biz-skip" href="#negocio">Pular para o negócio</a>
-      <header className="biz-top"><a href="/" aria-label="Prontô"><Sparkles size={16} />Prontô.</a><span>{demonstracao ? 'DEMONSTRAÇÃO · DADOS FICTÍCIOS' : 'INFORMAÇÕES DO NEGÓCIO'}</span></header>
+      <header className="biz-top"><a href="/" aria-label="Prontô"><Sparkles size={16} />Prontô.</a><div className="biz-top-actions"><span>{demonstracao ? 'DEMONSTRAÇÃO · DADOS FICTÍCIOS' : 'INFORMAÇÕES DO NEGÓCIO'}</span><BotaoTema tema={tema} alternar={alternar} /></div></header>
       <main id="negocio" className="biz-content">
         <section className="biz-hero">
           <div className="biz-avatar">{urlSegura(dados.logoUrl) ? <img src={dados.logoUrl} alt={`Marca de ${dados.nomeNegocio}`} width="112" height="112" /> : <span>{(dados.nomeNegocio || '?').slice(0, 1)}</span>}</div>

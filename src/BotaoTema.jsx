@@ -13,7 +13,7 @@ export default function BotaoTema({ tema, alternar, variante = "auto" }) {
       aria-label={tema === "dark" ? "Mudar para o tema claro" : "Mudar para o tema escuro"}
       title={tema === "dark" ? "Usar tema claro" : "Usar tema escuro"}
     >
-      {tema === "dark" ? <Sun size={14} /> : <Moon size={14} />}
+      {tema === "dark" ? <Sun size={18} aria-hidden="true" /> : <Moon size={18} aria-hidden="true" />}
     </button>
   );
 }

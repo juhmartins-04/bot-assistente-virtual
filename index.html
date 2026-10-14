@@ -4,6 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="color-scheme" content="light dark" />
+    <script>
+      try {
+        const tema = localStorage.getItem('pronto-tema');
+        document.documentElement.dataset.theme = tema === 'light' || tema === 'dark'
+          ? tema : matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
+      } catch { /* O CSS mantém a preferência do sistema. */ }
+    </script>
     <title>Prontô | Atendimento digital simples para seu negócio</title>
     <meta name="description" content="Responda às dúvidas dos seus clientes no site e encaminhe a conversa para o WhatsApp. Página própria e assistente personalizado. Planos a partir de R$ 97/mês." />
     <meta property="og:title" content="Prontô | Seu negócio continua respondendo" />

@@ -1,11 +1,14 @@
 import React,{useEffect,useState} from 'react'
 import {CONTATO,linkComercial} from './comercial'
 import './landing.css'
+import BotaoTema from './BotaoTema'
+import { useTema } from './useTema'
 export default function Privacidade(){
+ const {tema,alternar}=useTema()
  const id=new URLSearchParams(window.location.search).get('negocio')
  const [negocio,setNegocio]=useState(null)
- useEffect(()=>{if(!id)return;let cancelado=false;import('./utils/supabase').then(({supabase})=>supabase.from('widget_config').select('dados').eq('public_id',id).maybeSingle()).then(({data})=>{if(!cancelado)setNegocio(data?.dados||null)});return()=>{cancelado=true}},[id])
- return <div className="pr-site"><header className="pr-header pr-container"><a href="/" className="pr-brand">Prontô.</a><a href="/painel">Acessar minha conta ↗</a></header><main className="pr-container pr-privacy"><p className="pr-eyebrow">TRANSPARÊNCIA SOBRE OS DADOS</p><h1>Privacidade.</h1><p>Atualizada em 13 de outubro de 2026.</p>
+ useEffect(()=>{if(!id)return;let cancelado=false;import('./utils/supabase').then(({supabase})=>supabase.from('widget_config').select('dados').eq('public_id',id).maybeSingle()).then(({data})=>{if(!cancelado)setNegocio(data?.dados||null)}).catch(()=>{});return()=>{cancelado=true}},[id])
+ return <div className="pr-site"><header className="pr-header pr-container"><a href="/" className="pr-brand">Prontô.</a><div className="pr-header-actions"><a href="/painel">Acessar painel ↗</a><BotaoTema tema={tema} alternar={alternar}/></div></header><main className="pr-container pr-privacy"><p className="pr-eyebrow">TRANSPARÊNCIA SOBRE OS DADOS</p><h1>Privacidade.</h1><p>Atualizada em 13 de outubro de 2026.</p>
  <h2>Quem acompanha seus dados</h2><p>O Prontô é operado por Julia Martins, em Curitiba. Nas páginas e assistentes de negócios, o estabelecimento decide as informações publicadas e o uso dos contatos recebidos. O Prontô fornece e mantém a ferramenta para esse atendimento.</p>
  {negocio&&<p><strong>Negócio desta página: {negocio.nomeNegocio}.</strong> {/^\d{10,15}$/.test(negocio.numeroWhatsApp||'')&&<a href={`https://wa.me/${negocio.numeroWhatsApp}`} target="_blank" rel="noopener noreferrer">Falar com o estabelecimento sobre meus dados ↗</a>}</p>}
  <h2>O que registramos</h2><p>O assistente pode pedir nome e telefone de forma opcional antes do WhatsApp. Você pode pular essa etapa e continuar. Quando informados, esses dados, a opção escolhida e a data ficam disponíveis à operação e aos colaboradores autorizados daquele negócio. Notas e status podem ser usados para acompanhar o atendimento.</p><p>Registramos interações com a página e o assistente, como abertura, opção escolhida e clique no WhatsApp. São contagens de interações: não registramos o conteúdo da conversa no WhatsApp e não sabemos se uma mensagem foi enviada, se houve agendamento ou venda.</p><p> Dados de conta, solicitações de alteração e referências de pagamentos são usados para prestar o serviço e acompanhar a assinatura.</p>

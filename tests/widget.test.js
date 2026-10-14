@@ -123,3 +123,11 @@ test('a demonstração abre o menu sem roubar o foco da página', (t) => {
   assert.equal(document.querySelector('.avw-panel').classList.contains('is-open'), true)
   assert.equal(document.activeElement, document.body)
 })
+
+test('cor clara usa texto escuro e uma cor inválida recebe alternativa segura', (t) => {
+  const claro = abrirWidget({ corPrimaria: '#ffff00' })
+  const invalido = abrirWidget({ corPrimaria: 'url(https://exemplo.com)' })
+  t.after(() => { claro.dom.window.close(); invalido.dom.window.close() })
+  assert.equal(claro.document.querySelector('[data-atendente-widget]').style.getPropertyValue('--avw-on-brand'), '#000000')
+  assert.equal(invalido.document.querySelector('[data-atendente-widget]').style.getPropertyValue('--avw-cor'), '#2f6f62')
+})

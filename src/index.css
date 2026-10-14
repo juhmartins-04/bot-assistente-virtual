@@ -1,8 +1,18 @@
-﻿@import "tailwindcss";
+@import "tailwindcss";
+@custom-variant dark (&:where([data-theme="dark"], [data-theme="dark"] *));
 
 :root {
-  color-scheme: light dark;
+  color-scheme: light;
 
+  --pr-paper: #f7f8f2;
+  --pr-ink: #183e34;
+  --pr-muted: #526258;
+  --pr-line: #d5ded4;
+  --pr-surface: #fffdf9;
+  --pr-soft: #e9eee3;
+  --pr-accent: #526849;
+  --pr-focus: #8a5e1a;
+  --selection-text: #ffffff;
   --ink: #1c2430;
   --ink-soft: #2a3441;
   --canvas: #f3f6f4;
@@ -12,7 +22,7 @@
   --preview-dot: rgba(47, 111, 98, 0.06);
   --border: #dce4e0;
   --muted: #5b6672;
-  --placeholder: #87929e;
+  --placeholder: #66717c;
 
   --teal: #2f6f62;
   --teal-solid: #2f6f62;
@@ -37,6 +47,16 @@
    garante que uma escolha explícita de "claro" vence mesmo com o sistema no escuro. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --pr-paper: #121b18;
+    --pr-ink: #e7efe9;
+    --pr-muted: #adbdb2;
+    --pr-line: #34453b;
+    --pr-surface: #1b2822;
+    --pr-soft: #24352b;
+    --pr-accent: #b2c899;
+    --pr-focus: #e0ac63;
+    --selection-text: #121b18;
     --ink: #e9eeec;
     --ink-soft: #c3cdca;
     --canvas: #12181b;
@@ -46,7 +66,7 @@
     --preview-dot: rgba(107, 187, 168, 0.07);
     --border: #2b3538;
     --muted: #8fa09b;
-    --placeholder: #6b7672;
+    --placeholder: #9aaba5;
 
     --teal: #6bbba8;
     --teal-solid: #1f6f5c;
@@ -77,7 +97,16 @@
    única regra. */
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --ink: #e9eeec;
+    --pr-paper: #121b18;
+    --pr-ink: #e7efe9;
+    --pr-muted: #adbdb2;
+    --pr-line: #34453b;
+    --pr-surface: #1b2822;
+    --pr-soft: #24352b;
+    --pr-accent: #b2c899;
+    --pr-focus: #e0ac63;
+    --selection-text: #121b18;
+    --ink: #e9eeec;
   --ink-soft: #c3cdca;
   --canvas: #12181b;
   --surface: #1a2226;
@@ -86,7 +115,7 @@
   --preview-dot: rgba(107, 187, 168, 0.07);
   --border: #2b3538;
   --muted: #8fa09b;
-  --placeholder: #6b7672;
+  --placeholder: #9aaba5;
 
   /* --teal fica claro pra ler bem como texto/ícone sobre o fundo escuro;
      --teal-solid fica num tom mais fechado, só pra botão preenchido com
@@ -218,7 +247,7 @@
   }
 
   ::selection {
-    color: #ffffff;
+    color: var(--selection-text);
     background: var(--selection-bg);
   }
 
@@ -424,3 +453,38 @@
     text-wrap: balance;
   }
 }
+
+/* Interação e leitura consistentes no painel e nas páginas públicas. */
+.theme-toggle { width: 44px; height: 44px; flex-shrink: 0; }
+.btn { min-height: 40px; padding-inline: 12px; }
+.form-error { color: var(--crimson); }
+.validation-notice { color: var(--crimson); background: var(--crimson-wash); border: 1px solid var(--crimson); }
+.danger-action { color: var(--muted); min-width: 40px; min-height: 40px; }
+.danger-action:hover { color: var(--crimson); }
+.panel-main { min-width: 0; }
+.panel-sidebar { max-height: 100dvh; position: sticky; top: 0; }
+.panel-sidebar input { color: #ffffff; }
+.panel-search { background: #2a3441; border: 1px solid #526175; padding: 10px 12px; border-radius: 8px; width: 100%; }
+.panel-search::placeholder { color: #c3cdca; }
+.panel-client { min-height: 44px; }
+.panel-savebar { position: sticky; top: 12px; z-index: 20; padding: 14px 16px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; background: var(--surface); border: 1px solid var(--border); border-radius: 12px; box-shadow: 0 8px 22px #0000000c; }
+.panel-savebar h1 { font-size: 18px; font-weight: 650; overflow-wrap: anywhere; }
+.panel-savebar p { color: var(--muted); font-size: 12px; margin-top: 3px; }
+.panel-skip { position: fixed; left: 12px; top: -100px; z-index: 100; background: var(--surface); padding: 12px; border-radius: 8px; }
+.panel-skip:focus { top: 12px; }
+.password-field { position: relative; }
+.password-field input { padding-right: 50px; width: 100%; min-height: 44px; }
+.password-reveal { position: absolute; right: 2px; top: 2px; width: 40px; height: 40px; display: grid; place-items: center; color: var(--muted); }
+@media (max-width: 767px) {
+  .panel-sidebar { position: static; max-height: none; }
+  .panel-client-list { max-height: 190px; overflow-y: auto; }
+  .panel-savebar { top: 6px; }
+  input:not([type="checkbox"]):not([type="color"]), textarea, select { font-size: 16px !important; }
+  .btn, .danger-action { min-height: 44px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after { scroll-behavior: auto !important; animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; }
+  button:hover, a:hover { transform: none !important; }
+}
+
+.panel-sidebar .opacity-50, .panel-sidebar .opacity-60 { opacity: .75; }

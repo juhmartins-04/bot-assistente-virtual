@@ -5,6 +5,8 @@ import { CONTATO, linkComercial, PLANOS, SEGMENTOS } from './comercial'
 import { MODELOS } from './negocio'
 import { useEffect } from 'react'
 import './landing.css'
+import BotaoTema from './BotaoTema'
+import { useTema } from './useTema'
 
 const PERGUNTAS = [
   ['Preciso ter um site?', 'Você pode instalar o assistente no site que já tem ou escolher uma página própria do Prontô, com as informações do seu negócio.'],
@@ -50,11 +52,13 @@ function Demonstracao() {
       </div>
       <div className="pr-demo-caption"><span className="pr-status-dot" />Demonstração interativa · negócios fictícios</div>
       <p className="pr-demo-disclaimer">O WhatsApp da demonstração fala com a Julia sobre o Prontô.</p>
+      <a className="pr-demo-expand" href={`/demo?segmento=${segmento}&modelo=${modelo}`} target="_blank" rel="noopener noreferrer">Abrir demonstração em tela inteira ↗</a>
     </div>
   )
 }
 
 export default function Landing() {
+  const { tema, alternar } = useTema()
   useEffect(() => {
     if (!OPERACAO_COMPLETA) return;
     function clique(event) {
@@ -77,6 +81,7 @@ export default function Landing() {
           <a href="#como-funciona">Como funciona</a>
           <a href="#planos">Planos</a>
           <a href="/painel" className="pr-panel-link">Acessar painel<ArrowRight size={14} aria-hidden="true" /></a>
+          <BotaoTema tema={tema} alternar={alternar} />
         </nav>
       </header>
 

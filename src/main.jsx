@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import Landing from './Landing.jsx'
 import { resolverRota } from './routes'
 import './index.css'
+import { TemaProvider } from './useTema'
 
 const App = lazy(() => import('./App.jsx'))
 const Pagina = lazy(() => import('./Pagina.jsx'))
@@ -20,8 +21,10 @@ function Conteudo() {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
+    <TemaProvider>
     <Suspense fallback={<p role="status" style={{ padding: '2rem', textAlign: 'center' }}>Carregando Prontô...</p>}>
       <Conteudo />
     </Suspense>
+    </TemaProvider>
   </React.StrictMode>,
 )

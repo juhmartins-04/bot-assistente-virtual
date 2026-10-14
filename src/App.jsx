@@ -16,6 +16,7 @@ import Resultados from "./Resultados";
 import Assinatura from "./Assinatura";
 import ComercialPainel from "./ComercialPainel";
 import PortalCliente from "./PortalCliente";
+import { textoSobreCor } from "./cores";
 import { urlSegura, NOMES_PLANOS } from "./negocio";
 import PainelColaborador from "./PainelColaborador";
 import {
@@ -170,7 +171,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
         <span className="text-xs font-semibold uppercase tracking-wide" style={{ color: TOKENS.muted }}>
           Opção {indice + 1}
         </span>
-        <button onClick={onRemover} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" aria-label="Remover opção">
+        <button onClick={onRemover} className="danger-action" aria-label="Remover opção">
           <Trash2 size={16} />
         </button>
       </div>
@@ -219,6 +220,7 @@ export default function GeradorAtendenteVirtual() {
   const [ehColaborador, setEhColaborador] = useState(undefined); // undefined = verificando
   const [agencia, setAgencia] = useState("Sua Agência");
   const [clientes, setClientes] = useState({});
+  const [buscaClientes, setBuscaClientes] = useState("");
   const [clienteId, setClienteId] = useState(null);
   const [cliente, setCliente] = useState(null);
   const [widgetBaseUrl, setWidgetBaseUrl] = useState(() => {
@@ -320,7 +322,19 @@ export default function GeradorAtendenteVirtual() {
     return () => clearTimeout(timer);
   }, [agencia, widgetBaseUrl, carregado, sessao, ehColaborador]);
 
+  const temAlteracoes = !!cliente && JSON.stringify(cliente) !== JSON.stringify(clientes[cliente.id]);
+  useEffect(() => {
+    if (!temAlteracoes) return;
+    const avisar = e => { e.preventDefault(); e.returnValue = ''; };
+    window.addEventListener('beforeunload', avisar);
+    return () => window.removeEventListener('beforeunload', avisar);
+  }, [temAlteracoes]);
+  function podeTrocarTela() {
+    return !temAlteracoes || window.confirm('Há alterações não salvas neste cliente. Sair e descartar essas alterações?');
+  }
+
   function escolherCliente(id) {
+    if (!podeTrocarTela()) return;
     if (!clientes[id]) {
       setErro("Esse cliente não existe mais (pode ter sido excluído em outra aba).");
       return;
@@ -334,6 +348,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function iniciarNovoCliente() {
+    if (!podeTrocarTela()) return;
     const c = clienteEmBranco();
     setMostrarColaboradores(false);
     setMostrarSenha(false);
@@ -344,6 +359,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function irParaVisaoGeral() {
+    if (!podeTrocarTela()) return;
     setMostrarColaboradores(false);
     setMostrarSenha(false);
     setClienteId(null);
@@ -519,6 +535,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function abrirColaboradores() {
+    if (!podeTrocarTela()) return;
     setClienteId(null);
     setCliente(null);
     setMostrarSenha(false);
@@ -566,6 +583,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function abrirDefinirSenha() {
+    if (!podeTrocarTela()) return;
     setClienteId(null);
     setCliente(null);
     setMostrarColaboradores(false);
@@ -690,6 +708,7 @@ export default function GeradorAtendenteVirtual() {
 
   const listaClientes = Object.values(clientes).sort((a, b) => a.nomeNegocio.localeCompare(b.nomeNegocio));
 
+  const clientesFiltrados = listaClientes.filter(c => (c.nomeNegocio || '').toLocaleLowerCase('pt-BR').includes(buscaClientes.trim().toLocaleLowerCase('pt-BR')));
   const contagemStatus = {
     active: listaClientes.filter((c) => c.status === "active").length,
     trial: listaClientes.filter((c) => c.status === "trial").length,
@@ -726,13 +745,14 @@ export default function GeradorAtendenteVirtual() {
   }
 
   return (
-    <div className="flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
+    <div className="panel-layout flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
 
+      <a href="#painel-conteudo" className="panel-skip">Pular para o painel</a>
       {/* ---------------- SIDEBAR ---------------- */}
       {/* Fundo fixo (não usa TOKENS.ink): a barra lateral é sempre escura,
           claro ou escuro o tema do sistema, por isso o texto branco fixo
           combinado só funciona com uma cor de fundo igualmente fixa. */}
-      <aside className="w-full md:w-72 shrink-0 p-5 flex flex-col gap-5 text-white" style={{ backgroundColor: "#1C2430" }}>
+      <aside className="panel-sidebar w-full md:w-72 shrink-0 p-5 flex flex-col gap-5 text-white" style={{ backgroundColor: "#1C2430" }}>
         {/* Cores fixas (não usam TOKENS) daqui até o fim da barra lateral:
             ela é sempre escura, então os acentos precisam de valores fixos
             em vez dos tokens que trocam de tom no modo escuro do site. */}
@@ -741,12 +761,14 @@ export default function GeradorAtendenteVirtual() {
           <input
             value={agencia}
             onChange={(e) => setAgencia(e.target.value)}
+            style={{ backgroundColor: "transparent", color: "#ffffff" }}
             className="bg-transparent font-semibold text-base outline-none border-b border-transparent focus:border-white/40 w-full"
             aria-label="Nome da sua agência"
           />
           <BotaoTema tema={tema} alternar={alternarTema} variante="dark" />
         </div>
-        <p className="text-xs opacity-60 -mt-3">Prontô</p>
+        <p className="text-xs opacity-70 -mt-3">Seu espaço de operação · Prontô</p>
+        <button onClick={irParaVisaoGeral} aria-current={!cliente && !mostrarSenha && !mostrarColaboradores ? 'page' : undefined} className="btn btn-ghost-dark justify-start px-3 py-2 text-sm"><LayoutGrid size={16} /> Visão geral</button>
 
         <button
           onClick={iniciarNovoCliente}
@@ -790,16 +812,19 @@ export default function GeradorAtendenteVirtual() {
           />
         </div>
 
-        <div className="flex-1 overflow-y-auto flex flex-col gap-1.5">
+        <label className="flex flex-col gap-2 text-xs"><span>Clientes · {listaClientes.length}</span><input className="panel-search" type="search" value={buscaClientes} onChange={e => setBuscaClientes(e.target.value)} placeholder="Buscar cliente pelo nome" /></label>
+        <div className="panel-client-list flex-1 overflow-y-auto flex flex-col gap-1.5" aria-label="Lista de clientes">
+          {carregado && listaClientes.length > 0 && clientesFiltrados.length === 0 && <p role="status" className="text-xs text-white/80">Nenhum cliente com esse nome.</p>}
           {!carregado && <p className="text-xs opacity-60">Carregando...</p>}
           {carregado && listaClientes.length === 0 && (
             <p className="text-xs opacity-60 leading-relaxed">Nenhum cliente ainda. Clique em "Novo cliente" pra começar.</p>
           )}
-          {listaClientes.map((c) => (
+          {clientesFiltrados.map((c) => (
             <div key={c.id} className="flex items-center gap-1 group">
               <button
                 onClick={() => escolherCliente(c.id)}
-                className="flex-1 flex items-center gap-2 text-left px-3 py-2 rounded-lg text-sm truncate border-l-2"
+                aria-current={clienteId === c.id ? "page" : undefined}
+                className="panel-client flex-1 min-w-0 flex items-center gap-2 text-left px-3 py-2 rounded-lg text-sm truncate border-l-2"
                 style={{
                   backgroundColor: clienteId === c.id ? "#2A3441" : "transparent",
                   borderColor: clienteId === c.id ? c.corPrimaria : "transparent",
@@ -824,7 +849,7 @@ export default function GeradorAtendenteVirtual() {
         </div>
 
         <p className="text-xs opacity-50 leading-relaxed border-t border-white/10 pt-3">
-          Tudo isso roda como link direto pro WhatsApp — sem API oficial, sem QR Code, sem risco de banimento.
+          As respostas aparecem no site. A conversa continua no WhatsApp do negócio.
         </p>
         <div className="flex flex-col gap-1 border-t border-white/10 pt-3">
           <button
@@ -840,7 +865,7 @@ export default function GeradorAtendenteVirtual() {
             <Lock size={13} /> Definir senha
           </button>
           <button
-            onClick={() => supabase.auth.signOut()}
+            onClick={() => { if (podeTrocarTela()) supabase.auth.signOut(); }}
             className="btn btn-ghost-dark justify-start px-1.5 py-1.5 text-xs"
           >
             <LogOut size={13} /> Sair ({sessao.user.email})
@@ -849,7 +874,7 @@ export default function GeradorAtendenteVirtual() {
       </aside>
 
       {/* ---------------- MAIN ---------------- */}
-      <main className="flex-1 p-5 md:p-8 overflow-y-auto">
+      <main id="painel-conteudo" className="panel-main flex-1 p-5 md:p-8 overflow-y-auto">
         {erro && <div role="status" className="card p-3 mb-4 text-sm flex justify-between gap-3"><p>{erro}</p><button aria-label="Fechar aviso" onClick={() => setErro(null)}>×</button></div>}
         {mostrarColaboradores && (
           <div className="max-w-2xl mx-auto flex flex-col gap-5">
@@ -865,6 +890,7 @@ export default function GeradorAtendenteVirtual() {
             <form onSubmit={convidar} className="card p-4 flex items-center gap-2">
               <input
                 type="email"
+                aria-label="E-mail do colaborador"
                 required
                 value={novoEmailColaborador}
                 onChange={(e) => setNovoEmailColaborador(e.target.value)}
@@ -891,7 +917,7 @@ export default function GeradorAtendenteVirtual() {
                       {colab.aceito ? "ativo" : "convite pendente"}
                     </span>
                   </div>
-                  <button onClick={() => excluirColaborador(colab.id, colab.email)} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400" aria-label={"Remover " + colab.email}>
+                  <button onClick={() => excluirColaborador(colab.id, colab.email)} className="danger-action" aria-label={"Remover " + colab.email}>
                     <Trash2 size={14} />
                   </button>
                 </div>
@@ -966,7 +992,7 @@ export default function GeradorAtendenteVirtual() {
                 {salvandoSenha ? "Salvando..." : "Salvar senha"}
               </button>
               {senhaSalva && <span className="text-sm text-center" style={{ color: TOKENS.teal }}>Senha salva — use ela no próximo login.</span>}
-              {erroSenha && <span className="text-sm text-red-600 dark:text-red-400">{erroSenha}</span>}
+              {erroSenha && <span className="text-sm form-error">{erroSenha}</span>}
             </form>
           </div>
         )}
@@ -1033,6 +1059,7 @@ export default function GeradorAtendenteVirtual() {
           </div>
         )}
 
+        {cliente && <div className="panel-savebar max-w-6xl mx-auto mb-5"><div><h1>{cliente.nomeNegocio || 'Novo cliente'}</h1><p role="status">{salvando ? 'Salvando suas informações…' : temAlteracoes ? 'Alterações ainda não salvas' : 'Todas as alterações salvas'}</p></div><button onClick={salvarCliente} disabled={salvando || !temAlteracoes} className="btn btn-primary px-4"><Save size={16}/>{salvando ? 'Salvando…' : 'Salvar alterações'}</button></div>}
         {cliente && (
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 max-w-6xl mx-auto">
 
@@ -1078,7 +1105,7 @@ export default function GeradorAtendenteVirtual() {
                   <div className="flex items-center gap-3">
                     <div
                       className="w-12 h-12 rounded-full flex items-center justify-center text-white text-lg font-bold shrink-0 overflow-hidden"
-                      style={{ backgroundColor: cliente.corPrimaria }}
+                      style={{ backgroundColor: cliente.corPrimaria, color: textoSobreCor(cliente.corPrimaria) }}
                     >
                       {cliente.logoUrl
                         ? <img src={cliente.logoUrl} alt="" className="w-full h-full object-cover" />
@@ -1092,7 +1119,7 @@ export default function GeradorAtendenteVirtual() {
                       <Upload size={13} /> {enviandoLogo ? "Enviando..." : cliente.logoUrl ? "Trocar" : "Enviar imagem"}
                     </button>
                     {cliente.logoUrl && (
-                      <button onClick={removerLogo} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 text-xs">
+                      <button onClick={removerLogo} className="danger-action text-xs">
                         Remover
                       </button>
                     )}
@@ -1104,7 +1131,7 @@ export default function GeradorAtendenteVirtual() {
                       className="hidden"
                     />
                   </div>
-                  {erroLogo && <span className="text-xs text-red-600 dark:text-red-400">{erroLogo}</span>}
+                  {erroLogo && <span className="text-xs form-error">{erroLogo}</span>}
                   <span className="text-xs" style={{ color: TOKENS.muted }}>PNG, JPG ou WEBP, até 2MB. Sem logo, a página usa a inicial do nome na cor escolhida.</span>
                 </div>
 
@@ -1154,7 +1181,7 @@ export default function GeradorAtendenteVirtual() {
                     {(cliente.itensCardapio || []).map((item, i) => (
                       <div key={i} className="flex gap-2">
                         <input
-                          value={item.nome}
+                          aria-label={`Nome do item ${i+1}`} value={item.nome}
                           onChange={(e) => atualizarItemCardapio(i, "nome", e.target.value)}
                           placeholder="Nome do item"
                           className="flex-1 rounded-lg border px-3 py-2 text-sm"
@@ -1167,7 +1194,7 @@ export default function GeradorAtendenteVirtual() {
                           className="w-28 rounded-lg border px-3 py-2 text-sm"
                           style={{ borderColor: TOKENS.border }}
                         />
-                        <button onClick={() => removerItemCardapio(i)} className="text-gray-400 hover:text-red-500 dark:text-gray-500 dark:hover:text-red-400 p-2" aria-label="Remover item">
+                        <button onClick={() => removerItemCardapio(i)} className="danger-action p-2" aria-label="Remover item">
                           <Trash2 size={14} />
                         </button>
                       </div>
@@ -1243,10 +1270,10 @@ export default function GeradorAtendenteVirtual() {
                   <Save size={16} /> {salvando ? "Salvando..." : "Salvar cliente"}
                 </button>
                 {avisoSalvo && <span className="text-sm flex items-center gap-1" style={{ color: TOKENS.teal }}><Check size={14} /> Salvo</span>}
-                {erro && <span className="text-sm text-red-600 dark:text-red-400">{erro}</span>}
+                {erro && <span className="text-sm form-error">{erro}</span>}
               </div>
               {validacao.length > 0 && (
-                <div className="rounded-lg border border-red-200 bg-red-50 p-3 text-sm text-red-700 dark:border-red-900/50 dark:bg-red-950/40 dark:text-red-300">
+                <div role="alert" className="validation-notice rounded-lg p-3 text-sm">
                   <p className="font-semibold">Antes de salvar:</p>
                   <ul className="mt-1 list-disc pl-5">
                     {validacao.map((item) => <li key={item}>{item}</li>)}
@@ -1270,7 +1297,7 @@ export default function GeradorAtendenteVirtual() {
                 </div>
 
                 <div className="preview-frame">
-                  <div className="px-3 py-2 flex items-center gap-2 text-white" style={{ backgroundColor: cliente.corPrimaria }}>
+                  <div className="px-3 py-2 flex items-center gap-2 text-white" style={{ backgroundColor: cliente.corPrimaria, color: textoSobreCor(cliente.corPrimaria) }}>
                     <div className="w-6 h-6 rounded-full bg-white/25 flex items-center justify-center text-xs font-bold">
                       {(cliente.nomeNegocio || "?").charAt(0)}
                     </div>
@@ -1284,7 +1311,7 @@ export default function GeradorAtendenteVirtual() {
                     )}
                     {previewMsgs.map((m, i) => (
                       <div key={i} className={"max-w-[85%] rounded-lg px-2.5 py-1.5 text-xs whitespace-pre-wrap " + (m.autor === "user" ? "self-end text-white" : "self-start border")}
-                        style={m.autor === "user" ? { backgroundColor: cliente.corPrimaria } : { borderColor: TOKENS.border, backgroundColor: TOKENS.surface }}>
+                        style={m.autor === "user" ? { backgroundColor: cliente.corPrimaria, color: textoSobreCor(cliente.corPrimaria) } : { borderColor: TOKENS.border, backgroundColor: TOKENS.surface }}>
                         {m.link ? <a href={m.link.url} target="_blank" rel="noopener noreferrer" className="underline font-medium" style={{ color: TOKENS.amberDeep }}>{m.link.label}</a> : m.texto}
                       </div>
                     ))}

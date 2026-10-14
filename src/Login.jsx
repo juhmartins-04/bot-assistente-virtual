@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Sparkles, Mail, Lock } from "lucide-react";
+import { Sparkles, Mail, Lock, Eye, EyeOff } from "lucide-react";
 import { supabase } from "./utils/supabase";
 import { TOKENS } from "./tokens";
 import { useTema } from "./useTema";
@@ -10,6 +10,7 @@ export default function Login() {
   const [modo, setModo] = useState("senha"); // "senha" | "link"
   const [email, setEmail] = useState("");
   const [senha, setSenha] = useState("");
+  const [mostrarSenha, setMostrarSenha] = useState(false);
   const [enviando, setEnviando] = useState(false);
   const [enviado, setEnviado] = useState(false);
   const [erro, setErro] = useState(null);
@@ -70,9 +71,10 @@ export default function Login() {
           Voltar à página do Prontô
         </a>
 
+        <div><h2 className="text-xl font-semibold">Acesse seu painel</h2><p className="mt-2 leading-relaxed" style={{color: TOKENS.muted}}>Gerencie clientes, informações e resultados em um só lugar.</p></div>
         {enviado ? (
           <div className="flex flex-col gap-2">
-            <p className="font-medium">Verifique seu e-mail</p>
+            <p role="status" className="font-medium">Verifique seu e-mail</p>
             <p style={{ color: TOKENS.muted }}>
               Mandamos um link de acesso para <strong>{email}</strong>. Abra
               nesse mesmo navegador pra entrar.
@@ -96,24 +98,27 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@suaagencia.com"
+                placeholder="seu@email.com"
                 className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
             </label>
             <label className="flex flex-col gap-1">
               <span className="font-medium">Senha</span>
-              <input
-                type="password"
+              <div className="password-field"><input
+                type={mostrarSenha ? "text" : "password"}
                 name="password"
                 autoComplete="current-password"
                 required
                 value={senha}
                 onChange={(e) => setSenha(e.target.value)}
+                aria-invalid={!!erro}
+                aria-describedby={erro ? "login-erro" : undefined}
                 placeholder="Sua senha"
                 className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
+              <button type="button" className="password-reveal" aria-label={mostrarSenha ? 'Ocultar senha' : 'Mostrar senha'} aria-pressed={mostrarSenha} onClick={() => setMostrarSenha(v => !v)}>{mostrarSenha ? <EyeOff size={18}/> : <Eye size={18}/>}</button></div>
             </label>
             <button
               type="submit"
@@ -122,11 +127,11 @@ export default function Login() {
             >
               <Lock size={16} /> {enviando ? "Entrando..." : "Entrar"}
             </button>
-            {erro && <span className="text-sm text-red-600 dark:text-red-400">{erro}</span>}
+            {erro && <span id="login-erro" role="alert" className="text-sm form-error">{erro}</span>}
             <button
               type="button"
               onClick={() => { setModo("link"); setErro(null); }}
-              className="text-xs font-medium underline self-start"
+              className="text-sm font-medium underline self-start leading-relaxed"
               style={{ color: TOKENS.teal }}
             >
               Ainda não tenho senha / esqueci — entrar por link no e-mail
@@ -147,7 +152,7 @@ export default function Login() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                placeholder="voce@suaagencia.com"
+                placeholder="seu@email.com"
                 className="rounded-lg border px-3 py-2 text-sm"
                 style={{ borderColor: TOKENS.border }}
               />
@@ -159,11 +164,11 @@ export default function Login() {
             >
               <Mail size={16} /> {enviando ? "Enviando..." : "Enviar link de acesso"}
             </button>
-            {erro && <span className="text-sm text-red-600 dark:text-red-400">{erro}</span>}
+            {erro && <span id="login-erro" role="alert" className="text-sm form-error">{erro}</span>}
             <button
               type="button"
               onClick={() => { setModo("senha"); setErro(null); }}
-              className="text-xs font-medium underline self-start"
+              className="text-sm font-medium underline self-start leading-relaxed"
               style={{ color: TOKENS.teal }}
             >
               já tenho senha — entrar com senha
