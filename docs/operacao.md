@@ -91,3 +91,7 @@ O painel recebeu busca por nome, botão de visão geral, barra fixa de salvament
 Validação: 34 testes automáticos, build e dry-run do Workers. Os controles novos do painel foram exercitados em DOM local com dados fictícios e sem rede (busca, edição, salvamento, proteção de rascunho e tema). Esse teste não substitui o acesso autenticado da titular em produção, ainda pendente. Não foi alterado o banco nem contratado serviço nesta revisão.
 
 Próximas melhorias de produto, a avaliar após os primeiros testes com clientes: checklist de implantação por negócio, resumo de renovações e tarefas da semana e modelos por nicho com conteúdo aprovado. Priorizar a rotina real de operação antes de habilitar recursos opcionais de cobrança automática ou portal.
+
+Na conferência após publicar, a demonstração carregou HTML anterior com um chunk já substituído. Os documentos das rotas públicas/painel e o widget passaram a usar Cache-Control: no-cache; arquivos com hash mantêm seu cache normal. Um limite de erro na aplicação oferece recarregamento em falha de rede/chunk. Isso protege novas visitas e atualizações futuras, sem apagar dados do navegador.
+
+A prévia na landing começa com o assistente fechado para deixar a página visível, com instrução de abrir o menu; a demonstração em tela inteira continua abrindo o assistente.

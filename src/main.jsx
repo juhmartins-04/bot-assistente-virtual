@@ -3,6 +3,7 @@ import ReactDOM from 'react-dom/client'
 import Landing from './Landing.jsx'
 import { resolverRota } from './routes'
 import './index.css'
+import ErroCarregamento from './ErroCarregamento'
 import { TemaProvider } from './useTema'
 
 const App = lazy(() => import('./App.jsx'))
@@ -22,9 +23,11 @@ function Conteudo() {
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <TemaProvider>
+    <ErroCarregamento>
     <Suspense fallback={<p role="status" style={{ padding: '2rem', textAlign: 'center' }}>Carregando Prontô...</p>}>
       <Conteudo />
     </Suspense>
+    </ErroCarregamento>
     </TemaProvider>
   </React.StrictMode>,
 )

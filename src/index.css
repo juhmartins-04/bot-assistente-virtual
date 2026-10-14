@@ -5,6 +5,8 @@
   color-scheme: light;
 
   --pr-paper: #f7f8f2;
+  --pr-action: #234c3e;
+  --pr-action-hover: #183a2e;
   --pr-ink: #183e34;
   --pr-muted: #526258;
   --pr-line: #d5ded4;
@@ -49,6 +51,8 @@
   :root:not([data-theme="light"]) {
     color-scheme: dark;
     --pr-paper: #121b18;
+    --pr-action: #47765c;
+    --pr-action-hover: #4b7d61;
     --pr-ink: #e7efe9;
     --pr-muted: #adbdb2;
     --pr-line: #34453b;
@@ -98,6 +102,8 @@
 :root[data-theme="dark"] {
   color-scheme: dark;
     --pr-paper: #121b18;
+    --pr-action: #47765c;
+    --pr-action-hover: #4b7d61;
     --pr-ink: #e7efe9;
     --pr-muted: #adbdb2;
     --pr-line: #34453b;

@@ -50,8 +50,8 @@ function Demonstracao() {
         <iframe key={`${segmento}-${modelo}`} src={`/demo?segmento=${segmento}&modelo=${modelo}&embed=1`}
           title={`Experimente o assistente: ${SEGMENTOS[segmento].nome}`} className="pr-demo-frame" />
       </div>
-      <div className="pr-demo-caption"><span className="pr-status-dot" />Demonstração interativa · negócios fictícios</div>
-      <p className="pr-demo-disclaimer">O WhatsApp da demonstração fala com a Julia sobre o Prontô.</p>
+      <div className="pr-demo-caption"><span className="pr-status-dot" />Clique em “Iniciar conversa” para testar o menu.</div>
+      <p className="pr-demo-disclaimer">Dados fictícios. O WhatsApp fala com a Julia sobre o Prontô.</p>
       <a className="pr-demo-expand" href={`/demo?segmento=${segmento}&modelo=${modelo}`} target="_blank" rel="noopener noreferrer">Abrir demonstração em tela inteira ↗</a>
     </div>
   )

@@ -32,8 +32,8 @@
 .pr-lead { color: var(--pr-muted); font-size: 15px; max-width: 390px; margin-top: 24px !important; line-height: 1.85; }
 .pr-hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 22px; margin-top: 28px; }
 .pr-button { display: inline-flex; justify-content: center; align-items: center; gap: 16px; min-height: 46px; padding: 13px 21px; border-radius: 6px; font-weight: 650; font-size: 14px; text-align: center; transition: background 150ms ease, box-shadow 150ms ease; }
-.pr-site .pr-button-primary { background: #234c3e; color: #fff; border: 1px solid #234c3e; box-shadow: 0 5px 14px #234c3e12; }
-.pr-site .pr-button-primary:hover { background: #183a2e; box-shadow: 0 7px 18px #234c3e28; }
+.pr-site .pr-button-primary { background: var(--pr-action); color: #fff; border: 1px solid var(--pr-action); box-shadow: 0 5px 14px #234c3e12; }
+.pr-site .pr-button-primary:hover { background: var(--pr-action-hover); box-shadow: 0 7px 18px #234c3e28; }
 .pr-site .pr-button-outline { color: var(--pr-ink); border: 1px solid var(--pr-line); background: transparent; }
 .pr-site .pr-button-outline:hover { background: var(--pr-soft); }
 .pr-play-link { display: inline-flex; align-items: center; gap: 8px; font-size: 14px; font-weight: 600; }

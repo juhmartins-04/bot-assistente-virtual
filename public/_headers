@@ -2,3 +2,21 @@
   X-Content-Type-Options: nosniff
   X-Frame-Options: SAMEORIGIN
   Referrer-Policy: strict-origin-when-cross-origin
+
+# O documento de entrada sempre verifica a versão publicada.
+/
+  Cache-Control: no-cache
+/index.html
+  Cache-Control: no-cache
+/demo
+  Cache-Control: no-cache
+/painel
+  Cache-Control: no-cache
+/cliente
+  Cache-Control: no-cache
+/privacidade
+  Cache-Control: no-cache
+/p/*
+  Cache-Control: no-cache
+/atendente-virtual-widget.js
+  Cache-Control: no-cache
