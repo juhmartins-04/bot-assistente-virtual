@@ -1,6 +1,6 @@
 export const MODELOS = { classico: 'Clássico', cartao: 'Cartão de contato', servicos: 'Serviços', cardapio: 'Cardápio' }
 export const PRECOS = { pagina: 97, assistente: 147, completo: 197 }
-export const NOMES_PLANOS = { pagina: 'Só Página', assistente: 'Assistente', completo: 'Site + Assistente' }
+export const NOMES_PLANOS = { pagina: 'Só Página', assistente: 'Assistente', completo: 'Página + Assistente' }
 
 export function urlSegura(valor) {
   try { const u = new URL(valor); return ['https:', 'http:'].includes(u.protocol) ? u.href : null } catch { return null }

@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { atualizarStatusRemoto, listarRegistrosSolo, salvarRegistroSolo } from './storage';
 import { NOMES_PLANOS, PRECOS } from './negocio';
 
-export default function AssinaturaSolo({ cliente, onChange, onPlano }) {
+export default function AssinaturaSolo({ cliente, onChange, onPlano, configPendente = false }) {
   const [historico, setHistorico] = useState([]);
   const [referencia, setReferencia] = useState('');
   const [recebido, setRecebido] = useState(new Date().toLocaleDateString('en-CA', { timeZone: 'America/Sao_Paulo' }));
@@ -22,6 +22,7 @@ export default function AssinaturaSolo({ cliente, onChange, onPlano }) {
 
   async function registrar(evento) {
     evento.preventDefault();
+    if (configPendente) { setAviso("Salve a configuração antes de registrar ou ativar um período pago."); return; }
     if (validade <= recebido) { setAviso('A validade precisa ser posterior ao recebimento.'); return; }
     if (!window.confirm(`Você conferiu o recebimento de R$ ${PRECOS[plano]} no banco? Este registro não efetua uma cobrança.`)) return;
     setBusy(true); setAviso('');
@@ -45,6 +46,7 @@ export default function AssinaturaSolo({ cliente, onChange, onPlano }) {
 
 
   async function ativar() {
+    if (configPendente) { setAviso("Salve a configuração antes de ativar o acesso."); return; }
     if (!window.confirm('Confirma que há um período já pago e vigente no histórico?')) return;
     setBusy(true);
     try { await atualizarStatusRemoto(cliente.id, 'active'); onChange({ status: 'active' }); setAviso('Acesso ativado.'); }
@@ -60,10 +62,10 @@ export default function AssinaturaSolo({ cliente, onChange, onPlano }) {
     {cliente.publicId && <form onSubmit={registrar} className="border rounded p-3 flex flex-col gap-3">
       <div className="grid grid-cols-2 gap-2"><label className="text-xs">Recebido em<input required type="date" value={recebido} onChange={e => setRecebido(e.target.value)} className="w-full border rounded p-2"/></label><label className="text-xs">Período até<input required type="date" value={validade} onChange={e => setValidade(e.target.value)} className="w-full border rounded p-2"/></label></div>
       <label className="text-xs">Referência do comprovante<input required maxLength={160} value={referencia} onChange={e => setReferencia(e.target.value)} placeholder="Ex.: PIX-OUTUBRO-001" className="w-full border rounded p-2"/></label>
-      <button disabled={busy || !referencia.trim()} className="btn btn-primary text-xs">Registrar R$ {PRECOS[plano]} já recebidos</button>
+      <button disabled={busy || configPendente || !referencia.trim()} className="btn btn-primary text-xs">Registrar R$ {PRECOS[plano]} já recebidos</button>
     </form>}
     {historico.length > 0 && <details><summary className="text-xs cursor-pointer">Histórico de recebimentos</summary>{historico.map(r => <p key={r._key} className="text-xs py-2">{new Date(r.recebidoEm).toLocaleDateString('pt-BR')} · R$ {(r.valorCentavos/100).toFixed(2)} · {r.referencia}</p>)}</details>}
-    {historico.some(r => new Date(r.validoAte) > new Date()) && cliente.status !== 'active' && <button disabled={busy} className="btn btn-outline text-xs" onClick={ativar}>Ativar acesso já pago</button>}
+    {historico.some(r => new Date(r.validoAte) > new Date()) && cliente.status !== 'active' && <button disabled={busy || configPendente} className="btn btn-outline text-xs" onClick={ativar}>Ativar acesso já pago</button>}
     <p className="text-[11px]">Nesta edição, confira as renovações semanalmente. Após o prazo combinado e 10 dias de tolerância, suspenda o acesso se o cliente não renovar. Cancelamentos e pedidos de alteração são combinados por WhatsApp.</p>
     {aviso && <p role="status" className="text-xs">{aviso}</p>}
   </section>;

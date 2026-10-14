@@ -2,6 +2,7 @@ import { OPERACAO_COMPLETA } from './operacao';
 import React, { useState } from 'react'
 import { ArrowRight, Check, Clock3, Globe2, MessageCircle, Play, Sparkles } from 'lucide-react'
 import { CONTATO, linkComercial, PLANOS, SEGMENTOS } from './comercial'
+import { DESCRICOES_MODELOS } from './paginas'
 import { MODELOS } from './negocio'
 import { useEffect } from 'react'
 import './landing.css'
@@ -10,12 +11,13 @@ import { useTema } from './useTema'
 
 const PERGUNTAS = [
   ['Preciso ter um site?', 'Você pode instalar o assistente no site que já tem ou escolher uma página própria do Prontô, com as informações do seu negócio.'],
+  ['Por que há uma mensalidade?', 'A mensalidade inclui a configuração do modelo, a manutenção do serviço, o relatório de uso e até duas solicitações agrupadas de conteúdo por mês. Você fala diretamente comigo para os ajustes. Não é preciso montar e administrar a ferramenta por conta própria.'],
   ['Como funciona o teste de 14 dias?', 'Você conversa comigo, definimos as informações do negócio e eu preparo a configuração. O teste começa com o Prontô disponível para você experimentar. Depois, você decide se quer continuar no plano escolhido.'],
   ['Ele responde dentro do WhatsApp?', 'As respostas automáticas aparecem no site ou na página do Prontô. Quando o cliente quer conversar, ele abre o seu WhatsApp com uma mensagem pronta e você segue o atendimento por lá.'],
   ['As respostas são feitas por inteligência artificial?', 'O menu usa respostas que você aprova: horários, serviços, valores e outras dúvidas frequentes. Você sabe exatamente quais informações serão mostradas.'],
   ['Preciso entender de tecnologia?', 'Eu cuido da configuração e da instalação. Você me conta sobre seu negócio e aprova as informações antes de começar.'],
   ['O que está incluído nas atualizações?', 'Incluímos até duas solicitações agrupadas de atualização de conteúdo por mês e até cinco perguntas essenciais no assistente. Prazo e informações são combinados e aprovados com você. Redesign, novas funções, tradução e atendimento humano são serviços à parte.'],
-  ['Posso cancelar quando quiser?', 'Sim. Os planos são mensais, sem fidelidade e sem multa. O cancelamento encerra a renovação e você mantém acesso até o fim do período já pago. Solicite diretamente à Julia pelo WhatsApp.'],
+  ['Posso cancelar quando quiser?', 'Sim. Os planos são mensais, sem fidelidade e sem multa. A continuidade é combinada com você, sem cobrança automática. O cancelamento encerra a renovação e você mantém acesso até o fim do período já pago. Solicite diretamente à Julia pelo WhatsApp.'],
 ]
 
 function BotaoContato({ children = 'Quero testar por 14 dias', plano, secundario = false }) {
@@ -65,7 +67,7 @@ export default function Landing() {
       const a = event.target.closest?.('a[href]'); if (!a) return;
       const u = new URL(a.href); if (u.hostname !== 'wa.me' || u.pathname !== `/${CONTATO.whatsapp}`) return;
       const mensagem = u.searchParams.get('text') || '';
-      const plano = mensagem.includes('Só Página') ? 'pagina' : mensagem.includes('Site + Assistente') ? 'completo' : mensagem.includes('Assistente') ? 'assistente' : 'geral';
+      const plano = mensagem.includes('Só Página') ? 'pagina' : mensagem.includes('Página + Assistente') ? 'completo' : mensagem.includes('Assistente') ? 'assistente' : 'geral';
       const utm = new URLSearchParams(window.location.search).get('utm_source')?.toLowerCase();
       const origem = ['instagram','google','indicacao'].includes(utm) ? utm : utm ? 'outro' : 'direto';
       fetch('https://rnlgvlmwwncfrfywszaf.supabase.co/rest/v1/rpc/registrar_interesse', { method:'POST',keepalive:true,headers:{apikey:'sb_publishable_x40vbDCMSrdE7uiNGK0U8Q_ODc99VlB','Content-Type':'application/json'},body:JSON.stringify({p_plano:plano,p_origem:origem}) }).catch(() => {});
@@ -107,6 +109,10 @@ export default function Landing() {
           <div><MessageCircle size={21} aria-hidden="true" /><p><strong>Seu WhatsApp de sempre</strong><span>Uma conversa que continua com você</span></p></div>
         </div>
 
+        <section className="pr-section pr-container" aria-labelledby="titulo-diferencial"><div className="pr-section-heading"><p className="pr-eyebrow">CONFIGURAÇÃO E ACOMPANHAMENTO COMIGO</p><h2 id="titulo-diferencial">Uma ferramenta simples.<br/><em>Uma pessoa para deixar pronta.</em></h2><p>Eu organizo suas informações, preparo a página e acompanho os ajustes. Você aprova o conteúdo antes de publicar.</p></div><div className="pr-difference-grid"><article><Sparkles size={22}/><h3>Configuração feita para o seu negócio</h3><p>Nome, cores, serviços e perguntas escolhidos com você, dentro do modelo contratado.</p></article><article><Check size={22}/><h3>Informações que você aprova</h3><p>Seu cliente recebe os horários, preços e orientações que você decidiu mostrar.</p></article><article><MessageCircle size={22}/><h3>Suporte direto com a Julia</h3><p>Até duas solicitações agrupadas de conteúdo por mês. Prazos combinados na implantação.</p></article></div></section>
+
+        <section className="pr-section pr-container" aria-labelledby="titulo-modelos"><div className="pr-section-heading"><p className="pr-eyebrow">ESCOLHA A ESTRUTURA QUE COMBINA COM VOCÊ</p><h2 id="titulo-modelos">Seu negócio, em uma página<br/><em>fácil de encontrar e usar.</em></h2><p>Para profissionais de beleza, banho e tosa e serviços locais. Um link para a bio, informações organizadas e contato direto.</p></div><div className="pr-template-grid">{Object.entries(MODELOS).map(([k,v])=><article key={k}><span className={`pr-template-sample pr-template-${k}`} aria-hidden="true"><i/><i/><i/><i/></span><h3>{v}</h3><p>{DESCRICOES_MODELOS[k]}</p><a className="pr-text-link" href={`/demo?modelo=${k}`} target="_blank" rel="noopener noreferrer">Ver modelo<ArrowRight size={16}/></a></article>)}</div></section>
+
         <section className="pr-section pr-container" id="como-funciona" aria-labelledby="titulo-como">
           <div className="pr-section-heading"><p className="pr-eyebrow">PEQUENO NO SITE. ÚTIL NA ROTINA.</p><h2 id="titulo-como">Da dúvida à conversa,<br /><em>em poucos cliques.</em></h2><p>O cliente encontra o que precisa. Você recebe a conversa com mais contexto.</p></div>
           <ol className="pr-steps">
@@ -120,7 +126,7 @@ export default function Landing() {
           <div><p className="pr-eyebrow">DO JEITO QUE VOCÊ PRECISA</p><h2 id="titulo-fit">Já tem site?<br /><em>Ainda não tem?</em></h2></div>
           <div className="pr-fit-options">
             <article><span className="pr-tag">JÁ TENHO SITE</span><h3>Mais atendimento no que já existe.</h3><p>Eu instalo o Prontô no seu site e configuro as perguntas que seus clientes costumam fazer.</p><a href={linkComercial('Assistente (R$ 147/mês)')} target="_blank" rel="noopener noreferrer">Quero o assistente<ArrowRight size={16} aria-hidden="true" /></a></article>
-            <article><span className="pr-tag">PRECISO DE UMA PÁGINA</span><h3>Um endereço próprio para o seu negócio.</h3><p>Uma página com sua marca, serviços e contato. Você pode incluir o assistente para completar a experiência.</p><a href="#planos">Ver os planos com página<ArrowRight size={16} aria-hidden="true" /></a></article>
+            <article><span className="pr-tag">PRECISO DE UMA PÁGINA</span><h3>Um link com as informações do seu negócio.</h3><p>Uma página com sua marca, serviços e contato. Você pode incluir o assistente para completar a experiência.</p><a href="#planos">Ver os planos com página<ArrowRight size={16} aria-hidden="true" /></a></article>
           </div>
         </section>
 
@@ -138,7 +144,7 @@ export default function Landing() {
               </article>
             ))}
           </div>
-          <p className="pr-pricing-note">Precisa de acompanhamento humano no atendimento? A gente combina o escopo e o valor à parte.</p>
+          <p className="pr-pricing-note">A mensalidade inclui configuração e os ajustes de conteúdo do plano. O link no Prontô está incluído; domínio personalizado e mudanças de funcionalidade são combinados à parte.</p>
         </section>
 
         <section className="pr-section pr-container" aria-labelledby="titulo-implantacao"><div className="pr-section-heading"><p className="pr-eyebrow">DA CONFIGURAÇÃO AO PRIMEIRO DIA</p><h2 id="titulo-implantacao">Você aprova.<br /><em>Eu deixo pronto.</em></h2><p>Você envia marca, serviços, horários e contatos. Eu preparo a página ou o menu, você confere e combinamos a publicação. Os 14 dias começam quando o teste é publicado.</p></div><div className="pr-report-sample"><div><span className="pr-tag">RELATÓRIO FICTÍCIO · EXEMPLO</span><h3>Entenda o que está sendo usado.</h3><p>Relatório por período, com exportação. Acompanhe cliques e dúvidas frequentes para ajustar suas informações.</p></div><dl><div><dt>Visitas da página</dt><dd>240</dd></div><div><dt>Aberturas do assistente</dt><dd>68</dd></div><div><dt>Cliques no WhatsApp</dt><dd>21</dd></div></dl><p className="pr-micro">Números ilustrativos. Cliques não comprovam mensagens, agendamentos ou vendas.</p></div></section>

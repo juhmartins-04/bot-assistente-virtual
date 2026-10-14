@@ -1,3 +1,4 @@
+import { normalizarCliente } from "./paginas";
 import { OPERACAO_COMPLETA } from './operacao';
 import { periodoMes, caminhoLogo, baixar } from "./negocio";
 import { supabase } from "./utils/supabase";
@@ -66,14 +67,14 @@ export async function listarClientes() {
   const financeiro = OPERACAO_COMPLETA ? [] : await listarRegistrosSolo("pagamento:");
   const mapa = {};
   (data || []).forEach((linha) => {
-    mapa[linha.id] = {
+    mapa[linha.id] = normalizarCliente({
       id: linha.id,
       ...linha.dados,
       publicId: linha.public_id,
       status: linha.operational_state || linha.status,
       trialEndsAt: linha.trial_ends_at,
       plano: linha.plano || linha.dados.plano || (linha.dados.incluiAssistente === false ? "pagina" : "completo"), paidUntil: linha.paid_until || financeiro.filter(r => r.clienteId === linha.id).map(r => r.validoAte).sort().at(-1), cancelAt: linha.cancel_at, legacyAccess: linha.legacy_access || (!linha.operational_state && linha.status === "active"),
-    };
+    });
   });
   return mapa;
 }
@@ -84,7 +85,7 @@ export async function listarClientes() {
  * o estado local, principalmente no primeiro salvamento de um cliente novo.
  */
 export async function salvarClienteRemoto(cliente, userId) {
-  const { id, publicId, status, trialEndsAt, plano, paidUntil, cancelAt, legacyAccess, ...dados } = cliente;
+  const { id, publicId, status, trialEndsAt, plano, paidUntil, cancelAt, legacyAccess, ...dados } = normalizarCliente(cliente);
   if (!OPERACAO_COMPLETA) { dados.plano = plano || (dados.incluiAssistente === false ? 'pagina' : 'completo'); dados.incluiPagina = dados.plano !== 'assistente'; dados.incluiAssistente = dados.plano !== 'pagina'; }
   const { data: anterior, error: erroAnterior } = await supabase.from(TABELA_CLIENTES).select(OPERACAO_COMPLETA ? 'dados,operational_state' : 'dados').eq('id',id).maybeSingle();
   if (erroAnterior) throw erroAnterior;
@@ -132,7 +133,9 @@ export async function excluirClienteRemoto(id) {
   if (erroAlvo) throw erroAlvo;
   const base = import.meta.env.VITE_SUPABASE_URL || 'https://rnlgvlmwwncfrfywszaf.supabase.co';
   const logo = caminhoLogo(alvo.dados.logoUrl, alvo.user_id, base);
-  const { error } = await supabase.from(TABELA_CLIENTES).delete().eq("id", id);
+  const { error } = await supabase.from(TABELA_CLIENTES).delete().eq("id", id)
+    .select("id")
+    .single();
 
   if (error) {
     console.error("excluirClienteRemoto erro:", error.message);
@@ -157,7 +160,9 @@ export async function atualizarStatusRemoto(id, status) {
   const { error } = await supabase
     .from(TABELA_CLIENTES)
     .update({ status, ...(OPERACAO_COMPLETA ? { operational_state: status } : {}), updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .single();
 
   if (error) {
     console.error("atualizarStatusRemoto erro:", error.message);
@@ -176,7 +181,9 @@ export async function estenderTesteRemoto(id, dias) {
   const { error } = await supabase
     .from(TABELA_CLIENTES)
     .update({ status: "trial", ...(OPERACAO_COMPLETA ? { operational_state: "trial" } : {}), trial_ends_at: trialEndsAt, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .select("id")
+    .single();
 
   if (error) {
     console.error("estenderTesteRemoto erro:", error.message);

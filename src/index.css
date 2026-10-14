@@ -494,3 +494,25 @@
 }
 
 .panel-sidebar .opacity-50, .panel-sidebar .opacity-60 { opacity: .75; }
+
+.creation-dialog,.page-preview-dialog { width:min(880px,calc(100vw - 32px)); max-height:calc(100dvh - 32px); padding:0; border:1px solid var(--border); border-radius:20px; background:var(--surface); color:var(--ink); box-shadow:0 24px 90px #00000040; }
+.creation-dialog::backdrop,.page-preview-dialog::backdrop { background:#0c1917b3; }
+.creation-header { display:flex; justify-content:space-between; align-items:flex-start; gap:20px; padding:24px; border-bottom:1px solid var(--border); }
+.creation-header h1 { font-size:24px; line-height:1.25; font-weight:650; margin-top:6px; }
+.creation-eyebrow { color:var(--teal); font-size:10px; font-weight:700; letter-spacing:1px; }
+.creation-content { padding:24px; display:grid; gap:24px; }
+.creation-content legend { font-size:15px; font-weight:650; margin-bottom:12px; }
+.creation-options { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; }
+.creation-models { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
+.creation-choice { padding:16px; border:1px solid var(--border); border-radius:12px; display:grid; gap:7px; position:relative; cursor:pointer; }
+.creation-choice.is-selected { background:var(--teal-soft); border-color:var(--teal); }
+.creation-choice input { position:absolute; top:18px; right:14px; accent-color:var(--teal-solid); }
+.creation-choice strong { padding-right:20px; font-size:14px; }.creation-choice span{font-size:13px;font-weight:650;color:var(--teal)}
+.creation-choice small { font-size:12px; line-height:1.6; color:var(--muted); }
+.creation-note { font-size:12px; line-height:1.6; color:var(--muted); display:flex; gap:8px; align-items:flex-start; }.creation-note svg{flex-shrink:0;margin-top:2px}
+.creation-footer { display:flex; justify-content:flex-end; gap:12px; padding:18px 24px; border-top:1px solid var(--border); }
+.page-preview-dialog { width:min(1120px,calc(100vw - 24px)); }
+.page-preview-toolbar{display:flex;justify-content:center;gap:12px;padding:16px}
+.page-preview-stage{padding:0 18px 18px;background:var(--canvas);overflow:auto;text-align:center}
+.page-preview-stage iframe{display:block;max-width:100%;height:65dvh;border:1px solid var(--border);border-radius:12px;margin:auto;background:var(--pr-paper)}
+@media(max-width:600px){.creation-header{padding:18px}.creation-header h1{font-size:21px}.creation-content{padding:18px}.creation-options,.creation-models{grid-template-columns:1fr}.creation-footer{padding:16px}.page-preview-stage{padding-inline:8px}.page-preview-toolbar .btn{font-size:12px}}

@@ -1,5 +1,8 @@
 import { OPERACAO_COMPLETA } from './operacao';
 import AssinaturaSolo from './AssinaturaSolo';
+import NovoCliente from './NovoCliente';
+import { aplicarPlano, normalizarCliente, validarCliente, checklistPagina, acessoPublicado, LIMITE_CARDAPIO } from './paginas';
+const PreviaPagina = React.lazy(() => import('./PreviaPagina'));
 import React, { useState, useEffect, useRef } from "react";
 import {
   Plus, Trash2, Copy, Check, MessageCircle, Calendar,
@@ -47,19 +50,19 @@ function novoIdCliente() {
   return "c" + crypto.randomUUID();
 }
 
-function clienteEmBranco() {
+function clienteEmBranco(plano = "completo", layout = "classico") {
   return {
     id: novoIdCliente(),
     nomeNegocio: "",
-    plano: "completo",
-    corPrimaria: "#21c3cb",
+    plano, incluiPagina: plano !== "assistente",
+    corPrimaria: "#386951",
     numeroWhatsApp: "",
     idiomaPadrao: "auto",
     sobreNegocio: "",
     endereco: "",
     horarioFuncionamento: "",
-    incluiAssistente: true,
-    layout: "classico", // "classico" | "cartao" | "servicos" | "cardapio"
+    incluiAssistente: plano !== "pagina",
+    layout,
     instagramUrl: "",
     servicos: ["", "", "", ""],
     itensCardapio: [{ nome: "", preco: "" }, { nome: "", preco: "" }, { nome: "", preco: "" }],
@@ -69,13 +72,13 @@ function clienteEmBranco() {
     transferirLabelEn: "Talk to someone",
     transferirMensagemWhatsPt: "Olá! Vim pelo site e gostaria de falar com um atendente.",
     transferirMensagemWhatsEn: "Hi! I came from the website and would like to talk to someone.",
-    opcoes: [
+    opcoes: plano === "pagina" ? [] : [
       { id: "o1", labelPt: "Horário de funcionamento", labelEn: "Opening hours", tipo: "resposta",
-        respostaPt: "Funcionamos de segunda a sábado, das 9h às 18h.", respostaEn: "We're open Monday to Saturday, 9am to 6pm.",
+        respostaPt: "", respostaEn: "",
         mensagemWhatsPt: "", mensagemWhatsEn: "", linkAgenda: "" },
       { id: "o2", labelPt: "Agendar horário", labelEn: "Book an appointment", tipo: "agenda",
         respostaPt: "", respostaEn: "", mensagemWhatsPt: "", mensagemWhatsEn: "",
-        linkAgenda: "https://cal.com/seu-estabelecimento" }
+        linkAgenda: "" }
     ]
   };
 }
@@ -118,33 +121,6 @@ function mensagemLembreteWhats(cliente) {
   return `Oi! O teste do Prontô do ${cliente.nomeNegocio} acaba em ${dias === 0 ? "breve" : dias + " dia" + (dias === 1 ? "" : "s")}. Quer continuar? É só confirmar comigo que eu já ativo.`;
 }
 
-function validarCliente(c) {
-  const erros = [];
-  if (!c.nomeNegocio.trim()) erros.push("Informe o nome do estabelecimento.");
-  if (!/^\d{10,15}$/.test(c.numeroWhatsApp.trim())) {
-    erros.push("Informe o WhatsApp só com dígitos, incluindo país e DDD.");
-  }
-  if (c.incluiAssistente !== false && c.opcoes.length === 0) erros.push("Adicione pelo menos uma opção no menu.");
-
-  if (c.instagramUrl && !urlSegura(c.instagramUrl)) erros.push("Informe um link http ou https para o Instagram.");
-  if (c.opcoes.length > 5) erros.push("O plano inclui até cinco perguntas essenciais.");
-  c.opcoes.forEach((opcao, index) => {
-    const numero = index + 1;
-    if (!opcao.labelPt.trim()) erros.push(`Opção ${numero}: informe o nome em português.`);
-    if (!opcao.labelEn.trim()) erros.push(`Opção ${numero}: informe o nome em inglês.`);
-    if (opcao.tipo === "resposta" && !opcao.respostaPt.trim() && !opcao.respostaEn.trim()) {
-      erros.push(`Opção ${numero}: informe pelo menos uma resposta.`);
-    }
-    if (opcao.tipo === "whatsapp" && !opcao.mensagemWhatsPt.trim() && !opcao.mensagemWhatsEn.trim()) {
-      erros.push(`Opção ${numero}: informe pelo menos uma mensagem de WhatsApp.`);
-    }
-    if (opcao.tipo === "agenda" && !/^https?:\/\//i.test(opcao.linkAgenda.trim())) {
-      erros.push(`Opção ${numero}: informe um link de agenda começando com http ou https.`);
-    }
-  });
-
-  return erros;
-}
 
 function CampoTexto({ label, value, onChange, placeholder, textarea, dica }) {
   const Comp = textarea ? "textarea" : "input";
@@ -152,7 +128,7 @@ function CampoTexto({ label, value, onChange, placeholder, textarea, dica }) {
     <label className="flex flex-col gap-1 text-sm">
       <span className="font-medium" style={{ color: TOKENS.ink }}>{label}</span>
       <Comp
-        value={value}
+        value={value ?? ""}
         onChange={(e) => onChange(e.target.value)}
         placeholder={placeholder}
         rows={textarea ? 2 : undefined}
@@ -178,7 +154,7 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <CampoTexto label="Nome da opção (PT)" value={opcao.labelPt} onChange={(v) => onChange("labelPt", v)} placeholder="Ex: Ver cardápio" />
-        <CampoTexto label="Nome da opção (EN)" value={opcao.labelEn} onChange={(v) => onChange("labelEn", v)} placeholder="Ex: See menu" />
+        <CampoTexto label="Nome da opção (EN, opcional)" value={opcao.labelEn} onChange={(v) => onChange("labelEn", v)} placeholder="Ex: See menu" />
       </div>
 
       <label className="flex flex-col gap-1 text-sm">
@@ -196,13 +172,13 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
       {opcao.tipo === "resposta" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CampoTexto textarea label="Resposta (PT)" value={opcao.respostaPt} onChange={(v) => onChange("respostaPt", v)} placeholder="Texto que o bot vai responder" />
-          <CampoTexto textarea label="Resposta (EN)" value={opcao.respostaEn} onChange={(v) => onChange("respostaEn", v)} placeholder="Same text in English" />
+          <CampoTexto textarea label="Resposta (EN, opcional)" value={opcao.respostaEn} onChange={(v) => onChange("respostaEn", v)} placeholder="Same text in English" />
         </div>
       )}
       {opcao.tipo === "whatsapp" && (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <CampoTexto textarea label="Mensagem que chega no WhatsApp (PT)" value={opcao.mensagemWhatsPt} onChange={(v) => onChange("mensagemWhatsPt", v)} placeholder="Olá! Vim pelo site..." />
-          <CampoTexto textarea label="Mensagem que chega no WhatsApp (EN)" value={opcao.mensagemWhatsEn} onChange={(v) => onChange("mensagemWhatsEn", v)} placeholder="Hi! I came from the website..." />
+          <CampoTexto textarea label="Mensagem que chega no WhatsApp (EN, opcional)" value={opcao.mensagemWhatsEn} onChange={(v) => onChange("mensagemWhatsEn", v)} placeholder="Hi! I came from the website..." />
         </div>
       )}
       {opcao.tipo === "agenda" && (
@@ -210,6 +186,14 @@ function CardOpcao({ opcao, indice, onChange, onRemover }) {
       )}
     </div>
   );
+}
+
+function useAvisoTemporario(visivel, desativar, prazo) {
+  useEffect(() => {
+    if (!visivel) return;
+    const timer = setTimeout(() => desativar(false), prazo);
+    return () => clearTimeout(timer);
+  }, [visivel, desativar, prazo]);
 }
 
 const PlanoOperacao = OPERACAO_COMPLETA ? Assinatura : AssinaturaSolo;
@@ -220,6 +204,8 @@ export default function GeradorAtendenteVirtual() {
   const [ehColaborador, setEhColaborador] = useState(undefined); // undefined = verificando
   const [agencia, setAgencia] = useState("Sua Agência");
   const [clientes, setClientes] = useState({});
+  const [novoAberto, setNovoAberto] = useState(false);
+  const [previaAberta, setPreviaAberta] = useState(false);
   const [buscaClientes, setBuscaClientes] = useState("");
   const [clienteId, setClienteId] = useState(null);
   const [cliente, setCliente] = useState(null);
@@ -252,6 +238,11 @@ export default function GeradorAtendenteVirtual() {
   const logoInputRef = useRef(null);
   const importInputRef = useRef(null);
   const ultimaContaRef = useRef(null);
+  useAvisoTemporario(avisoSalvo, setAvisoSalvo, 2000);
+  useAvisoTemporario(senhaSalva, setSenhaSalva, 2500);
+  useAvisoTemporario(copiado, setCopiado, 1800);
+  useAvisoTemporario(paginaCopiada, setPaginaCopiada, 1800);
+
 
   useEffect(() => {
     function atualizarSessao(novaSessao) {
@@ -330,6 +321,7 @@ export default function GeradorAtendenteVirtual() {
     return () => window.removeEventListener('beforeunload', avisar);
   }, [temAlteracoes]);
   function podeTrocarTela() {
+    if (salvando || enviandoLogo) { setErro("Aguarde o salvamento ou envio da imagem antes de trocar de tela."); return false; }
     return !temAlteracoes || window.confirm('Há alterações não salvas neste cliente. Sair e descartar essas alterações?');
   }
 
@@ -342,14 +334,17 @@ export default function GeradorAtendenteVirtual() {
     setMostrarColaboradores(false);
     setMostrarSenha(false);
     setClienteId(id);
-    setCliente(JSON.parse(JSON.stringify(clientes[id])));
+    setCliente(normalizarCliente(JSON.parse(JSON.stringify(clientes[id]))));
     setValidacao([]);
     setPreviewMsgs([]);
   }
 
-  function iniciarNovoCliente() {
-    if (!podeTrocarTela()) return;
-    const c = clienteEmBranco();
+  function abrirNovoCliente() {
+    if (podeTrocarTela()) setNovoAberto(true);
+  }
+  function iniciarNovoCliente({ plano, layout }) {
+    const c = clienteEmBranco(plano, layout);
+    setNovoAberto(false);
     setMostrarColaboradores(false);
     setMostrarSenha(false);
     setClienteId(c.id);
@@ -367,7 +362,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function atualizarCampo(campo, valor) {
-    setCliente((prev) => ({ ...prev, [campo]: valor, ...(campo === "incluiAssistente" ? { plano: valor ? "completo" : "pagina" } : {}) }));
+    setCliente((prev) => campo === "incluiAssistente" ? aplicarPlano(prev, valor ? "completo" : "pagina") : { ...prev, [campo]: valor });
     setValidacao([]);
   }
 
@@ -412,6 +407,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function adicionarItemCardapio() {
+    if ((cliente.itensCardapio || []).length >= LIMITE_CARDAPIO) { setErro("O cardápio inclui até vinte itens."); return; }
     setCliente((prev) => ({ ...prev, itensCardapio: [...(prev.itensCardapio || []), { nome: "", preco: "" }] }));
   }
 
@@ -451,8 +447,9 @@ export default function GeradorAtendenteVirtual() {
   }
 
   async function salvarCliente() {
-    if (!cliente) return;
-    const erros = validarCliente(cliente);
+    if (!cliente || salvando || enviandoLogo) return;
+    const configuracao = normalizarCliente(cliente);
+    const erros = validarCliente(configuracao);
     setValidacao(erros);
     if (erros.length > 0) {
       setErro("Revise os campos antes de salvar.");
@@ -462,12 +459,11 @@ export default function GeradorAtendenteVirtual() {
     setSalvando(true);
     setErro(null);
     try {
-      const resultado = await salvarClienteRemoto(cliente, sessao.user.id);
-      const clienteSalvo = { ...cliente, ...resultado };
-      setCliente(clienteSalvo);
-      setClientes((prev) => ({ ...prev, [cliente.id]: clienteSalvo }));
+      const resultado = await salvarClienteRemoto(configuracao, sessao.user.id);
+      const clienteSalvo = { ...configuracao, ...resultado };
+      setCliente(prev => prev?.id === configuracao.id ? { ...normalizarCliente(prev), ...resultado } : prev);
+      setClientes((prev) => ({ ...prev, [configuracao.id]: clienteSalvo }));
       setAvisoSalvo(true);
-      setTimeout(() => setAvisoSalvo(false), 2000);
     } catch {
       setErro("Não consegui salvar agora. Seu texto continua aqui — tente salvar de novo em instantes.");
     }
@@ -487,6 +483,7 @@ export default function GeradorAtendenteVirtual() {
 
   async function estenderTeste(dias) {
     if (!cliente?.publicId) return;
+    if (temAlteracoes || salvando || enviandoLogo) { setErro('Salve as alterações e confira a prévia antes de publicar o teste.'); return; }
     if (!window.confirm("Confirma que o cliente conferiu as informações e que o teste pode começar agora?")) return;
     try {
       const trialEndsAt = await estenderTesteRemoto(cliente.id, dias);
@@ -521,8 +518,7 @@ export default function GeradorAtendenteVirtual() {
     try {
       await navigator.clipboard.writeText(gerarCodigo(cliente, widgetBaseUrl));
       setCopiado(true);
-      setTimeout(() => setCopiado(false), 1800);
-    } catch { /* clipboard indisponível, sem problema */ }
+    } catch { setErro("Não foi possível copiar automaticamente. Selecione o texto exibido e copie manualmente."); }
   }
 
   async function copiarLinkPagina() {
@@ -530,8 +526,7 @@ export default function GeradorAtendenteVirtual() {
     try {
       await navigator.clipboard.writeText(`${window.location.origin}/p/${cliente.publicId}`);
       setPaginaCopiada(true);
-      setTimeout(() => setPaginaCopiada(false), 1800);
-    } catch { /* clipboard indisponível, sem problema */ }
+    } catch { setErro("Não foi possível copiar automaticamente. Selecione o texto exibido e copie manualmente."); }
   }
 
   function abrirColaboradores() {
@@ -611,7 +606,6 @@ export default function GeradorAtendenteVirtual() {
       setSenhaSalva(true);
       setNovaSenha("");
       setConfirmarSenha("");
-      setTimeout(() => setSenhaSalva(false), 2500);
     } catch {
       setErroSenha("Não consegui salvar a senha agora. Tente de novo em instantes.");
     }
@@ -660,7 +654,6 @@ export default function GeradorAtendenteVirtual() {
       if (dados.widgetBaseUrl) setWidgetBaseUrl(dados.widgetBaseUrl);
       setErro(null);
       setAvisoSalvo(true);
-      setTimeout(() => setAvisoSalvo(false), 2000);
     } catch {
       setErro("Não consegui importar esse arquivo. Confira se ele é um backup JSON válido.");
     } finally {
@@ -669,14 +662,14 @@ export default function GeradorAtendenteVirtual() {
   }
 
   function montarMenuPreview(idioma) {
-    const linhas = cliente.opcoes.map((o, i) => `*${i + 1}* — ${idioma === "en" ? o.labelEn : o.labelPt}`).join("\n");
-    const transferir = idioma === "en" ? cliente.transferirLabelEn : cliente.transferirLabelPt;
+    const linhas = cliente.opcoes.map((o, i) => `*${i + 1}* — ${idioma === "en" ? (o.labelEn || o.labelPt) : o.labelPt}`).join("\n");
+    const transferir = idioma === "en" ? (cliente.transferirLabelEn || cliente.transferirLabelPt) : cliente.transferirLabelPt;
     return `*0* — ${transferir}\n${linhas}\n*9* — ${idioma === "en" ? "Close" : "Encerrar"}`;
   }
 
   function criarMensagensIniciais(idioma) {
     return [
-      { autor: "bot", texto: idioma === "en" ? cliente.saudacaoEn : cliente.saudacaoPt },
+      { autor: "bot", texto: idioma === "en" ? (cliente.saudacaoEn || cliente.saudacaoPt) : cliente.saudacaoPt },
       { autor: "bot", texto: montarMenuPreview(idioma) }
     ];
   }
@@ -695,11 +688,11 @@ export default function GeradorAtendenteVirtual() {
 
   function clicarOpcaoPreview(o) {
     const idioma = previewIdioma;
-    const novas = [...previewMsgs, { autor: "user", texto: idioma === "en" ? o.labelEn : o.labelPt }];
+    const novas = [...previewMsgs, { autor: "user", texto: idioma === "en" ? (o.labelEn || o.labelPt) : o.labelPt }];
     if (o.tipo === "resposta") {
-      novas.push({ autor: "bot", texto: idioma === "en" ? o.respostaEn : o.respostaPt });
+      novas.push({ autor: "bot", texto: idioma === "en" ? (o.respostaEn || o.respostaPt) : o.respostaPt });
     } else if (o.tipo === "whatsapp") {
-      novas.push({ autor: "bot", link: { label: idioma === "en" ? "Continue on WhatsApp" : "Continuar no WhatsApp", url: gerarLinkWhats(cliente.numeroWhatsApp, idioma === "en" ? o.mensagemWhatsEn : o.mensagemWhatsPt) } });
+      novas.push({ autor: "bot", link: { label: idioma === "en" ? "Continue on WhatsApp" : "Continuar no WhatsApp", url: gerarLinkWhats(cliente.numeroWhatsApp, idioma === "en" ? (o.mensagemWhatsEn || o.mensagemWhatsPt) : o.mensagemWhatsPt) } });
     } else {
       novas.push({ autor: "bot", link: { label: idioma === "en" ? "Open calendar" : "Abrir agenda", url: o.linkAgenda } });
     }
@@ -747,6 +740,8 @@ export default function GeradorAtendenteVirtual() {
   return (
     <div className="panel-layout flex flex-col md:flex-row min-h-screen font-sans text-sm" style={{ backgroundColor: TOKENS.canvas, color: TOKENS.ink }}>
 
+      {novoAberto && <NovoCliente onCriar={iniciarNovoCliente} onFechar={()=>setNovoAberto(false)} />}
+      {previaAberta && cliente && <React.Suspense fallback={<p role="status">Preparando prévia…</p>}><PreviaPagina cliente={cliente} onFechar={()=>setPreviaAberta(false)}/></React.Suspense>}
       <a href="#painel-conteudo" className="panel-skip">Pular para o painel</a>
       {/* ---------------- SIDEBAR ---------------- */}
       {/* Fundo fixo (não usa TOKENS.ink): a barra lateral é sempre escura,
@@ -771,7 +766,7 @@ export default function GeradorAtendenteVirtual() {
         <button onClick={irParaVisaoGeral} aria-current={!cliente && !mostrarSenha && !mostrarColaboradores ? 'page' : undefined} className="btn btn-ghost-dark justify-start px-3 py-2 text-sm"><LayoutGrid size={16} /> Visão geral</button>
 
         <button
-          onClick={iniciarNovoCliente}
+          onClick={abrirNovoCliente}
           className="btn py-2.5 text-sm focus:ring-2 focus:ring-white/50"
           style={{ backgroundColor: "#B57A22", color: "#1C2430" }}
         >
@@ -1059,12 +1054,12 @@ export default function GeradorAtendenteVirtual() {
           </div>
         )}
 
-        {cliente && <div className="panel-savebar max-w-6xl mx-auto mb-5"><div><h1>{cliente.nomeNegocio || 'Novo cliente'}</h1><p role="status">{salvando ? 'Salvando suas informações…' : temAlteracoes ? 'Alterações ainda não salvas' : 'Todas as alterações salvas'}</p></div><button onClick={salvarCliente} disabled={salvando || !temAlteracoes} className="btn btn-primary px-4"><Save size={16}/>{salvando ? 'Salvando…' : 'Salvar alterações'}</button></div>}
+        {cliente && <div className="panel-savebar max-w-6xl mx-auto mb-5"><div><h1>{cliente.nomeNegocio || 'Novo cliente'}</h1><p role="status">{salvando ? 'Salvando suas informações…' : temAlteracoes ? 'Alterações ainda não salvas' : 'Todas as alterações salvas'}</p></div><div className="flex flex-wrap gap-2">{cliente.incluiPagina !== false && <button className="btn btn-outline" onClick={()=>setPreviaAberta(true)}><Eye size={16}/>Ver página</button>}<button onClick={salvarCliente} disabled={salvando || enviandoLogo || !temAlteracoes} className="btn btn-primary px-4"><Save size={16}/>{salvando ? 'Salvando…' : 'Salvar alterações'}</button></div></div>}
         {cliente && (
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 max-w-6xl mx-auto">
 
             {/* -------- FORM -------- */}
-            <div className="flex flex-col gap-5">
+            <fieldset disabled={salvando || enviandoLogo} className="flex flex-col gap-5 min-w-0">
 
               <div className="card p-5 flex flex-col gap-4">
                 <div className="flex justify-between gap-2"><h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Building2 size={14} /></span> Identidade</h2><button className="btn btn-outline text-xs" onClick={() => {
@@ -1072,6 +1067,7 @@ export default function GeradorAtendenteVirtual() {
                   const copia = { ...conteudo, id: novoIdCliente(), nomeNegocio: `${cliente.nomeNegocio} (cópia)` };
                   setClienteId(copia.id); setCliente(copia); setValidacao([]);
                 }}>Duplicar configuração</button></div>
+                <label className="flex flex-col gap-1 text-sm"><span className="font-medium">Plano e recursos desta entrega</span><select value={cliente.plano || 'completo'} onChange={e=>setCliente(prev=>aplicarPlano(prev,e.target.value))} className="border rounded-lg p-2">{Object.entries(NOMES_PLANOS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>
                 <p className="text-xs" style={{ color: TOKENS.muted }}>1. Configurar e salvar → 2. Conferir as informações com o cliente → 3. Publicar e iniciar o teste.</p>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <CampoTexto label="Nome do estabelecimento" value={cliente.nomeNegocio} onChange={(v) => atualizarCampo("nomeNegocio", v)} placeholder="Ex: Clínica Vida Plena" />
@@ -1093,11 +1089,12 @@ export default function GeradorAtendenteVirtual() {
                 </div>
               </div>
 
-              <div className="card p-5 flex flex-col gap-4">
-                <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Globe2 size={14} /></span> Página simples (opcional)</h2>
+              {cliente.incluiPagina !== false && <div className="card p-5 flex flex-col gap-4">
+                <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Globe2 size={14} /></span> Página do negócio</h2>
                 <p className="text-xs -mt-2" style={{ color: TOKENS.muted }}>
-                  Preencha se o cliente ainda não tem site. Gera uma página própria com esses dados.
+                  Escolha o modelo e preencha somente o que fizer sentido para este negócio. Confira a página no botão “Ver página”.
                 </p>
+                <CampoTexto label="Categoria ou especialidade (opcional)" value={cliente.categoriaNegocio || ""} onChange={v=>atualizarCampo("categoriaNegocio",v)} placeholder="Ex.: Manicure e cuidados com as unhas"/>
                 <CampoTexto textarea label="Sobre o negócio" value={cliente.sobreNegocio} onChange={(v) => atualizarCampo("sobreNegocio", v)} placeholder="Uma frase curta contando o que o negócio faz." />
 
                 <div className="flex flex-col gap-1.5 text-sm">
@@ -1173,30 +1170,17 @@ export default function GeradorAtendenteVirtual() {
                 {cliente.layout === "cardapio" && (
                   <div className="flex flex-col gap-2">
                     <div className="flex items-center justify-between">
-                      <span className="font-medium text-sm">Itens do cardápio</span>
+                      <span className="font-medium text-sm">Cardápio · até 20 itens</span>
                       <button onClick={adicionarItemCardapio} className="btn btn-soft-teal text-xs px-2 py-1">
                         <Plus size={12} /> Adicionar
                       </button>
                     </div>
                     {(cliente.itensCardapio || []).map((item, i) => (
-                      <div key={i} className="flex gap-2">
-                        <input
-                          aria-label={`Nome do item ${i+1}`} value={item.nome}
-                          onChange={(e) => atualizarItemCardapio(i, "nome", e.target.value)}
-                          placeholder="Nome do item"
-                          className="flex-1 rounded-lg border px-3 py-2 text-sm"
-                          style={{ borderColor: TOKENS.border }}
-                        />
-                        <input
-                          aria-label={`Preço do item ${i+1}`} value={item.preco}
-                          onChange={(e) => atualizarItemCardapio(i, "preco", e.target.value)}
-                          placeholder="R$ 0,00"
-                          className="w-28 rounded-lg border px-3 py-2 text-sm"
-                          style={{ borderColor: TOKENS.border }}
-                        />
-                        <button onClick={() => removerItemCardapio(i)} className="danger-action p-2" aria-label="Remover item">
-                          <Trash2 size={14} />
-                        </button>
+                      <div key={i} className="card p-3 flex flex-col gap-3">
+                        <div className="flex items-center justify-between"><span className="text-xs font-semibold">Item {i+1}</span><button onClick={()=>removerItemCardapio(i)} className="danger-action" aria-label={`Remover item ${i+1}`}><Trash2 size={14}/></button></div>
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3"><CampoTexto label="Nome do item" value={item.nome || ''} onChange={v=>atualizarItemCardapio(i,'nome',v)}/><CampoTexto label="Preço aprovado" value={item.preco || ''} onChange={v=>atualizarItemCardapio(i,'preco',v)} placeholder="Ex.: R$ 12,00"/></div>
+                        <CampoTexto label="Categoria (opcional)" value={item.categoria || ''} onChange={v=>atualizarItemCardapio(i,'categoria',v)} placeholder="Ex.: Bebidas"/>
+                        <CampoTexto textarea label="Descrição (opcional)" value={item.descricao || ''} onChange={v=>atualizarItemCardapio(i,'descricao',v)}/>
                       </div>
                     ))}
                   </div>
@@ -1206,23 +1190,9 @@ export default function GeradorAtendenteVirtual() {
                   <CampoTexto label="Horário de funcionamento" value={cliente.horarioFuncionamento} onChange={(v) => atualizarCampo("horarioFuncionamento", v)} placeholder="Seg a sáb, 9h às 18h" />
                   <CampoTexto label="Endereço" value={cliente.endereco} onChange={(v) => atualizarCampo("endereco", v)} placeholder="Rua Exemplo, 123 - Curitiba/PR" />
                 </div>
-                <label className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    className="mt-0.5"
-                    checked={cliente.incluiAssistente}
-                    onChange={(e) => atualizarCampo("incluiAssistente", e.target.checked)}
-                  />
-                  <span>
-                    <span className="font-medium" style={{ color: TOKENS.ink }}>Incluir o assistente (chat) nesta página</span>
-                    <br />
-                    <span className="text-xs" style={{ color: TOKENS.muted }}>
-                      Desmarque pro plano de entrada "Só Página" — fica só as informações e um botão de WhatsApp comum, sem o menu de chat. As visitas e os cliques da página continuam no relatório.
-                    </span>
-                  </span>
-                </label>
-              </div>
+              </div>}
 
+              {cliente.incluiAssistente !== false && <>
               <div className="card p-5 flex flex-col gap-4">
                 <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><MessageCircle size={14} /></span> Saudação inicial</h2>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -1261,6 +1231,7 @@ export default function GeradorAtendenteVirtual() {
                 )}
               </div>
 
+              </>}
               <div className="flex items-center gap-3">
                 <button
                   onClick={salvarCliente}
@@ -1280,12 +1251,13 @@ export default function GeradorAtendenteVirtual() {
                   </ul>
                 </div>
               )}
-            </div>
+            </fieldset>
 
             {/* -------- PREVIEW + CÓDIGO -------- */}
             <div className="flex flex-col gap-5 xl:sticky xl:top-6 self-start">
+              <section className="card p-4 flex flex-col gap-3" aria-label="Conferência antes da publicação"><h2 className="font-semibold">Antes de publicar</h2>{checklistPagina(cliente, temAlteracoes).map(item=><p key={item.label} className="flex items-center gap-2 text-xs" style={{color:item.ok ? TOKENS.teal : TOKENS.muted}}>{item.ok ? <Check size={15}/> : <Clock size={15}/>} {item.label}</p>)}<p className="text-xs" style={{color:TOKENS.muted}}>Depois, confira a prévia com o cliente e publique o teste. Aprovação e início do teste são decisões suas.</p>{cliente.incluiPagina !== false && <button className="btn btn-outline" onClick={()=>setPreviaAberta(true)}><Eye size={16}/>Conferir página no celular</button>}</section>
 
-              <div className="card p-4 flex flex-col gap-3">
+              {cliente.incluiAssistente !== false && <div className="card p-4 flex flex-col gap-3">
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><Eye size={14} /></span> Pré-visualização</h2>
                   <button
@@ -1319,7 +1291,7 @@ export default function GeradorAtendenteVirtual() {
                       <div className="flex flex-wrap gap-1 pt-1">
                         {cliente.opcoes.map((o, i) => (
                           <button key={o.id} onClick={() => clicarOpcaoPreview(o)} className="text-[11px] px-2 py-1 rounded-md border" style={{ borderColor: cliente.corPrimaria, color: TOKENS.ink }}>
-                            {i + 1}. {previewIdioma === "en" ? o.labelEn : o.labelPt}
+                            {i + 1}. {previewIdioma === "en" ? (o.labelEn || o.labelPt) : o.labelPt}
                           </button>
                         ))}
                         <button onClick={iniciarPreview} className="text-[11px] px-2 py-1 rounded-md border" style={{ borderColor: TOKENS.border, color: TOKENS.muted }}>↺ reiniciar</button>
@@ -1327,7 +1299,7 @@ export default function GeradorAtendenteVirtual() {
                     )}
                   </div>
                 </div>
-              </div>
+              </div>}
 
               <div className="card p-4 flex flex-col gap-3">
                 <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><Lock size={14} /></span> Acesso do cliente</h2>
@@ -1358,9 +1330,9 @@ export default function GeradorAtendenteVirtual() {
                           <Ban size={13} /> Suspender
                         </button>
                       )}
-                      <button onClick={() => estenderTeste(14)} className="btn btn-outline text-xs px-2.5 py-1.5">
+                      {cliente.status !== "active" && <button disabled={temAlteracoes || salvando || enviandoLogo} onClick={() => estenderTeste(14)} className="btn btn-outline text-xs px-2.5 py-1.5">
                         {cliente.status !== "trial" ? "Publicar teste de 14 dias" : "Reiniciar teste por 14 dias"}
-                      </button>
+                      </button>}
                       {(cliente.status === "suspended" || (cliente.status === "trial" && diasRestantes(cliente.trialEndsAt) <= 3)) && (
                         <a
                           href={gerarLinkWhats(cliente.numeroWhatsApp, mensagemLembreteWhats(cliente))}
@@ -1379,7 +1351,7 @@ export default function GeradorAtendenteVirtual() {
                 )}
               </div>
 
-              <PlanoOperacao key={cliente.id} cliente={cliente} onPlano={plano => setCliente(prev => ({ ...prev, plano, incluiAssistente: plano !== 'pagina' }))} onChange={campos => {
+              <PlanoOperacao key={cliente.id} cliente={cliente} configPendente={temAlteracoes || salvando || enviandoLogo} onPlano={plano => setCliente(prev => aplicarPlano(prev, plano))} onChange={campos => {
                 setCliente(prev => ({ ...prev, ...campos })); setClientes(prev => ({ ...prev, [cliente.id]: { ...prev[cliente.id], ...campos } }));
               }} />
               {cliente.publicId && <Resultados key={cliente.publicId} publicId={cliente.publicId} nome={cliente.nomeNegocio} podeGerenciar={OPERACAO_COMPLETA} />}
@@ -1397,16 +1369,16 @@ export default function GeradorAtendenteVirtual() {
                     <ExternalLink size={13} /> Testar widget
                   </a>
                 </div>
-                <CampoTexto
+                {cliente.incluiAssistente !== false && <CampoTexto
                   label="URL onde o widget ficará hospedado"
                   value={widgetBaseUrl}
                   onChange={setWidgetBaseUrl}
                   placeholder="https://seu-dominio.com"
-                  dica="Em produção, use a URL pública onde o arquivo atendente-virtual-widget.js será publicado."
-                />
-                {cliente.publicId && (cliente.sobreNegocio || cliente.endereco || cliente.horarioFuncionamento) && (
+                  dica="Use a origem pública do Prontô. Esta configuração vale para todos os widgets da sua conta."
+                />}
+                {cliente.publicId && cliente.incluiPagina !== false && (
                   <div className="rounded-lg border p-3 flex flex-col gap-2" style={{ borderColor: TOKENS.border }}>
-                    <span className="text-xs font-medium" style={{ color: TOKENS.ink }}>Página simples deste cliente</span>
+                    <span className="text-xs font-medium" style={{ color: TOKENS.ink }}>Link público da página</span><p className="text-xs" style={{color:TOKENS.muted}}>{acessoPublicado(cliente) ? "Acesso liberado. Alterações aparecem depois de salvar." : "Acesso desativado. Use a prévia para conferir; o link só abre após publicar o teste ou ativar um período pago."}</p>
                     <div className="flex items-center gap-2">
                       <a
                         href={`/p/${cliente.publicId}`}
@@ -1428,7 +1400,7 @@ export default function GeradorAtendenteVirtual() {
               {/* Cores fixas (não usam TOKENS): painel de código é sempre
                   escuro, com destaque de sintaxe pensado pra esse contraste,
                   então nem fundo, borda ou botão devem trocar com o tema. */}
-              <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: "rgba(255,255,255,0.1)", backgroundColor: "#1C2430" }}>
+              {cliente.incluiAssistente !== false && <div className="rounded-xl border p-4 flex flex-col gap-3" style={{ borderColor: "rgba(255,255,255,0.1)", backgroundColor: "#1C2430" }}>
                 <div className="flex items-center justify-between">
                   <h2 className="font-semibold text-sm text-white flex items-center gap-2"><Code2 size={14} className="opacity-70" /> Código pra colar no site</h2>
                   <button onClick={copiarCodigo} className="flex items-center gap-1 text-xs font-medium px-2.5 py-1.5 rounded-md" style={{ backgroundColor: copiado ? "#2F6F62" : "#B57A22", color: copiado ? "#fff" : "#1C2430" }}>
@@ -1441,7 +1413,7 @@ export default function GeradorAtendenteVirtual() {
                 <p className="text-[11px] text-white/50 leading-relaxed">
                   Hospede o <code>atendente-virtual-widget.js</code> em uma hospedagem que permita uso comercial e troque a URL acima. Cole essa linha única antes do <code>&lt;/body&gt;</code> do site do cliente — depois disso, ativar, suspender ou editar o conteúdo acontece só aqui no painel, sem precisar mexer no site dele de novo.
                 </p>
-              </div>
+              </div>}
             </div>
           </div>
         )}

@@ -8,7 +8,7 @@ import { useTema } from './useTema'
 
 export default function BusinessPage({ dados, demonstracao = false, onWhatsApp }) {
   const { tema, alternar } = useTema()
-  const layout = dados.layout || 'classico'
+  const layout = ['classico','cartao','servicos','cardapio'].includes(dados.layout) ? dados.layout : 'classico'
   const cor = /^#[0-9a-f]{6}$/i.test(dados.corPrimaria || '') ? dados.corPrimaria : '#386951'
   const whats = /^\d{10,15}$/.test(dados.numeroWhatsApp || '') ? `https://wa.me/${dados.numeroWhatsApp}?text=${encodeURIComponent(dados.transferirMensagemWhatsPt || '')}` : null
   const servicos = (dados.servicos || []).map(s => typeof s === 'string' ? { nome: s } : s).filter(s => s?.nome?.trim())
@@ -28,7 +28,7 @@ export default function BusinessPage({ dados, demonstracao = false, onWhatsApp }
           {demonstracao && <p className="biz-caption">O contato deste exemplo fala com a Julia sobre o Prontô.</p>}
         </section>
         {layout === 'servicos' && servicos.length > 0 && <section className="biz-section"><p className="biz-eyebrow">O QUE FAZEMOS</p><h2>Cuidado em cada detalhe.</h2><div className="biz-service-grid">{servicos.map((s, i) => <article key={i}><span className="biz-number">0{i + 1}</span><h3>{s.nome}</h3>{s.descricao && <p>{s.descricao}</p>}{s.preco && <strong>{s.preco}</strong>}</article>)}</div></section>}
-        {layout === 'cardapio' && itens.length > 0 && <section className="biz-section"><p className="biz-eyebrow">FEITO PARA VOCÊ</p><h2>Nosso cardápio.</h2><div className="biz-menu">{itens.map((item, i) => <article key={i}><div>{item.categoria && <small>{item.categoria}</small>}<h3>{item.nome}</h3>{item.descricao && <p>{item.descricao}</p>}</div>{item.preco && <strong>{item.preco}</strong>}</article>)}</div></section>}
+        {layout === 'cardapio' && itens.length > 0 && <section className="biz-section"><p className="biz-eyebrow">FEITO PARA VOCÊ</p><h2>{dados.tituloCardapio || 'Nosso cardápio.'}</h2><div className="biz-menu">{itens.map((item, i) => <article key={i}><div>{item.categoria && <small>{item.categoria}</small>}<h3>{item.nome}</h3>{item.descricao && <p>{item.descricao}</p>}</div>{item.preco && <strong>{item.preco}</strong>}</article>)}</div></section>}
         {(dados.horarioFuncionamento || dados.endereco || instagram) && <section className="biz-info" aria-label="Informações e contato">
           {dados.horarioFuncionamento && <div><Clock3 size={20} /><div><h2>Quando estamos por aqui</h2><p>{dados.horarioFuncionamento}</p></div></div>}
           {dados.endereco && <a href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(dados.endereco)}`} target="_blank" rel="noopener noreferrer"><MapPin size={20} /><div><h2>Venha nos conhecer</h2><p>{dados.endereco}</p><span>Ver no mapa ↗</span></div></a>}

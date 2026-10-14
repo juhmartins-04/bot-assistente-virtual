@@ -14,14 +14,14 @@ export function linkComercial(plano = '') {
 export const PLANOS = [
   {
     nome: 'Só Página', preco: 97, descricao: 'Um lugar próprio para apresentar seu negócio.',
-    itens: ['Página com a sua marca', 'Sobre, serviços, horário e endereço', 'Botão para o seu WhatsApp', 'Até 2 pedidos de atualização por mês'],
+    itens: ['Modelo configurado com a sua marca', 'Serviços, horário, endereço e contato', 'Link para usar na bio e no WhatsApp', 'Relatório de visitas e cliques', 'Até 2 pedidos de conteúdo por mês'],
   },
   {
     nome: 'Assistente', preco: 147, descricao: 'Atendimento rápido no site que você já tem.',
-    itens: ['Instalação no seu site incluída', 'Até 5 perguntas com respostas aprovadas', 'Encaminhamento para WhatsApp e agenda', 'Relatório mensal de uso'],
+    itens: ['Instalação no seu site incluída', 'Até 5 perguntas com respostas aprovadas', 'Encaminhamento para WhatsApp e agenda', 'Relatório de uso e dúvidas mais clicadas', 'Até 2 pedidos de conteúdo por mês'],
   },
   {
-    nome: 'Site + Assistente', preco: 197, descricao: 'Sua página e seu atendimento, juntos.', destaque: true,
+    nome: 'Página + Assistente', preco: 197, descricao: 'Sua página e seu atendimento, juntos.', destaque: true,
     itens: ['Tudo do plano Só Página', 'Assistente integrado à página', 'Até 5 perguntas com respostas aprovadas', 'Relatório mensal de uso'],
   },
 ]
