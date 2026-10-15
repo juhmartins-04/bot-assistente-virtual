@@ -2,9 +2,8 @@ import { OPERACAO_COMPLETA } from './operacao';
 import React, { useState } from 'react'
 import { ArrowRight, Check, Clock3, Globe2, MessageCircle, Play, Sparkles } from 'lucide-react'
 import { CONTATO, linkComercial, PLANOS, SEGMENTOS } from './comercial'
-import { DESCRICOES_MODELOS } from './paginas'
 import { MODELOS } from './negocio'
-import { EXPERIENCIAS_DEMO } from './demonstracao'
+import { EXPERIENCIAS_DEMO, VITRINE_PAGINAS } from './demonstracao'
 import { useEffect } from 'react'
 import './landing.css'
 import BotaoTema from './BotaoTema'
@@ -31,7 +30,7 @@ function BotaoContato({ children = 'Quero testar por 14 dias', plano, secundario
 }
 
 function Demonstracao() {
-  const [segmento, setSegmento] = useState('beleza')
+  const [segmento, setSegmento] = useState('pet')
   const [modelo, setModelo] = useState('servicos')
   const [experiencia, setExperiencia] = useState('completo')
   const destino = `/demo?segmento=${segmento}&modelo=${modelo}&experiencia=${experiencia}`
@@ -121,15 +120,17 @@ export default function Landing() {
         <section className="pr-section pr-container" aria-labelledby="titulo-diferencial"><div className="pr-section-heading"><p className="pr-eyebrow">CONFIGURAÇÃO E ACOMPANHAMENTO COMIGO</p><h2 id="titulo-diferencial">Uma ferramenta simples.<br/><em>Uma pessoa para deixar pronta.</em></h2><p>Eu organizo suas informações, preparo a página e acompanho os ajustes. Você aprova o conteúdo antes de publicar.</p></div><div className="pr-difference-grid"><article><Sparkles size={22}/><h3>Configuração feita para o seu negócio</h3><p>Nome, cores, serviços e perguntas escolhidos com você, dentro do modelo contratado.</p></article><article><Check size={22}/><h3>Informações que você aprova</h3><p>Seu cliente recebe os horários, preços e orientações que você decidiu mostrar.</p></article><article><MessageCircle size={22}/><h3>Suporte direto com a Julia</h3><p>Até duas solicitações agrupadas de conteúdo por mês. Prazos combinados na implantação.</p></article></div></section>
 
         <section className="pr-section pr-container" id="exemplos" aria-labelledby="titulo-modelos">
-          <div className="pr-section-heading"><p className="pr-eyebrow">SUA MARCA TAMBÉM MERECE UM LUGAR PRÓPRIO</p><h2 id="titulo-modelos">Imagine o seu negócio<br/><em>em uma página assim.</em></h2><p>Explore quatro modelos de página. Eu personalizo nome, cores, serviços e contatos com você. Cada exemplo abre de verdade para você navegar.</p></div>
-          <div className="pr-template-grid">{Object.entries(MODELOS).map(([k,v]) => <article key={k}>
-            <a className="pr-template-preview" href={`/demo?modelo=${k}&experiencia=pagina`} target="_blank" rel="noopener noreferrer" aria-label={`Explorar página no modelo ${v}`}>
-              <span className="pr-preview-bar" aria-hidden="true"><i/><i/><i/><span>Exemplo de página · {v}</span></span>
-              <iframe src={`/demo?embed=1&modelo=${k}&experiencia=pagina`} loading="lazy" title={`Prévia visual do modelo ${v}`} tabIndex={-1} inert="" aria-hidden="true"/>
+          <div className="pr-section-heading"><p className="pr-eyebrow">SUA MARCA TAMBÉM MERECE UM LUGAR PRÓPRIO</p><h2 id="titulo-modelos">Imagine o seu negócio<br/><em>em uma página assim.</em></h2><p>Pet, assistência técnica, costura, lavanderia, reparos e beleza: veja como negócios diferentes podem ter sua própria página. Eu personalizo o modelo com a sua marca e as suas informações.</p></div>
+          <div className="pr-template-grid">{VITRINE_PAGINAS.map(({segmento, modelo}) => {
+            const exemplo = SEGMENTOS[segmento], destino = `/demo?segmento=${segmento}&modelo=${modelo}&experiencia=pagina`
+            return <article key={segmento}>
+            <a className="pr-template-preview" href={destino} target="_blank" rel="noopener noreferrer" aria-label={`Explorar página de ${exemplo.nome}: ${exemplo.negocio}`}>
+              <span className="pr-preview-bar" aria-hidden="true"><i/><i/><i/><span>{exemplo.nome}</span></span>
+              <iframe src={`${destino}&embed=1`} loading="lazy" title={`Prévia de ${exemplo.negocio}`} tabIndex={-1} inert="" aria-hidden="true"/>
               <span className="pr-preview-open">Explorar este exemplo ↗</span>
             </a>
-            <h3>{v}</h3><p>{DESCRICOES_MODELOS[k]}</p><a className="pr-text-link" href={`/demo?modelo=${k}&experiencia=pagina`} target="_blank" rel="noopener noreferrer">Ver página completa<ArrowRight size={16} aria-hidden="true"/></a>
-          </article>)}</div>
+            <span className="pr-template-niche">{exemplo.nome} · {MODELOS[modelo]}</span><h3>{exemplo.negocio}</h3><p>{exemplo.descricao}</p><a className="pr-text-link" href={destino} target="_blank" rel="noopener noreferrer">Ver página completa<ArrowRight size={16} aria-hidden="true"/></a>
+          </article>})}</div>
           <div className="pr-page-offer"><div><h3>Só a página ou a experiência completa?</h3><p>Se você ainda não tem site, escolha a página com a sua marca e, se quiser, inclua o assistente. Se já tem, eu verifico a compatibilidade e instalo apenas o assistente.</p></div><a className="pr-button pr-button-outline" href="/demos/">Ver exemplos por segmento<ArrowRight size={17} aria-hidden="true"/></a></div>
           <p className="pr-demo-disclaimer">Marcas e informações fictícias. Os contatos das demos falam com a Julia sobre o Prontô.</p>
         </section>

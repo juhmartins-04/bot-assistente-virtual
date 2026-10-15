@@ -7,3 +7,12 @@ export const EXPERIENCIAS_DEMO = {
 export function experienciaDemo(valor) {
   return Object.hasOwn(EXPERIENCIAS_DEMO, valor) ? valor : 'completo'
 }
+
+export const VITRINE_PAGINAS = [
+  { segmento: 'pet', modelo: 'classico' },
+  { segmento: 'tecnica', modelo: 'servicos' },
+  { segmento: 'costura', modelo: 'cartao' },
+  { segmento: 'lavanderia', modelo: 'cardapio' },
+  { segmento: 'servicos', modelo: 'servicos' },
+  { segmento: 'beleza', modelo: 'classico' },
+]

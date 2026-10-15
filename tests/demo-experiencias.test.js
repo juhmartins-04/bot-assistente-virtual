@@ -38,7 +38,11 @@ test('vitrine e demonstrações distinguem página, conjunto e instalação no s
   const click = async text => act(async () => button(text).click())
   try {
     await mount(Landing)
-    assert.equal(document.querySelectorAll('#exemplos .pr-template-preview').length, 4)
+    assert.equal(document.querySelectorAll('#exemplos .pr-template-preview').length, 6)
+    const cards = [...document.querySelectorAll('#exemplos .pr-template-grid article')]
+    assert.deepEqual(cards.map(card => card.querySelector('h3').textContent), ['Pet & Carinho', 'Conecta Tech', 'Ateliê Linha & Ponto', 'Leve Lavanderia', 'Casa em Dia', 'Studio Aurora'])
+    const paginas = cards.map(card => ({ url: card.querySelector('iframe').src, nome: card.querySelector('h3').textContent }))
+    assert.equal(new Set(paginas.map(p => new URL(p.url).searchParams.get('segmento'))).size, 6)
     for (const frame of document.querySelectorAll('#exemplos iframe')) {
       assert.equal(new URL(frame.src).searchParams.get('experiencia'), 'pagina')
       assert.equal(frame.getAttribute('loading'), 'lazy')
@@ -52,6 +56,13 @@ test('vitrine e demonstrações distinguem página, conjunto e instalação no s
     assert.match(document.querySelector('#demonstracao [aria-live]').textContent, /Seu site continua/)
     await click('Página + assistente')
     assert.ok(document.querySelector('#demonstracao select'))
+
+    for (const pagina of paginas) {
+      dom.reconfigure({ url: pagina.url })
+      await mount(DemoPage)
+      assert.equal(document.querySelector('.biz-hero h1').textContent, pagina.nome)
+      assert.equal(document.querySelector('script[src="/atendente-virtual-widget.js"]'), null)
+    }
 
     for (const modo of ['pagina', 'assistente', 'completo']) {
       dom.reconfigure({ url: `https://pronto.example/demo?embed=1&experiencia=${modo}` })

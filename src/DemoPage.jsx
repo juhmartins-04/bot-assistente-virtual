@@ -21,11 +21,11 @@ export default function DemoPage(){
   nomeNegocio:exemplo.negocio,corPrimaria:exemplo.cor,numeroWhatsApp:CONTATO.whatsapp,idiomaPadrao:'pt',capturarContato:false,abertoInicialmente:experiencia==='assistente',
   categoriaNegocio:exemplo.nome,sobreNegocio:exemplo.assinatura+' '+exemplo.descricao,horarioFuncionamento:exemplo.horario,layout,
   endereco:'Curitiba · endereço fictício',incluiAssistente:experiencia!=='pagina',servicos:exemplo.servicos,
-  tituloCardapio:'Serviços e valores.',
-  itensCardapio:exemplo.servicos.map((nome,i)=>({nome,descricao:'Descrição ilustrativa. Na sua página, usamos o conteúdo que você aprovar.',preco:['R$ 80,00','R$ 60,00','R$ 120,00'][i],categoria:'EXEMPLO FICTÍCIO'})),
+  tituloServicos:exemplo.tituloServicos,tituloCardapio:exemplo.tituloCardapio,
+  itensCardapio:exemplo.servicos.map(servico=>({...servico,categoria:'EXEMPLO FICTÍCIO'})),
   saudacaoPt:'Oi! Como posso ajudar? Escolha uma opção abaixo.',transferirLabelPt:'Conhecer o Prontô',
   transferirMensagemWhatsPt:`Olá, Julia! Experimentei a demonstração do Prontô para ${exemplo.nome.toLowerCase()} e quero conhecer o projeto.`,
-  opcoes:[{labelPt:'Horário de funcionamento',tipo:'resposta',respostaPt:exemplo.horario},{labelPt:exemplo.pergunta,tipo:'resposta',respostaPt:exemplo.resposta},{labelPt:'Como funciona o agendamento?',tipo:'resposta',respostaPt:'O Prontô abre a agenda que seu negócio já usa ou encaminha para o WhatsApp. Este exemplo não faz agendamentos.'}],
+  opcoes:[{labelPt:'Horário de funcionamento',tipo:'resposta',respostaPt:exemplo.horario},{labelPt:exemplo.pergunta,tipo:'resposta',respostaPt:exemplo.resposta},{labelPt:exemplo.proximoPasso[0],tipo:'resposta',respostaPt:exemplo.proximoPasso[1]}],
  }),[exemplo,layout,experiencia])
  useWidget({config:dados,ativo:embutido&&experiencia!=='pagina'})
  if(embutido)return experiencia==='assistente' ? <main className="pr-demo-page pr-existing-site" style={{'--demo-color':exemplo.cor}}><div className="pr-existing-content"><p className="pr-sample-label">SIMULAÇÃO · SITE JÁ EXISTENTE</p><span className="pr-existing-initial" aria-hidden="true">{exemplo.negocio.slice(0,1)}</span><h1>{exemplo.negocio}</h1><h2>Seu site continua aqui.</h2><p>Você mantém sua página e adiciona o assistente do Prontô no canto da tela.</p><div className="pr-existing-hint"><MessageCircle size={22} aria-hidden="true"/><p>Escolha uma pergunta no menu para testar uma resposta. Na sua instalação, usamos as informações que você aprovar.</p></div><p className="pr-existing-footnote">Exemplo fictício. O WhatsApp fala com a Julia sobre o Prontô.</p></div></main> : <BusinessPage dados={dados} demonstracao/>

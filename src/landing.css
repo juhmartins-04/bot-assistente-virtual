@@ -259,3 +259,5 @@
 .pr-existing-content h1{font:clamp(30px,5vw,48px)/1.1 Georgia,serif;color:var(--demo-color);margin:18px 0}.pr-existing-content h2{font:24px Georgia,serif;margin:14px 0}.pr-existing-content>p{font-size:14px;line-height:1.8;max-width:420px}
 .pr-existing-hint{display:flex;gap:12px;align-items:center;padding:18px;background:#fff;border:1px solid #ded1da;border-radius:12px;max-width:430px;margin:22px 0}.pr-existing-hint svg{flex-shrink:0;color:var(--demo-color)}.pr-existing-hint p{font-size:13px;line-height:1.7;margin:0}.pr-existing-footnote{font-size:12px!important;color:#756673}
 @media(max-width:600px){.pr-template-grid{grid-template-columns:1fr}.pr-template-preview{height:265px}.pr-page-offer{align-items:flex-start;flex-direction:column;gap:18px;padding:22px}.pr-demo-experiences button{font-size:11px;padding-inline:5px}.pr-demo-caption{min-height:55px}.pr-existing-site{padding-top:30px}}
+
+.pr-template-niche{font-size:11px;font-weight:650;color:var(--pr-accent);margin-top:18px;letter-spacing:.3px}.pr-template-grid .pr-template-niche+h3{margin-top:7px}
