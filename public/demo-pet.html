@@ -1,0 +1,171 @@
+<!doctype html>
+<html lang="pt-BR" data-theme="light" data-demo-mode="completo">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<meta name="theme-color" content="#F7F4EC">
+<meta name="description" content="Proposta demonstrativa do Prontô: uma página para a Pata & Companhia com serviços, informações e assistente de perguntas frequentes. Conteúdo ilustrativo, não é o site oficial.">
+<title>Pet shop fictício · Demo de página + assistente | Prontô</title>
+<link rel="icon" href="/favicon.svg" type="image/svg+xml">
+<style>
+:root{color-scheme:light;--bg:#f7f4ec;--paper:#fffefb;--ink:#203b4b;--muted:#566772;--line:#d9dfda;--accent:#e2ac73;--soft:#e8eee5;--brand:#243e50;--on:#fff;--shadow:0 18px 48px #203b4b0c}
+:root[data-theme=dark]{color-scheme:dark;--bg:#111e26;--paper:#1a2b35;--ink:#eef2ed;--muted:#b2c3c8;--line:#354953;--accent:#e9b784;--soft:#263a35;--brand:#243e50;--on:#fff;--shadow:0 18px 48px #0002}
+*{box-sizing:border-box}html{scroll-behavior:smooth;scroll-padding-top:24px}body{margin:0;background:var(--bg);color:var(--ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;line-height:1.6}a{color:inherit}button,a{touch-action:manipulation}button{font:inherit;cursor:pointer}button:disabled{cursor:wait;opacity:.65}button:focus-visible,a:focus-visible,summary:focus-visible{outline:3px solid var(--accent);outline-offset:4px}a,button{ -webkit-tap-highlight-color:transparent }[hidden]{display:none!important}h1,h2,h3,p{margin-top:0}h1,h2{letter-spacing:-.045em;line-height:1.12}h1{font-size:clamp(2.6rem,6vw,4.7rem);max-width:12ch;margin-bottom:22px}h2{font-size:clamp(1.9rem,3.6vw,2.9rem);max-width:21ch;margin-bottom:18px}h3{font-size:1.1rem;line-height:1.35}p{margin-bottom:16px}.wrap{width:min(1120px,calc(100% - 48px));margin-inline:auto}.muted{color:var(--muted)}.eyebrow{font-size:.72rem;font-weight:800;letter-spacing:.14em;text-transform:uppercase;margin-bottom:16px}.tiny{font-size:.8rem}.btn{display:inline-flex;align-items:center;justify-content:center;gap:9px;min-height:48px;padding:12px 20px;border:1px solid var(--line);border-radius:12px;text-decoration:none;font-size:.9rem;font-weight:700;background:var(--paper);color:var(--ink)}.btn.primary{background:var(--brand);border-color:var(--brand);color:var(--on)}.btn.accent{background:var(--accent);color:#203342;border-color:var(--accent)}.actions{display:flex;flex-wrap:wrap;gap:12px;align-items:center}.demo-notice{background:var(--brand);color:#f2f5f3;padding:12px 24px;text-align:center;font-size:.78rem}.demo-notice strong{color:#f5c58f}.demo-tools{border-bottom:1px solid var(--line);padding:14px 0}.tool-row{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}.switch{display:flex;gap:4px;background:var(--paper);padding:4px;border-radius:12px;border:1px solid var(--line)}.switch button{background:transparent;border:0;color:var(--muted);padding:9px 13px;border-radius:8px;min-height:44px;font-size:.78rem;font-weight:700}.switch button[aria-pressed=true]{background:var(--brand);color:#fff}.theme-button{font-size:.78rem;min-height:44px;padding:8px 12px;background:transparent;border:1px solid var(--line);border-radius:9px;color:var(--ink)}.nav{display:flex;align-items:center;justify-content:space-between;gap:18px;padding:26px 0}.brand{display:flex;align-items:center;gap:12px;text-decoration:none}.brand-symbol{width:45px;height:45px;display:grid;place-items:center;background:var(--brand);color:#fff;border-radius:14px;font-size:23px}.brand strong{font-size:1.45rem;letter-spacing:.1em;line-height:1.2}.brand small{display:block;font-size:.65rem;letter-spacing:.08em;color:var(--muted)}.nav-links{display:flex;gap:24px;align-items:center;font-size:.82rem;font-weight:650}.nav-links a{text-decoration:none}.hero{display:grid;grid-template-columns:1.15fr 1fr;gap:48px;align-items:center;padding:48px 0 64px}.hero-copy>p:not(.eyebrow){max-width:44ch;font-size:1rem;color:var(--muted)}.hero-note{margin-top:16px;font-size:.75rem!important}.hero-visual{position:relative;background:var(--soft);border:1px solid var(--line);border-radius:46% 46% 24px 24px;min-height:435px;padding:22px;display:flex;align-items:center;justify-content:center}.hero-visual svg{width:100%;height:auto;max-width:360px}.visual-label{position:absolute;bottom:24px;left:24px;right:24px;border-radius:16px;padding:14px 18px;background:var(--paper);border:1px solid var(--line);box-shadow:var(--shadow)}.visual-label strong{display:block;font-size:.9rem}.visual-label span{display:block;font-size:.75rem;color:var(--muted)}.pill{display:inline-flex;gap:8px;align-items:center;border:1px solid var(--line);border-radius:99px;padding:6px 12px;font-size:.73rem;background:var(--paper)}.intro-strip{display:grid;grid-template-columns:repeat(3,1fr);border-block:1px solid var(--line);padding:22px 0;gap:20px}.intro-strip strong{display:block;font-size:.86rem}.intro-strip span{font-size:.78rem;color:var(--muted)}section.section{padding:72px 0}.section-head{display:flex;align-items:end;justify-content:space-between;gap:28px;margin-bottom:24px}.section-head p{max-width:38ch;color:var(--muted);font-size:.9rem}.services{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:18px}.service{background:var(--paper);border:1px solid var(--line);border-radius:20px;padding:26px;box-shadow:var(--shadow);min-width:0}.service-number{display:block;font-size:.75rem;letter-spacing:.1em;font-weight:800;margin-bottom:28px;color:var(--muted)}.service p{font-size:.86rem;color:var(--muted)}.text-button{padding:8px 0;min-height:44px;border:0;background:transparent;color:var(--ink);font-weight:750;font-size:.82rem;text-align:left}.assistant-section{display:grid;grid-template-columns:1fr 1fr;gap:56px;align-items:start;background:var(--paper);padding:38px;border:1px solid var(--line);border-radius:24px}.assistant-section p{color:var(--muted);font-size:.9rem}.try-list{list-style:none;margin:0;padding:0;display:grid;gap:12px}.try-list li{padding:14px 16px;background:var(--bg);border:1px solid var(--line);border-radius:12px;font-size:.88rem}.try-list span{color:var(--muted);display:block;font-size:.75rem}.contact-grid{display:grid;grid-template-columns:1fr 1fr;gap:28px}.info-card{padding:30px;background:var(--paper);border:1px solid var(--line);border-radius:20px}.info-row{display:flex;gap:20px;justify-content:space-between;padding:12px 0;border-bottom:1px solid var(--line);font-size:.86rem}.info-row:last-child{border:0}.info-row span{color:var(--muted)}details{border-bottom:1px solid var(--line);padding:19px 0}summary{cursor:pointer;font-size:.94rem;font-weight:700;min-height:32px}details p{color:var(--muted);font-size:.86rem;max-width:75ch;margin:14px 0 0}.proposal{padding:38px;background:var(--soft);border:1px solid var(--line);border-radius:24px}.plans{display:grid;grid-template-columns:1fr 1.15fr;gap:18px;margin:24px 0}.plan{padding:26px;background:var(--paper);border:1px solid var(--line);border-radius:18px}.plan.featured{border:2px solid var(--ink)}.price{font-size:2.2rem;font-weight:800;letter-spacing:-.05em;margin:10px 0}.price small{font-size:.8rem;font-weight:500;letter-spacing:0;color:var(--muted)}.plan ul{padding-left:19px;font-size:.85rem;color:var(--muted)}.plan li{margin-bottom:9px}.plan .btn{width:100%}.proposal-footnote{font-size:.76rem;color:var(--muted);max-width:88ch}.footer{display:flex;justify-content:space-between;gap:24px;border-top:1px solid var(--line);padding:24px 0 100px;font-size:.75rem;color:var(--muted)}.footer p{max-width:58ch}#assistant-status{font-size:.78rem;margin:12px 0 0;color:var(--muted)}html[data-demo-mode=pagina] [data-atendente-widget]{display:none!important}.mode-note{font-size:.78rem;color:var(--muted);margin:12px 0 0}noscript p{padding:18px;background:var(--soft)}.skip-link{position:absolute;left:12px;top:-100px;z-index:100000;background:var(--paper);padding:12px}.skip-link:focus{top:12px}
+@media(max-width:760px){.wrap{width:calc(100% - 32px)}.nav{padding:22px 0}.nav-links{gap:16px}.nav-links a:first-child{display:none}.hero{grid-template-columns:1fr;gap:28px;padding:28px 0 42px}h1{max-width:14ch}.hero-visual{min-height:340px;max-width:480px;width:100%;margin:auto}.hero-visual svg{max-width:280px}.intro-strip{grid-template-columns:1fr;gap:14px}.services{grid-template-columns:1fr}.service-number{margin-bottom:16px}.section-head{display:block}.section-head h2{margin-bottom:14px}.assistant-section{grid-template-columns:1fr;padding:24px;gap:24px}.contact-grid,.plans{grid-template-columns:1fr}section.section{padding:44px 0}.proposal{padding:24px}.footer{flex-direction:column;gap:8px}.tool-row{gap:10px}.switch button{padding:8px 10px;font-size:.74rem}.demo-tools .tiny{width:100%}.info-card{padding:24px}}
+@media(max-width:480px){.nav-links a:nth-child(2){display:none}}
+@media(max-width:380px){.hero .actions>.btn{width:100%}.nav-links{gap:10px;font-size:.75rem}.brand strong{font-size:1.2rem}.hero-visual{min-height:320px}.info-row{gap:12px;font-size:.8rem}}
+@media(prefers-reduced-motion:reduce){html{scroll-behavior:auto}*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<a class="skip-link" href="#conteudo">Pular para o conteúdo</a>
+<div class="demo-notice"><strong>Demonstração de um pet shop fictício.</strong> Nome, serviços e horários ilustrativos. Não é o site oficial.</div>
+<div class="demo-tools">
+ <div class="wrap tool-row">
+  <span class="tiny muted">Experimente os dois formatos:</span>
+  <div class="switch" role="group" aria-label="Formato da demonstração">
+   <button type="button" data-mode="pagina" aria-pressed="false">Só página</button>
+   <button type="button" data-mode="completo" aria-pressed="true">Página + assistente</button>
+  </div>
+  <button class="theme-button" id="theme-toggle" type="button" aria-pressed="false">Ativar modo escuro</button>
+ </div>
+</div>
+<div class="wrap">
+<header class="nav">
+ <a class="brand" href="#conteudo" aria-label="Pata & Companhia, início da demonstração"><span class="brand-symbol" aria-hidden="true">✦</span><span><strong>PATA &amp; CIA</strong><small>VETERINÁRIA & PET SHOP</small></span></a>
+ <nav class="nav-links" aria-label="Navegação da página"><a href="#servicos">Serviços</a><a href="#informacoes">Informações</a><a href="#proposta">A proposta</a></nav>
+</header>
+<main id="conteudo">
+ <section class="hero" aria-labelledby="hero-title">
+  <div class="hero-copy">
+   <p class="eyebrow">Um novo jeito de encontrar vocês</p>
+   <h1 id="hero-title">Pequenas patas.<br>Grandes laços.</h1>
+   <p>Um espaço para conhecer os cuidados com seu pet, encontrar informações e conversar com a equipe. Simples, acolhedor e na palma da mão.</p>
+   <div class="actions"><button class="btn primary" type="button" data-open-assistant disabled>Experimentar o assistente ↗</button><a class="btn" href="#servicos">Conhecer a página ↓</a></div>
+   <p class="hero-note">Demo do Prontô · O contato de teste fala com a Juh, não com a Pata & Companhia.</p>
+  </div>
+  <div class="hero-visual">
+   <svg viewBox="0 0 400 400" aria-hidden="true" focusable="false">
+    <circle cx="200" cy="176" r="133" fill="#d4dfd0"/><path d="M45 305c54-32 251-30 310 0" stroke="#abbda5" stroke-width="2" fill="none"/>
+    <path d="M105 131c-51-28-70 46-52 96 11 30 48 21 62-7M245 131c48-27 67 46 49 96-12 30-43 19-55-8" fill="#a16c45"/>
+    <path d="M94 176c0-65 33-96 84-96s87 32 87 96v62c0 55-36 86-86 86s-85-33-85-86z" fill="#d5a878"/>
+    <path d="M151 83c14-5 33-5 48 0l-10 101h-31z" fill="#f5ead7"/>
+    <ellipse cx="179" cy="243" rx="58" ry="45" fill="#f5ead7"/><circle cx="139" cy="184" r="7" fill="#243e50"/><circle cx="220" cy="184" r="7" fill="#243e50"/>
+    <path d="M167 222q12-9 25 0l-13 14z" fill="#243e50"/><path d="M179 236v13m-16 0q16 13 32 0" stroke="#243e50" stroke-width="4" stroke-linecap="round" fill="none"/>
+    <path d="M178 258q11 0 21-5v17c0 17-21 17-21 0z" fill="#c58279"/><path d="M115 306q64 25 128-2" stroke="#243e50" stroke-width="15" fill="none"/><circle cx="180" cy="325" r="10" fill="#e3b277"/>
+    <path d="M268 256l-3-76 41 23 29-21 13 79c9 52-14 72-41 72-33 0-52-25-39-77" fill="#f6efe1"/>
+    <path d="M267 181l27 24-26 11m68-32l-20 21 24 9" fill="#d6b4a4"/>
+    <path d="M283 254l10 3m25-2l10-4" stroke="#243e50" stroke-width="4" stroke-linecap="round"/><path d="M302 273l10-1-5 7z" fill="#c58279"/><path d="M307 279v7m-9 0q9 6 18-1" stroke="#243e50" stroke-width="2" fill="none"/>
+    <path d="M352 108l6 12 14 2-10 10 3 14-13-7-12 7 2-14-10-10 14-2z" fill="#e3b277"/>
+    <circle cx="58" cy="103" r="8" fill="#e3b277"/><path d="M318 62v18m-9-9h18" stroke="#243e50" stroke-width="3" stroke-linecap="round"/>
+   </svg>
+   <div class="visual-label"><strong>Cuidado começa com uma boa conversa.</strong><span>Página + informações + caminho para o WhatsApp.</span></div>
+  </div>
+ </section>
+ <div class="intro-strip" aria-label="O que esta página reúne"><div><strong>Serviços bem apresentados</strong><span>O essencial sem precisar procurar no feed.</span></div><div><strong>Dúvidas mais simples</strong><span>Respostas que a equipe aprova antes.</span></div><div><strong>Contato a um toque</strong><span>Um caminho claro para continuar a conversa.</span></div></div>
+ <section class="section" id="servicos" aria-labelledby="services-title">
+  <div class="section-head"><div><p class="eyebrow">Cuidados em cada fase</p><h2 id="services-title">Tudo começa por conhecer o seu pet.</h2></div><p>Uma vitrine para os serviços da empresa. Textos, fotos e categorias são definidos com a equipe antes da publicação.</p></div>
+  <div class="services">
+   <article class="service"><span class="service-number">01 / VETERINÁRIA</span><h3>Saúde com atenção.</h3><p>Um espaço para apresentar consultas, orientações de contato e os atendimentos que a clínica confirmar.</p><a class="text-button" href="#informacoes">Ver informações →</a></article>
+   <article class="service"><span class="service-number">02 / PET SHOP</span><h3>O cuidado do dia a dia.</h3><p>Apresente categorias de produtos e explique como consultar a equipe sobre disponibilidade e valores.</p><a class="text-button" href="#duvidas">Como consultar →</a></article>
+   <article class="service"><span class="service-number">03 / SERVIÇO ILUSTRATIVO</span><h3>Banho, tosa e carinho.</h3><p>Exemplo de categoria. Só entra na página definitiva se a empresa confirmar que oferece esse serviço.</p><a class="text-button" href="#proposta">Personalizar os serviços →</a></article>
+  </div>
+ </section>
+ <section class="assistant-section" id="assistente" aria-labelledby="assistant-title">
+  <div><p class="eyebrow">A página apresenta. O assistente orienta.</p><h2 id="assistant-title">Menos procura.<br>Mais clareza.</h2><p>O visitante escolhe uma pergunta e recebe a informação configurada pela equipe. Quando quiser conversar, segue para o WhatsApp.</p><button type="button" class="btn accent" data-open-assistant disabled>Abrir assistente da demo ↗</button><p id="assistant-status" role="status">Carregando o assistente…</p><p class="mode-note" id="mode-note">Você está vendo o pacote Página + assistente.</p></div>
+  <ol class="try-list"><li><strong>01 · Escolha uma dúvida</strong><span>Horários, serviços, localização ou contato.</span></li><li><strong>02 · Veja a resposta no site</strong><span>Sem respostas inventadas e sem avaliação clínica.</span></li><li><strong>03 · Continue pelo WhatsApp</strong><span>Na demo, você fala com a Juh sobre a proposta. Não há reserva nem envio automático.</span></li></ol>
+ </section>
+ <section class="section" id="informacoes" aria-labelledby="info-title">
+  <p class="eyebrow">Informações à mão</p><h2 id="info-title">Antes de sair de casa.</h2>
+  <div class="contact-grid">
+   <article class="info-card"><span class="pill">Horários ilustrativos</span><h3 style="margin-top:20px">Quando encontrar a equipe</h3><div class="info-row"><span>Segunda a sexta</span><strong>9h às 18h</strong></div><div class="info-row"><span>Sábado</span><strong>9h às 13h</strong></div><p class="tiny muted" style="margin-top:16px">São exemplos de preenchimento, não horários confirmados da Pata & Companhia. Feriados e plantão precisam de confirmação.</p></article>
+   <article class="info-card"><span class="pill">Localização a confirmar</span><h3 style="margin-top:20px">Sua cidade · endereço a confirmar</h3><p class="muted tiny">O endereço completo e o link para o mapa serão inseridos após confirmação da equipe. Não criamos uma rota fictícia.</p><a class="btn" href="#proposta">Conversar sobre a página →</a><p class="tiny muted" style="margin-top:16px">WhatsApp e redes oficiais também serão configurados somente com aprovação.</p></article>
+  </div>
+ </section>
+ <section class="section" id="duvidas" aria-labelledby="faq-title" style="padding-top:0">
+  <p class="eyebrow">Perguntas frequentes</p><h2 id="faq-title">Uma ajuda antes da conversa.</h2>
+  <details><summary>Posso marcar uma consulta por aqui?</summary><p>Na versão publicada, a página pode abrir o WhatsApp da empresa com uma mensagem pronta. A equipe confirma disponibilidade e agendamento. Esta demonstração não reserva horários.</p></details>
+  <details><summary>Consigo consultar produtos ou valores?</summary><p>A página apresenta as informações e os valores que a empresa aprovar. Disponibilidade de produtos e orçamento individual são confirmados pela equipe; não há carrinho nem pagamento nesta demo.</p></details>
+  <details><summary>O assistente funciona dentro do WhatsApp?</summary><p>Não. Ele responde às opções de menu dentro da página e oferece um link para continuar no WhatsApp. Não envia mensagens sozinho nem acessa as conversas da empresa.</p></details>
+  <details><summary>E se minha dúvida for sobre urgência veterinária?</summary><p>Este assistente não avalia sintomas nem classifica urgências. Plantão e atendimento de emergência precisam ser confirmados diretamente com o serviço veterinário. Esta proposta não oferece qualquer atendimento veterinário real.</p></details>
+ </section>
+ <section class="proposal" id="proposta" aria-labelledby="proposal-title">
+  <p class="eyebrow">Proposta Prontô · seu negócio pode ser o próximo</p><h2 id="proposal-title">Uma presença digital.<br>Dois jeitos de começar.</h2><p class="muted">Eu organizo o conteúdo, configuro a página e vocês aprovam antes de publicar. Sem precisar aprender a montar um site.</p>
+  <div class="plans">
+   <article class="plan"><h3>Só página</h3><p class="price">R$97 <small>/mês</small></p><ul><li>Página com serviços, horários e contato</li><li>Layout adaptado ao celular</li><li>Link para o WhatsApp da empresa</li><li>Até 2 solicitações agrupadas de atualização por mês</li></ul><button class="btn" type="button" data-mode-choice="pagina">Ver a página sem assistente</button></article>
+   <article class="plan featured"><span class="pill">Os dois serviços juntos</span><h3 style="margin-top:16px">Página + assistente</h3><p class="price">R$197 <small>/mês pelo pacote</small></p><ul><li>Tudo da página, com configuração feita por mim</li><li>Assistente de menu com até 5 perguntas frequentes</li><li>Respostas aprovadas e encaminhamento para o WhatsApp</li><li>Até 2 solicitações agrupadas de atualização por mês, para o conjunto</li></ul><a class="btn primary" data-whatsapp="proposta" href="#contato">Conversar com a Juh sobre o pacote ↗</a></article>
+  </div>
+  <p class="proposal-footnote">Teste de 14 dias a partir da publicação aprovada. Hospedagem no endereço do Prontô; domínio próprio não incluso. Sem triagem veterinária, automação dentro do WhatsApp, execução de agendamentos ou garantia de vendas. Se a empresa já tiver site compatível, o assistente avulso custa R$147/mês.</p>
+ </section>
+ <section class="section" id="contato" style="padding-bottom:42px" aria-labelledby="contact-title"><p class="eyebrow">Gostou de imaginar seu negócio assim?</p><h2 id="contact-title">Vamos deixar com a cara de vocês.</h2><p class="muted">O próximo passo é confirmar os serviços e as informações da empresa. Esta proposta ainda não é uma página oficial nem um serviço contratado.</p><a class="btn primary" data-whatsapp="contato" href="#proposta">Falar com a Juh, do Prontô ↗</a><noscript><p>Para experimentar o assistente e abrir o contato, ative o JavaScript. A página e as perguntas acima continuam disponíveis.</p></noscript></section>
+</main>
+<footer class="footer"><p><strong>Pata & Companhia · negócio fictício</strong><br>Empresa fictícia. Não representa um estabelecimento real. Não é um canal de atendimento veterinário.</p><a href="/">Feito com Prontô ↗</a></footer>
+</div>
+<script type="application/json" id="demo-config">{"nomeNegocio":"Pata & Companhia · demonstração","corPrimaria":"#243E50","numeroWhatsApp":"5541995472287","idiomaPadrao":"pt","capturarContato":false,"abertoInicialmente":false,"incluiAssistente":true,"saudacaoPt":"Oi! 🐾 Esta é uma demonstração do assistente para a Pata & Companhia. Escolha uma dúvida abaixo. As informações são ilustrativas, ainda não aprovadas pela empresa. O WhatsApp desta demo fala com a Juh, do Prontô.","transferirLabelPt":"Falar com a Juh sobre esta proposta","transferirMensagemWhatsPt":"Oi, Juh! Vi a demo de página + assistente para a Pata & Companhia e quero conversar sobre a proposta do Prontô.","opcoes":[{"id":"horarios","labelPt":"Quais são os horários?","tipo":"resposta","respostaPt":"Exemplo de resposta: segunda a sexta, das 9h às 18h; sábado, das 9h às 13h. Estes horários são ilustrativos, não são os horários confirmados da Pata & Companhia. Na publicação, usamos somente os horários aprovados pela equipe."},{"id":"servicos","labelPt":"Quais serviços encontro aqui?","tipo":"resposta","respostaPt":"A página pode apresentar veterinária, pet shop e os demais serviços que a equipe confirmar. Banho e tosa aparece apenas como exemplo de organização nesta proposta. Lista, valores e condições precisam ser aprovados pela Pata & Companhia."},{"id":"localizacao","labelPt":"Onde fica e como chegar?","tipo":"resposta","respostaPt":"Esta é uma demonstração de um negócio fictício. O endereço completo e o link do mapa ainda precisam ser confirmados pela Pata & Companhia. Não usamos um endereço fictício para traçar uma rota."},{"id":"agendamento","labelPt":"Como pedir um horário?","tipo":"resposta","respostaPt":"Na versão publicada, este botão pode encaminhar ao WhatsApp da empresa com uma mensagem pronta. A equipe confirma disponibilidade, valores e agendamento. Esta demo não reserva horários; os contatos de teste vão para a Juh, do Prontô."},{"id":"urgencia","labelPt":"E sobre urgências ou plantão?","tipo":"resposta","respostaPt":"Este assistente não avalia sintomas nem classifica urgências veterinárias. A existência de plantão e de atendimento de emergência precisa ser confirmada diretamente com o serviço veterinário. Esta demonstração não oferece qualquer atendimento veterinário real."}]}</script>
+<script id="demo-controller">
+(function () {
+ "use strict";
+ var config = JSON.parse(document.getElementById("demo-config").textContent);
+ window.ATENDENTE_CONFIG = config;
+ var root = document.documentElement;
+ var themeButton = document.getElementById("theme-toggle");
+ var status = document.getElementById("assistant-status");
+ var note = document.getElementById("mode-note");
+ var openButtons = document.querySelectorAll("[data-open-assistant]");
+ var modeButtons = document.querySelectorAll("[data-mode]");
+ var ready = false;
+ function applyTheme(theme) {
+  root.dataset.theme = theme;
+  themeButton.setAttribute("aria-pressed", String(theme === "dark"));
+  themeButton.textContent = theme === "dark" ? "Ativar modo claro" : "Ativar modo escuro";
+  document.querySelector('meta[name="theme-color"]').setAttribute("content", theme === "dark" ? "#111e26" : "#F7F4EC");
+ }
+ try { var saved = localStorage.getItem("pronto_demo_tema"); if (saved === "dark" || saved === "light") applyTheme(saved); } catch (_) {}
+ themeButton.addEventListener("click", function () {
+  var next = root.dataset.theme === "dark" ? "light" : "dark";
+  applyTheme(next);
+  try { localStorage.setItem("pronto_demo_tema", next); } catch (_) {}
+ });
+ function selectMode(mode) {
+  root.dataset.demoMode = mode;
+  modeButtons.forEach(function (button) { button.setAttribute("aria-pressed", String(button.dataset.mode === mode)); });
+  note.textContent = mode === "pagina" ? "Modo Só página: o assistente fica oculto. As informações e o contato continuam disponíveis." : "Você está vendo o pacote Página + assistente.";
+  openButtons.forEach(function (button) {
+   button.textContent = mode === "pagina" ? "Comparar com página + assistente ↗" : "Experimentar o assistente ↗";
+  });
+ }
+ modeButtons.forEach(function (button) { button.addEventListener("click", function () { selectMode(button.dataset.mode); }); });
+ document.querySelectorAll("[data-mode-choice]").forEach(function (button) { button.addEventListener("click", function () {
+  selectMode(button.dataset.modeChoice);
+  document.getElementById("conteudo").scrollIntoView({block:"start"});
+ }); });
+ openButtons.forEach(function (button) { button.addEventListener("click", function () {
+  if (!ready) return;
+  selectMode("completo");
+  var panel = document.querySelector(".avw-panel");
+  var fab = document.querySelector(".avw-fab");
+  if (panel && fab && !panel.classList.contains("is-open")) fab.click();
+  var first = document.querySelector(".avw-option");
+  if (first) first.focus();
+ }); });
+ document.querySelectorAll("[data-whatsapp]").forEach(function (link) {
+  link.href = "https://wa.me/" + config.numeroWhatsApp + "?text=" + encodeURIComponent(config.transferirMensagemWhatsPt);
+  link.target = "_blank"; link.rel = "noopener noreferrer";
+ });
+ var widget = document.createElement("script");
+ widget.src = "/atendente-virtual-widget.js";
+ widget.async = true;
+ widget.addEventListener("load", function () {
+  ready = Boolean(document.querySelector("[data-atendente-widget]"));
+  openButtons.forEach(function (button) { button.disabled = !ready; });
+  status.textContent = ready ? "Pronto para testar. A demo não solicita contato nem registra conversas." : "O assistente não carregou. Você pode consultar as informações da página e falar com a Juh abaixo.";
+ });
+ widget.addEventListener("error", function () {
+  status.textContent = "Não foi possível carregar o assistente. Recarregue a página ou use o contato da Juh abaixo.";
+ });
+ document.body.appendChild(widget);
+})();
+</script>
+</body>
+</html>

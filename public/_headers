@@ -20,3 +20,11 @@
   Cache-Control: no-cache
 /atendente-virtual-widget.js
   Cache-Control: no-cache
+
+# Demonstração fictícia: não indexar. Não é controle de acesso.
+/demo-pet
+  Cache-Control: no-cache
+  X-Robots-Tag: noindex, nofollow
+/demo-pet.html
+  Cache-Control: no-cache
+  X-Robots-Tag: noindex, nofollow
