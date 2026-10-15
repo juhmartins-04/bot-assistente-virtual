@@ -4,6 +4,7 @@ import { ArrowRight, Check, Clock3, Globe2, MessageCircle, Play, Sparkles } from
 import { CONTATO, linkComercial, PLANOS, SEGMENTOS } from './comercial'
 import { DESCRICOES_MODELOS } from './paginas'
 import { MODELOS } from './negocio'
+import { EXPERIENCIAS_DEMO } from './demonstracao'
 import { useEffect } from 'react'
 import './landing.css'
 import BotaoTema from './BotaoTema'
@@ -32,8 +33,14 @@ function BotaoContato({ children = 'Quero testar por 14 dias', plano, secundario
 function Demonstracao() {
   const [segmento, setSegmento] = useState('beleza')
   const [modelo, setModelo] = useState('servicos')
+  const [experiencia, setExperiencia] = useState('completo')
+  const destino = `/demo?segmento=${segmento}&modelo=${modelo}&experiencia=${experiencia}`
   return (
     <div className="pr-demo" id="demonstracao">
+      <p className="pr-demo-heading">Veja como pode ficar o seu negócio.</p>
+      <div className="pr-demo-experiences" role="group" aria-label="O que você quer experimentar?">
+        {Object.entries(EXPERIENCIAS_DEMO).map(([chave, dados]) => <button key={chave} type="button" aria-pressed={experiencia === chave} onClick={() => setExperiencia(chave)}>{dados.nome}</button>)}
+      </div>
       <div className="pr-demo-tabs" role="group" aria-label="Escolha um exemplo de negócio">
         {Object.entries(SEGMENTOS).map(([chave, dados]) => (
           <button key={chave} type="button" aria-pressed={segmento === chave}
@@ -42,19 +49,19 @@ function Demonstracao() {
           </button>
         ))}
       </div>
-      <div className="pr-demo-models"><label>Modelo da página <select value={modelo} onChange={e => setModelo(e.target.value)} aria-label="Modelo da demonstração">{Object.entries(MODELOS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></label></div>
+      {experiencia !== 'assistente' && <div className="pr-demo-models"><label>Modelo da página <select value={modelo} onChange={e => setModelo(e.target.value)} aria-label="Modelo da demonstração">{Object.entries(MODELOS).map(([k,v]) => <option key={k} value={k}>{v}</option>)}</select></label></div>}
       <div className="pr-browser">
         <div className="pr-browser-bar">
           <span className="pr-browser-dots" aria-hidden="true"><i /><i /><i /></span>
-          <span>página do seu negócio</span>
+          <span>{experiencia === 'assistente' ? 'simulação no site que você já tem' : 'sua marca, sua página'}</span>
           <Globe2 size={14} aria-hidden="true" />
         </div>
-        <iframe key={`${segmento}-${modelo}`} src={`/demo?segmento=${segmento}&modelo=${modelo}&embed=1`}
-          title={`Experimente o assistente: ${SEGMENTOS[segmento].nome}`} className="pr-demo-frame" />
+        <iframe key={`${segmento}-${modelo}-${experiencia}`} src={`${destino}&embed=1`}
+          title={`${EXPERIENCIAS_DEMO[experiencia].nome}: ${SEGMENTOS[segmento].nome}`} className="pr-demo-frame" />
       </div>
-      <div className="pr-demo-caption"><span className="pr-status-dot" />Clique em “Iniciar conversa” para testar o menu.</div>
+      <p className="pr-demo-caption" aria-live="polite">{EXPERIENCIAS_DEMO[experiencia].descricao}</p>
       <p className="pr-demo-disclaimer">Dados fictícios. O WhatsApp fala com a Julia sobre o Prontô.</p>
-      <a className="pr-demo-expand" href={`/demo?segmento=${segmento}&modelo=${modelo}`} target="_blank" rel="noopener noreferrer">Abrir demonstração em tela inteira ↗</a>
+      <a className="pr-demo-expand" href={destino} target="_blank" rel="noopener noreferrer">{experiencia === 'assistente' ? 'Testar assistente em tela inteira' : 'Explorar página em tela inteira'} ↗</a>
       <a className="pr-demo-expand" href="/demos/">Ver páginas e assistentes por segmento ↗</a>
     </div>
   )
@@ -82,6 +89,7 @@ export default function Landing() {
         <a href="/" className="pr-brand" aria-label="Prontô, página inicial"><span className="pr-brand-icon"><Sparkles size={20} /></span>Prontô<span className="pr-brand-dot">.</span></a>
         <nav className="pr-nav" aria-label="Navegação principal">
           <a href="#como-funciona">Como funciona</a>
+          <a href="#exemplos">Exemplos de páginas</a>
           <a href="#planos">Planos</a>
           <a href="/painel" className="pr-panel-link">Acessar painel<ArrowRight size={14} aria-hidden="true" /></a>
           <BotaoTema tema={tema} alternar={alternar} />
@@ -93,7 +101,7 @@ export default function Landing() {
           <div className="pr-hero-copy">
             <p className="pr-eyebrow"><span className="pr-small-line" />ATENDIMENTO DIGITAL SIMPLES</p>
             <h1 id="titulo-principal">Seu negócio<br />continua respondendo.<br /><em>Mesmo quando<br className="pr-desktop-break" /> você para.</em></h1>
-            <p className="pr-lead">As dúvidas mais comuns respondidas na hora, no seu site. E quem quer conversar vai direto para o seu WhatsApp.</p>
+            <p className="pr-lead">Uma página com a sua marca, serviços e contato. Um assistente que responde às dúvidas na hora e leva a conversa para o WhatsApp. Já tem site? Instalo só o assistente nele.</p>
             <div className="pr-hero-actions">
               <BotaoContato />
               <a className="pr-play-link" href="#demonstracao"><Play size={14} fill="currentColor" aria-hidden="true" />Veja funcionar</a>
@@ -112,7 +120,19 @@ export default function Landing() {
 
         <section className="pr-section pr-container" aria-labelledby="titulo-diferencial"><div className="pr-section-heading"><p className="pr-eyebrow">CONFIGURAÇÃO E ACOMPANHAMENTO COMIGO</p><h2 id="titulo-diferencial">Uma ferramenta simples.<br/><em>Uma pessoa para deixar pronta.</em></h2><p>Eu organizo suas informações, preparo a página e acompanho os ajustes. Você aprova o conteúdo antes de publicar.</p></div><div className="pr-difference-grid"><article><Sparkles size={22}/><h3>Configuração feita para o seu negócio</h3><p>Nome, cores, serviços e perguntas escolhidos com você, dentro do modelo contratado.</p></article><article><Check size={22}/><h3>Informações que você aprova</h3><p>Seu cliente recebe os horários, preços e orientações que você decidiu mostrar.</p></article><article><MessageCircle size={22}/><h3>Suporte direto com a Julia</h3><p>Até duas solicitações agrupadas de conteúdo por mês. Prazos combinados na implantação.</p></article></div></section>
 
-        <section className="pr-section pr-container" aria-labelledby="titulo-modelos"><div className="pr-section-heading"><p className="pr-eyebrow">ESCOLHA A ESTRUTURA QUE COMBINA COM VOCÊ</p><h2 id="titulo-modelos">Seu negócio, em uma página<br/><em>fácil de encontrar e usar.</em></h2><p>Para profissionais de beleza, banho e tosa e serviços locais. Um link para a bio, informações organizadas e contato direto.</p></div><div className="pr-template-grid">{Object.entries(MODELOS).map(([k,v])=><article key={k}><span className={`pr-template-sample pr-template-${k}`} aria-hidden="true"><i/><i/><i/><i/></span><h3>{v}</h3><p>{DESCRICOES_MODELOS[k]}</p><a className="pr-text-link" href={`/demo?modelo=${k}`} target="_blank" rel="noopener noreferrer">Ver modelo<ArrowRight size={16}/></a></article>)}</div></section>
+        <section className="pr-section pr-container" id="exemplos" aria-labelledby="titulo-modelos">
+          <div className="pr-section-heading"><p className="pr-eyebrow">SUA MARCA TAMBÉM MERECE UM LUGAR PRÓPRIO</p><h2 id="titulo-modelos">Imagine o seu negócio<br/><em>em uma página assim.</em></h2><p>Explore quatro modelos de página. Eu personalizo nome, cores, serviços e contatos com você. Cada exemplo abre de verdade para você navegar.</p></div>
+          <div className="pr-template-grid">{Object.entries(MODELOS).map(([k,v]) => <article key={k}>
+            <a className="pr-template-preview" href={`/demo?modelo=${k}&experiencia=pagina`} target="_blank" rel="noopener noreferrer" aria-label={`Explorar página no modelo ${v}`}>
+              <span className="pr-preview-bar" aria-hidden="true"><i/><i/><i/><span>Exemplo de página · {v}</span></span>
+              <iframe src={`/demo?embed=1&modelo=${k}&experiencia=pagina`} loading="lazy" title={`Prévia visual do modelo ${v}`} tabIndex={-1} inert="" aria-hidden="true"/>
+              <span className="pr-preview-open">Explorar este exemplo ↗</span>
+            </a>
+            <h3>{v}</h3><p>{DESCRICOES_MODELOS[k]}</p><a className="pr-text-link" href={`/demo?modelo=${k}&experiencia=pagina`} target="_blank" rel="noopener noreferrer">Ver página completa<ArrowRight size={16} aria-hidden="true"/></a>
+          </article>)}</div>
+          <div className="pr-page-offer"><div><h3>Só a página ou a experiência completa?</h3><p>Se você ainda não tem site, escolha a página com a sua marca e, se quiser, inclua o assistente. Se já tem, eu verifico a compatibilidade e instalo apenas o assistente.</p></div><a className="pr-button pr-button-outline" href="/demos/">Ver exemplos por segmento<ArrowRight size={17} aria-hidden="true"/></a></div>
+          <p className="pr-demo-disclaimer">Marcas e informações fictícias. Os contatos das demos falam com a Julia sobre o Prontô.</p>
+        </section>
 
         <section className="pr-section pr-container" id="como-funciona" aria-labelledby="titulo-como">
           <div className="pr-section-heading"><p className="pr-eyebrow">PEQUENO NO SITE. ÚTIL NA ROTINA.</p><h2 id="titulo-como">Da dúvida à conversa,<br /><em>em poucos cliques.</em></h2><p>O cliente encontra o que precisa. Você recebe a conversa com mais contexto.</p></div>

@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "bot-assistente-virtual",
+  "main": "cloudflare/legacy-redirect.js",
+  "compatibility_date": "2026-10-15",
+  "workers_dev": true,
+  "send_metrics": false
+}

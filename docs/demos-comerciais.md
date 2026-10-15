@@ -1,6 +1,6 @@
 # Demos comerciais por segmento
 
-Implementadas em 15/10/2026. Catálogo: https://bot-assistente-virtual.juuhhzinha2000.workers.dev/demos/
+Implementadas em 15/10/2026. Catálogo: https://pronto.juuhhzinha2000.workers.dev/demos/
 
 ## Formatos
 
@@ -40,7 +40,7 @@ As cinco primeiras permitem comparar Só Página (R$97/mês) com Página + Assis
 Formato do código (exemplo técnico, substituir pelo código real do painel):
 
 ```html
-<script src="https://bot-assistente-virtual.juuhhzinha2000.workers.dev/atendente-virtual-widget.js" data-site="IDENTIFICADOR_PUBLICO_GERADO_NO_PAINEL" defer></script>
+<script src="https://pronto.juuhhzinha2000.workers.dev/atendente-virtual-widget.js" data-site="IDENTIFICADOR_PUBLICO_GERADO_NO_PAINEL" defer></script>
 ```
 
 Não publicar o exemplo sem substituir o identificador. Hospedagem e domínio atuais seguem com o fornecedor do site. Não afirmar compatibilidade universal ou instalação em rede inteira pelo preço de uma unidade. Instalações restritas precisam ser avaliadas antes da contratação.

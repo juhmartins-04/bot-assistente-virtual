@@ -3,7 +3,7 @@
 Criada em 15/10/2026 para apresentar os dois serviços do Prontô. Usa o nome fictício **Pata & Companhia**. Não representa uma empresa real ou uma contratação.
 
 ## Link e implementação
-- Link: https://bot-assistente-virtual.juuhhzinha2000.workers.dev/demo-pet
+- Link: https://pronto.juuhhzinha2000.workers.dev/demo-pet
 - Fonte: `public/demo-pet.html`, copiada pelo build do Vite.
 - Widget real: `/atendente-virtual-widget.js`, sem duplicar sua implementação.
 - Modo local de demonstração: sem `data-site`, sem conta, cadastro, mudança no Supabase, período pago ou início de teste.

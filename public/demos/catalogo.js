@@ -1,5 +1,5 @@
 // Marcas e conteúdo ilustrativos; nenhum dado de prospect é publicado.
-export const BASE = 'https://bot-assistente-virtual.juuhhzinha2000.workers.dev'
+export const BASE = 'https://pronto.juuhhzinha2000.workers.dev'
 export const WHATSAPP = '5541995472287'
 export const DEMOS = [
   {

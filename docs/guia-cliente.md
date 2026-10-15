@@ -25,7 +25,7 @@ Você escolhe uma das estruturas disponíveis. Julia configura a marca e o conte
 
 As respostas são as que você aprova. Se já possui uma agenda online, usamos o link dessa agenda. O assistente não cria agendamentos nem conversa dentro do aplicativo WhatsApp.
 
-[Demonstração com dados fictícios](https://bot-assistente-virtual.juuhhzinha2000.workers.dev/demo)
+[Demonstração com dados fictícios](https://pronto.juuhhzinha2000.workers.dev/demo)
 
 # Planos sem complicação.
 
@@ -100,9 +100,9 @@ Pedidos sobre seus dados ou os dados relacionados ao atendimento podem ser encam
 
 A ferramenta depende dos serviços de hospedagem e banco de dados. Não há promessa de disponibilidade de 100%, vendas garantidas ou respostas dentro do WhatsApp.
 
-[Conhecer o Prontô](https://bot-assistente-virtual.juuhhzinha2000.workers.dev/)
+[Conhecer o Prontô](https://pronto.juuhhzinha2000.workers.dev/)
 
-[Política de privacidade](https://bot-assistente-virtual.juuhhzinha2000.workers.dev/privacidade)
+[Política de privacidade](https://pronto.juuhhzinha2000.workers.dev/privacidade)
 
 [Conversar com Julia sobre o Prontô](https://wa.me/5541995472287)
 
