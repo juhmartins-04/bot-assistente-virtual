@@ -1,4 +1,4 @@
-import React, { useMemo, useState } from 'react'
+import React, { useEffect, useMemo, useState } from 'react'
 import BotaoTema from './BotaoTema'
 import { useTema } from './useTema'
 import { ArrowLeft, Smartphone, Monitor, MessageCircle } from 'lucide-react'
@@ -16,9 +16,21 @@ export default function DemoPage(){
  const [experiencia,setExperiencia]=useState(()=>experienciaDemo(params.get('experiencia')))
  const {tema,alternar}=useTema()
  const exemplo=SEGMENTOS[segmento],embutido=params.get('embed')==='1'
+ const [nomePersonalizado,setNomePersonalizado]=useState('')
+ const abrirInicialmente=params.get('abrir')==='1'
+ useEffect(()=>{
+  if(!embutido)return
+  function personalizar(event){
+   if(event.origin!==window.location.origin||event.source!==window.parent||event.data?.type!=='pronto:demo-personalizar'||typeof event.data.nome!=='string')return
+   setNomePersonalizado(event.data.nome.trim().slice(0,70))
+  }
+  window.addEventListener('message',personalizar)
+  if(window.parent!==window)window.parent.postMessage({type:'pronto:demo-pronta'},window.location.origin)
+  return()=>window.removeEventListener('message',personalizar)
+ },[embutido])
  const [layout,setLayout]=useState(Object.hasOwn(MODELOS,params.get('modelo'))?params.get('modelo'):'servicos')
  const dados=useMemo(()=>({
-  nomeNegocio:exemplo.negocio,corPrimaria:exemplo.cor,numeroWhatsApp:CONTATO.whatsapp,idiomaPadrao:'pt',capturarContato:false,abertoInicialmente:experiencia==='assistente',
+  nomeNegocio:nomePersonalizado||exemplo.negocio,corPrimaria:exemplo.cor,numeroWhatsApp:CONTATO.whatsapp,idiomaPadrao:'pt',capturarContato:false,abertoInicialmente:experiencia==='assistente'||abrirInicialmente,
   categoriaNegocio:exemplo.nome,sobreNegocio:exemplo.assinatura+' '+exemplo.descricao,horarioFuncionamento:exemplo.horario,layout,
   endereco:'Curitiba · endereço fictício',incluiAssistente:experiencia!=='pagina',servicos:exemplo.servicos,
   tituloServicos:exemplo.tituloServicos,tituloCardapio:exemplo.tituloCardapio,
@@ -26,9 +38,9 @@ export default function DemoPage(){
   saudacaoPt:'Oi! Como posso ajudar? Escolha uma opção abaixo.',transferirLabelPt:'Conhecer o Prontô',
   transferirMensagemWhatsPt:`Olá, Julia! Experimentei a demonstração do Prontô para ${exemplo.nome.toLowerCase()} e quero conhecer o projeto.`,
   opcoes:[{labelPt:'Horário de funcionamento',tipo:'resposta',respostaPt:exemplo.horario},{labelPt:exemplo.pergunta,tipo:'resposta',respostaPt:exemplo.resposta},{labelPt:exemplo.proximoPasso[0],tipo:'resposta',respostaPt:exemplo.proximoPasso[1]}],
- }),[exemplo,layout,experiencia])
+ }),[exemplo,layout,experiencia,nomePersonalizado,abrirInicialmente])
  useWidget({config:dados,ativo:embutido&&experiencia!=='pagina'})
- if(embutido)return experiencia==='assistente' ? <main className="pr-demo-page pr-existing-site" style={{'--demo-color':exemplo.cor}}><div className="pr-existing-content"><p className="pr-sample-label">SIMULAÇÃO · SITE JÁ EXISTENTE</p><span className="pr-existing-initial" aria-hidden="true">{exemplo.negocio.slice(0,1)}</span><h1>{exemplo.negocio}</h1><h2>Seu site continua aqui.</h2><p>Você mantém sua página e adiciona o assistente do Prontô no canto da tela.</p><div className="pr-existing-hint"><MessageCircle size={22} aria-hidden="true"/><p>Escolha uma pergunta no menu para testar uma resposta. Na sua instalação, usamos as informações que você aprovar.</p></div><p className="pr-existing-footnote">Exemplo fictício. O WhatsApp fala com a Julia sobre o Prontô.</p></div></main> : <BusinessPage dados={dados} demonstracao/>
+ if(embutido)return experiencia==='assistente' ? <main className="pr-demo-page pr-existing-site" style={{'--demo-color':exemplo.cor}}><div className="pr-existing-content"><p className="pr-sample-label">SIMULAÇÃO · SITE JÁ EXISTENTE</p><span className="pr-existing-initial" aria-hidden="true">{dados.nomeNegocio.slice(0,1)}</span><h1>{dados.nomeNegocio}</h1><h2>Seu site continua aqui.</h2><p>Você mantém sua página e adiciona o assistente do Prontô no canto da tela.</p><div className="pr-existing-hint"><MessageCircle size={22} aria-hidden="true"/><p>Escolha uma pergunta no menu para testar uma resposta. Na sua instalação, usamos as informações que você aprovar.</p></div><p className="pr-existing-footnote">Exemplo fictício. O WhatsApp fala com a Julia sobre o Prontô.</p></div></main> : <BusinessPage dados={dados} demonstracao/>
  return <main className="pr-site pr-demo-workbench">
   <header className="pr-demo-page-nav"><a href="/"><ArrowLeft size={16}/>Voltar ao Prontô</a><BotaoTema tema={tema} alternar={alternar}/></header>
   <div className="pr-demo-intro"><p className="pr-eyebrow">DEMONSTRAÇÃO · DADOS FICTÍCIOS</p><h1>Encontre o formato do seu negócio.</h1><p>Experimente uma página pronta ou o assistente para o site que você já tem. Alterne entre computador e celular.</p></div>

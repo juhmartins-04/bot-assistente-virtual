@@ -24,6 +24,7 @@ test('vitrine e demonstrações distinguem página, conjunto e instalação no s
   const dom = new JSDOM('<div id="root"></div>', { url: 'https://pronto.example/' })
   Object.assign(globalThis, { window: dom.window, document: dom.window.document, IS_REACT_ACT_ENVIRONMENT: true })
   dom.window.matchMedia = () => ({ matches: false, addEventListener() {}, removeEventListener() {} })
+  dom.window.HTMLDialogElement.prototype.showModal = function () { this.open = true }
   globalThis.fetch = () => { throw new Error('A demo não deve acessar a rede neste teste') }
   const { default: React, act } = await import('react')
   const { createRoot } = await import('react-dom/client')
@@ -57,6 +58,44 @@ test('vitrine e demonstrações distinguem página, conjunto e instalação no s
     await click('Página + assistente')
     assert.ok(document.querySelector('#demonstracao select'))
 
+    const verDemo = button('Veja funcionar')
+    await click('Veja funcionar')
+    assert.ok(document.querySelector('dialog[open]'))
+    assert.equal(document.body.style.overflow, 'hidden')
+    assert.match(document.querySelector('dialog iframe').src, /abrir=1/)
+    assert.equal(document.querySelector('dialog .pr-browser').getAttribute('aria-busy'), 'true')
+    await act(async () => document.querySelector('dialog iframe').dispatchEvent(new dom.window.Event('load')))
+    assert.equal(document.querySelector('dialog .pr-browser').getAttribute('aria-busy'), 'false')
+    await act(async () => document.querySelector('[aria-label="Fechar demonstração"]').click())
+    assert.equal(document.querySelector('dialog'), null)
+    assert.equal(document.body.style.overflow, '')
+    assert.equal(document.activeElement, verDemo)
+    await click('Veja funcionar')
+    await act(async () => document.querySelector('dialog').dispatchEvent(new dom.window.Event('cancel', { cancelable: true })))
+    assert.equal(document.querySelector('dialog'), null)
+
+    const form = document.querySelector('.pr-personalize-form')
+    const input = form.querySelector('input[type="text"]')
+    await act(async () => {
+      Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype, 'value').set.call(input, 'Minha Oficina')
+      input.dispatchEvent(new dom.window.Event('input', { bubbles: true }))
+      form.querySelector('select').value = 'tecnica'
+      form.querySelector('select').dispatchEvent(new dom.window.Event('change', { bubbles: true }))
+    })
+    await act(async () => form.querySelectorAll('input[type="radio"]')[1].click())
+    await act(async () => form.querySelector('button[type="submit"]').click())
+    assert.match(document.querySelector('#demo-dialog-titulo').textContent, /Minha Oficina/)
+    const previa = new URL(document.querySelector('dialog iframe').src)
+    assert.equal(previa.searchParams.get('segmento'), 'tecnica')
+    assert.equal(previa.searchParams.get('experiencia'), 'assistente')
+    assert.equal(previa.searchParams.has('nome'), false)
+    await act(async () => document.querySelector('[aria-label="Fechar demonstração"]').click())
+    await click('Planos e valores')
+    assert.match(document.querySelector('.pr-faq-items').textContent, /R\$ 97\/mês/)
+    assert.match(document.querySelector('.pr-faq-items').textContent, /posso cancelar/)
+    await click('No dia a dia')
+    assert.match(document.querySelector('.pr-faq-items').textContent, /Não é um chat de inteligência artificial aberto/)
+
     for (const pagina of paginas) {
       dom.reconfigure({ url: pagina.url })
       await mount(DemoPage)
@@ -77,6 +116,16 @@ test('vitrine e demonstrações distinguem página, conjunto e instalação no s
         assert.equal(dom.window.ATENDENTE_CONFIG.publicId, undefined)
       }
       if (modo === 'assistente') assert.match(document.body.textContent, /SIMULAÇÃO · SITE JÁ EXISTENTE/)
+      if (modo === 'completo') {
+        const original = document.querySelector('.biz-hero h1').textContent
+        await act(async () => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { origin: 'https://externo.invalid', source: dom.window.parent, data: { type: 'pronto:demo-personalizar', nome: 'Origem não permitida' } })))
+        assert.equal(document.querySelector('.biz-hero h1').textContent, original)
+        const nome = '<img src=x onerror=alert(1)>'
+        await act(async () => dom.window.dispatchEvent(new dom.window.MessageEvent('message', { origin: dom.window.location.origin, source: dom.window.parent, data: { type: 'pronto:demo-personalizar', nome } })))
+        assert.equal(document.querySelector('.biz-hero h1').textContent, nome)
+        assert.equal(document.querySelector('.biz-hero img'), null)
+        assert.equal(dom.window.ATENDENTE_CONFIG.nomeNegocio, nome)
+      }
     }
     dom.reconfigure({ url: 'https://pronto.example/demo?experiencia=pagina&modelo=cartao' })
     await mount(DemoPage)

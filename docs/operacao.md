@@ -121,3 +121,15 @@ A vitrine inicial passa a oferecer três experiências explícitas: Só Página,
 A vitrine inicial apresenta seis marcas fictícias diferentes: Pet & Carinho (pet), Conecta Tech (assistência técnica), Ateliê Linha & Ponto (costura), Leve Lavanderia (lavanderia), Casa em Dia (reparos) e Studio Aurora (beleza). As seis opções estão disponíveis também no seletor da demo. Os quatro modelos continuam disponíveis e são distribuídos entre os exemplos, sem repetir Studio Aurora em todas as prévias.
 
 Cada nicho usa descrições de serviços, títulos, cores, dúvidas e próximos passos próprios. Orçamento, avaliação, coleta e reserva são apresentados conforme o serviço; os preços genéricos de salão foram retirados dos demais nichos. Só Página continua sem carregar o widget e o plano de assistente mantém a simulação de site existente. A suíte de 72 testes e o build passaram, incluindo a navegação das seis prévias até a marca correta, sem coleta ou rede real no teste de componentes. Não há alteração de dados de clientes ou de preços dos planos.
+
+
+
+## Demonstração e experiência comercial — 15/10/2026
+
+O botão Veja funcionar abre um dialog nativo com demonstração interativa e assistente aberto, indicador de carregamento, fechamento por botão, Escape ou clique fora e devolução do foco ao acionador. A página ao fundo fica sem rolagem enquanto o dialog está aberto, respeitando preferência por movimento reduzido.
+
+A seção Imagine no seu negócio permite informar apenas nome comercial, segmento e se já existe site. A prévia usa o nome em memória por postMessage com origem e janela de envio conferidas; não coloca o nome em parâmetros de URL, não cria cadastros e não coleta contatos. O nome entra como texto e tem limite de 70 caracteres. Para quem já tem site, a prévia abre no modo Só Assistente. Serviços e respostas permanecem ilustrativos, identificados como tal; a configuração definitiva depende de aprovação do cliente. O contato comercial abre o WhatsApp com mensagem preparada, sem enviar nada automaticamente.
+
+O FAQ reúne dez dúvidas em três assuntos: Para começar, No dia a dia e Planos e valores. Explica o encaixe para pequenos negócios, a instalação no site existente, a diferença para um robô no WhatsApp, as respostas aprovadas, os limites de atualização, mensalidades e cancelamento. Preços, teste de 14 dias e escopo dos planos foram mantidos.
+
+A suíte de 72 testes passou com fluxos de abertura, carregamento, fechamento, foco, nome comercial, segmento, plano de assistente, FAQ e isolamento da personalização entre origens. Build concluído. A conferência visual manual em celular continua pendente. A troca de endereço não faz parte desta publicação: os links existentes permanecem ativos enquanto a configuração adicional do novo endereço depende de acesso ao painel da Cloudflare.
