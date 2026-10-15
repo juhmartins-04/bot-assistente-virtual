@@ -20,6 +20,8 @@ import Assinatura from "./Assinatura";
 import ComercialPainel from "./ComercialPainel";
 import PortalCliente from "./PortalCliente";
 import { textoSobreCor } from "./cores";
+import { gerarCodigo, origemWidget, validarPublicacao } from './instalacao';
+import InstalacaoAssistente from './InstalacaoAssistente';
 import { urlSegura, NOMES_PLANOS } from "./negocio";
 import PainelColaborador from "./PainelColaborador";
 import {
@@ -85,18 +87,6 @@ function clienteEmBranco(plano = "completo", layout = "classico") {
 
 function gerarLinkWhats(numero, mensagem) {
   return "https://wa.me/" + (numero || "SEU_NUMERO") + "?text=" + encodeURIComponent(mensagem || "");
-}
-
-function normalizarUrlBase(url) {
-  return (url || "").trim().replace(/\/+$/, "");
-}
-
-function gerarCodigo(c, widgetBaseUrl) {
-  const widgetSrc = normalizarUrlBase(widgetBaseUrl) || "COLOQUE_AQUI_A_URL";
-  if (!c.publicId) {
-    return "<!-- Salve o cliente pelo menos uma vez pra gerar o código de instalação. -->";
-  }
-  return `<script src="${widgetSrc}/atendente-virtual-widget.js" data-site="${c.publicId}" defer></script>`;
 }
 
 function diasRestantes(iso) {
@@ -484,6 +474,8 @@ export default function GeradorAtendenteVirtual() {
   async function estenderTeste(dias) {
     if (!cliente?.publicId) return;
     if (temAlteracoes || salvando || enviandoLogo) { setErro('Salve as alterações e confira a prévia antes de publicar o teste.'); return; }
+    const pendencias = validarPublicacao(cliente);
+    if (pendencias.length) { setErro(pendencias.join(' ')); return; }
     if (!window.confirm("Confirma que o cliente conferiu as informações e que o teste pode começar agora?")) return;
     try {
       const trialEndsAt = await estenderTesteRemoto(cliente.id, dias);
@@ -515,6 +507,7 @@ export default function GeradorAtendenteVirtual() {
   }
 
   async function copiarCodigo() {
+    if (!cliente?.publicId || !origemWidget(widgetBaseUrl)) { setErro('Salve o cliente e informe uma origem HTTPS válida do Prontô antes de copiar.'); return; }
     try {
       await navigator.clipboard.writeText(gerarCodigo(cliente, widgetBaseUrl));
       setCopiado(true);
@@ -590,8 +583,8 @@ export default function GeradorAtendenteVirtual() {
 
   async function salvarSenha(e) {
     e.preventDefault();
-    if (novaSenha.length < 6) {
-      setErroSenha("A senha precisa ter pelo menos 6 caracteres.");
+    if (novaSenha.length < 12) {
+      setErroSenha("Use uma senha com pelo menos 12 caracteres.");
       return;
     }
     if (novaSenha !== confirmarSenha) {
@@ -961,7 +954,7 @@ export default function GeradorAtendenteVirtual() {
                   required
                   value={novaSenha}
                   onChange={(e) => setNovaSenha(e.target.value)}
-                  placeholder="Pelo menos 6 caracteres"
+                  placeholder="Pelo menos 12 caracteres"
                   className="rounded-lg border px-3 py-2 text-sm"
                   style={{ borderColor: TOKENS.border }}
                 />
@@ -1054,7 +1047,7 @@ export default function GeradorAtendenteVirtual() {
           </div>
         )}
 
-        {cliente && <div className="panel-savebar max-w-6xl mx-auto mb-5"><div><h1>{cliente.nomeNegocio || 'Novo cliente'}</h1><p role="status">{salvando ? 'Salvando suas informações…' : temAlteracoes ? 'Alterações ainda não salvas' : 'Todas as alterações salvas'}</p></div><div className="flex flex-wrap gap-2">{cliente.incluiPagina !== false && <button className="btn btn-outline" onClick={()=>setPreviaAberta(true)}><Eye size={16}/>Ver página</button>}<button onClick={salvarCliente} disabled={salvando || enviandoLogo || !temAlteracoes} className="btn btn-primary px-4"><Save size={16}/>{salvando ? 'Salvando…' : 'Salvar alterações'}</button></div></div>}
+        {cliente && <div className="panel-savebar max-w-6xl mx-auto mb-5"><div><h1>{cliente.nomeNegocio || 'Novo cliente'}</h1><p role="status">{salvando ? 'Salvando suas informações…' : temAlteracoes ? 'Alterações ainda não salvas' : 'Todas as alterações salvas'}</p></div><div className="flex flex-wrap gap-2"><button className="btn btn-outline" onClick={()=>setPreviaAberta(true)}><Eye size={16}/>{cliente.incluiPagina === false ? 'Ver assistente' : 'Ver página'}</button><button onClick={salvarCliente} disabled={salvando || enviandoLogo || !temAlteracoes} className="btn btn-primary px-4"><Save size={16}/>{salvando ? 'Salvando…' : 'Salvar alterações'}</button></div></div>}
         {cliente && (
           <div className="grid grid-cols-1 xl:grid-cols-[1fr_380px] gap-6 max-w-6xl mx-auto">
 
@@ -1089,6 +1082,7 @@ export default function GeradorAtendenteVirtual() {
                 </div>
               </div>
 
+              {cliente.plano === 'assistente' && <InstalacaoAssistente cliente={cliente} onChange={v=>atualizarCampo('instalacao',v)} onPrevia={()=>setPreviaAberta(true)}/>}
               {cliente.incluiPagina !== false && <div className="card p-5 flex flex-col gap-4">
                 <h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Globe2 size={14} /></span> Página do negócio</h2>
                 <p className="text-xs -mt-2" style={{ color: TOKENS.muted }}>
@@ -1284,7 +1278,7 @@ export default function GeradorAtendenteVirtual() {
                     {previewMsgs.map((m, i) => (
                       <div key={i} className={"max-w-[85%] rounded-lg px-2.5 py-1.5 text-xs whitespace-pre-wrap " + (m.autor === "user" ? "self-end text-white" : "self-start border")}
                         style={m.autor === "user" ? { backgroundColor: cliente.corPrimaria, color: textoSobreCor(cliente.corPrimaria) } : { borderColor: TOKENS.border, backgroundColor: TOKENS.surface }}>
-                        {m.link ? <a href={m.link.url} target="_blank" rel="noopener noreferrer" className="underline font-medium" style={{ color: TOKENS.amberDeep }}>{m.link.label}</a> : m.texto}
+                        {m.link ? <a href={urlSegura(m.link.url) || undefined} target="_blank" rel="noopener noreferrer" className="underline font-medium" style={{ color: TOKENS.amberDeep }}>{m.link.label}</a> : m.texto}
                       </div>
                     ))}
                     {previewMsgs.length > 0 && (
@@ -1360,7 +1354,7 @@ export default function GeradorAtendenteVirtual() {
                 <div className="flex items-center justify-between gap-3">
                   <h2 className="font-semibold text-sm flex items-center gap-2"><span className="icon-chip"><Rocket size={14} /></span> Publicação</h2>
                   <a
-                    href="/teste-widget.html"
+                    href={cliente.publicId ? `/teste-widget.html?site=${encodeURIComponent(cliente.publicId)}` : '/teste-widget.html'}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="flex items-center gap-1 text-xs font-medium"
@@ -1370,7 +1364,7 @@ export default function GeradorAtendenteVirtual() {
                   </a>
                 </div>
                 {cliente.incluiAssistente !== false && <CampoTexto
-                  label="URL onde o widget ficará hospedado"
+                  label="Origem HTTPS do Prontô (hospedagem do código)"
                   value={widgetBaseUrl}
                   onChange={setWidgetBaseUrl}
                   placeholder="https://seu-dominio.com"
@@ -1411,7 +1405,7 @@ export default function GeradorAtendenteVirtual() {
 {gerarCodigo(cliente, widgetBaseUrl)}
                 </pre>
                 <p className="text-[11px] text-white/50 leading-relaxed">
-                  Hospede o <code>atendente-virtual-widget.js</code> em uma hospedagem que permita uso comercial e troque a URL acima. Cole essa linha única antes do <code>&lt;/body&gt;</code> do site do cliente — depois disso, ativar, suspender ou editar o conteúdo acontece só aqui no painel, sem precisar mexer no site dele de novo.
+                  O código já está hospedado no Prontô. Insira esta linha uma vez antes do <code>&lt;/body&gt;</code>, ou na área de código personalizado permitida pela plataforma. Depois da publicação, confira no site real. Respostas e acesso são mantidos aqui no painel. Não substitua o endereço do código pelo endereço do cliente.
                 </p>
               </div>}
             </div>

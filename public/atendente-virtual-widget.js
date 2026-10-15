@@ -10,7 +10,13 @@
 
   var scriptAtual = document.currentScript;
   var siteId = scriptAtual && scriptAtual.dataset.site;
+  var somenteTeste = scriptAtual && scriptAtual.dataset.preview === 'true';
   if (scriptAtual && scriptAtual.isConnected === false) return;
+
+  function avisarEstado(estado) {
+    window.dispatchEvent(new CustomEvent('pronto:widget-status', { detail: { siteId: siteId || null, estado: estado } }));
+  }
+  if (siteId && !/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(siteId)) { avisarEstado('erro'); return; }
 
   function urlSegura(url) {
     if (!url) return null;
@@ -23,7 +29,7 @@
   }
 
   function chamarSupabase(caminho, corpo) {
-    if (!siteId) return; // modo local/preview: sem backend, sem eventos/leads
+    if (!siteId || somenteTeste) return; // teste de instalação nunca registra eventos/contatos
     fetch(SUPABASE_URL + "/rest/v1/" + caminho, {
       method: "POST",
       headers: {
@@ -96,58 +102,6 @@
     var root = document.createElement("div");
     root.dataset.atendenteWidget = "true";
     root.innerHTML = `
-      <style>
-        [data-atendente-widget] {
-          --avw-texto: #1c2430;
-          --avw-fundo-painel: #fff;
-          --avw-fundo-corpo: #f8faf9;
-          --avw-fundo-bolha: #fff;
-          --avw-borda: #dde3e1;
-          --avw-muted: #5b6672;
-        }
-        @media (prefers-color-scheme: dark) {
-          :root:not([data-theme="light"]) [data-atendente-widget] {
-            --avw-texto: #e9eeec;
-            --avw-fundo-painel: #1a2226;
-            --avw-fundo-corpo: #12181b;
-            --avw-fundo-bolha: #222c30;
-            --avw-borda: #2b3538;
-            --avw-muted: #8fa09b;
-          }
-        }
-        [data-theme="dark"] [data-atendente-widget] {
-            --avw-texto: #e9eeec;
-            --avw-fundo-painel: #1a2226;
-            --avw-fundo-corpo: #12181b;
-            --avw-fundo-bolha: #222c30;
-            --avw-borda: #2b3538;
-            --avw-muted: #8fa09b;
-        }
-        [data-atendente-widget] { position: fixed; right: 18px; bottom: 18px; z-index: 99999; font-family: Inter, system-ui, sans-serif; color: var(--avw-texto); }
-        [data-atendente-widget] * { box-sizing: border-box; }
-        .avw-panel { display: none; width: min(340px, calc(100vw - 32px)); overflow: hidden; border: 1px solid var(--avw-borda); border-radius: 16px; background: var(--avw-fundo-painel); box-shadow: 0 22px 52px rgba(28,36,48,.22); }
-        .avw-panel.is-open { display: block; }
-        .avw-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; padding: 12px 14px; background: var(--avw-cor); color: var(--avw-on-brand); }
-        .avw-title { font-size: 14px; font-weight: 700; margin: 0; }
-        .avw-close, .avw-fab, .avw-option { border: 0; cursor: pointer; font: inherit; }
-        .avw-close { background: rgba(255,255,255,.18); color: var(--avw-on-brand); border-radius: 999px; width: 44px; height: 44px; flex-shrink: 0; }
-        .avw-body { display: grid; gap: 10px; padding: 14px; background: var(--avw-fundo-corpo); max-height: min(340px, calc(100dvh - 130px)); overflow-y: auto; }
-        .avw-msg { max-width: 92%; padding: 9px 11px; border: 1px solid var(--avw-borda); border-radius: 12px; background: var(--avw-fundo-bolha); color: var(--avw-texto); font-size: 13px; line-height: 1.4; white-space: pre-wrap; }
-        .avw-options { display: grid; gap: 8px; margin-top: 2px; }
-        .avw-option { width: 100%; padding: 9px 10px; border: 1px solid var(--avw-cor); border-radius: 10px; background: var(--avw-fundo-bolha); color: var(--avw-texto); text-align: left; font-size: 14px; min-height: 44px; }
-        .avw-fab { display: inline-flex; align-items: center; justify-content: center; margin-top: 10px; padding: 12px 16px; border-radius: 999px; background: var(--avw-cor); color: var(--avw-on-brand); box-shadow: 0 14px 34px rgba(28,36,48,.24); font-weight: 700; }
-        .avw-link-btn { display: inline-flex; align-items: center; justify-content: center; width: 100%; padding: 9px 10px; border-radius: 10px; background: var(--avw-cor); color: var(--avw-on-brand); font-weight: 700; font-size: 13px; text-decoration: none; }
-        .avw-lead { display: grid; gap: 8px; padding: 10px; border: 1px solid var(--avw-borda); border-radius: 12px; background: var(--avw-fundo-bolha); }
-        .avw-lead input { width: 100%; padding: 8px 9px; border: 1px solid var(--avw-borda); border-radius: 8px; font-size: 16px; min-height: 44px; font-family: inherit; color: var(--avw-texto); background: var(--avw-fundo-bolha); }
-        .avw-lead-acoes { display: flex; gap: 8px; }
-        .avw-lead-continuar { flex: 1; padding: 8px 10px; border-radius: 8px; background: var(--avw-cor); color: var(--avw-on-brand); font-size: 13px; font-weight: 700; text-align: center; text-decoration: none; }
-        .avw-lead-pular { padding: 8px 10px; border-radius: 8px; background: transparent; color: var(--avw-muted); font-size: 12px; }
-        .avw-lead-aviso { margin: 0; font-size: 11px; line-height: 1.4; color: var(--avw-muted); }
-        [data-atendente-widget] :focus-visible { outline: 3px solid var(--avw-texto); outline-offset: 3px; }
-        .avw-fab, .avw-link-btn, .avw-lead-continuar, .avw-lead-pular { min-height: 44px; }
-        .avw-head :focus-visible { outline-color: var(--avw-on-brand); outline-offset: -4px; }
-        @media (prefers-reduced-motion: reduce) { [data-atendente-widget] * { transition: none !important; transform: none !important; } }
-      </style>
       <section class="avw-panel" id="pronto-chat-panel" aria-live="polite">
         <header class="avw-head">
           <h2 class="avw-title"></h2>
@@ -157,6 +111,10 @@
       </section>
       <button class="avw-fab" type="button" aria-controls="pronto-chat-panel" aria-expanded="false">${textos.iniciar}</button>
     `;
+    var stylesheet = document.createElement("link");
+    stylesheet.rel = "stylesheet";
+    stylesheet.href = new URL("atendente-virtual-widget.css", scriptAtual && scriptAtual.src ? scriptAtual.src : window.location.origin + "/atendente-virtual-widget.js").href;
+    root.prepend(stylesheet);
     // Cor aplicada via propriedade CSS customizada (não como texto do
     // <style>): um valor malicioso em corPrimaria não tem como escapar
     // pra fora do contexto de valor de propriedade CSS dessa forma.
@@ -346,6 +304,7 @@
     });
 
     document.body.appendChild(root);
+    avisarEstado('pronto');
     // Na demonstração embutida, mostra o menu sem roubar o foco nem
     // rolar a página comercial automaticamente para o iframe.
     if (config.abertoInicialmente === true) abrirConversa(false);
@@ -353,7 +312,7 @@
 
   // Modo local/preview: window.ATENDENTE_CONFIG já pronto na página
   // (usado por public/teste-widget.html). Sem rede, sem trial/status.
-  if (window.ATENDENTE_CONFIG) {
+  if (!siteId && window.ATENDENTE_CONFIG) {
     montar(window.ATENDENTE_CONFIG);
     return;
   }
@@ -372,10 +331,12 @@
       Authorization: "Bearer " + SUPABASE_ANON_KEY,
     },
   })
-    .then(function (r) { return r.ok ? r.json() : []; })
+    .then(function (r) { if (!r.ok) throw new Error('Configuração indisponível'); return r.json(); })
     .then(function (linhas) {
       var linha = linhas && linhas[0];
-      if (linha && linha.dados) montar(linha.dados);
+      if (linha && linha.dados && linha.dados.incluiAssistente !== false) {
+        montar(somenteTeste ? Object.assign({},linha.dados,{capturarContato:false}) : linha.dados);
+      } else avisarEstado('indisponivel');
     })
-    .catch(function () { /* falha de rede: não quebra o site do cliente */ });
+    .catch(function () { avisarEstado('erro'); /* falha não interrompe o site externo */ });
 })();

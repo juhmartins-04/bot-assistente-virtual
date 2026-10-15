@@ -20,7 +20,7 @@ export function periodoMes(mes = new Intl.DateTimeFormat('en-CA', { timeZone: 'A
 export function csv(linhas) {
   return '\uFEFF' + linhas.map(linha => linha.map(valor => {
     let texto = String(valor ?? '')
-    if (/^[=+@\-\t\r]/.test(texto)) texto = "'" + texto
+    if (/^[\u0000-\u0020]*[=+@\-]|^[\t\r\n]/.test(texto)) texto = "'" + texto
     return '"' + texto.replaceAll('"', '""') + '"'
   }).join(';')).join('\r\n')
 }

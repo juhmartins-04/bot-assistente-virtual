@@ -16,7 +16,7 @@ function montarDemo({ carregar = true } = {}) {
  const requisicoes = [];
  window.fetch = (...args) => { requisicoes.push(args); throw new Error('A demo não deve fazer chamadas ao banco'); };
  window.HTMLElement.prototype.scrollIntoView = function () {};
- window.eval(window.document.getElementById('demo-controller').textContent);
+ window.eval(readFileSync(new URL('../public/demo-pet.js', import.meta.url), 'utf8'));
  const script = window.document.querySelector('script[src="/atendente-virtual-widget.js"]');
  if (carregar) {
   window.eval(widget);

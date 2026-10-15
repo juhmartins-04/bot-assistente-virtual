@@ -41,7 +41,7 @@ export default async function middleware(request) {
 
     const linhas = await resposta.json();
     const dados = linhas?.[0]?.dados;
-    if (!dados?.nomeNegocio) return next();
+    if (!dados?.nomeNegocio || dados.incluiPagina === false) return next();
 
     const nome = escapeHtml(dados.nomeNegocio);
     const descricao = escapeHtml(dados.sobreNegocio || "Atendimento digital simples pro seu negócio.");

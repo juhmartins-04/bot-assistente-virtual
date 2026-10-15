@@ -3,7 +3,8 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Teste do Widget</title>
+    <title>Conferir instalação do assistente | Prontô</title>
+    <meta name="robots" content="noindex,nofollow">
     <style>
       body {
         min-height: 100vh;
@@ -106,92 +107,17 @@
           inteiro) <strong>ou</strong> só o <code>public_id</code> — os dois
           funcionam, a página reconhece sozinha. Isso carrega o widget do jeito
           que ele realmente se comporta no site de um cliente — incluindo
-          teste, ativação e suspensão.
+          teste, ativação e suspensão. Esta conferência não registra contatos ou eventos.
         </p>
         <form>
-          <input type="text" name="site" id="campoSite" placeholder="cole o código gerado ou só o public_id" />
+          <label for="campoSite">Identificador ou código do painel</label><input type="text" name="site" id="campoSite" placeholder="cole o código gerado ou só o public_id" />
           <button type="submit">Carregar</button>
         </form>
       </div>
 
-      <span class="modo-atual" id="indicadorModo"></span>
+      <span class="modo-atual" id="indicadorModo" role="status"></span>
     </main>
 
-    <script>
-      // Aceita tanto o public_id sozinho quanto o snippet inteiro colado
-      // por engano (<script ... data-site="...">) — extrai o id de
-      // qualquer um dos dois formatos, em vez de exigir que a pessoa
-      // recorte só o pedaço certo.
-      function extrairPublicId(texto) {
-        if (!texto) return null;
-        var t = texto.trim();
-        var doAtributo = t.match(/data-site=["']([0-9a-fA-F-]{36})["']/);
-        if (doAtributo) return doAtributo[1];
-        var soloUuid = t.match(/[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}/);
-        if (soloUuid) return soloUuid[0];
-        return t;
-      }
-
-      var params = new URLSearchParams(window.location.search);
-      var siteId = extrairPublicId(params.get("site"));
-      var indicador = document.getElementById("indicadorModo");
-
-      if (siteId) {
-        document.getElementById("campoSite").value = siteId;
-        indicador.textContent = "modo produção — carregando cliente real";
-      } else {
-        indicador.textContent = "modo offline — configuração de exemplo, sem banco de dados";
-        // Config de exemplo, só usada quando nenhum "site" está na URL.
-        window.ATENDENTE_CONFIG = {
-          nomeNegocio: "Clínica Vida Plena (exemplo)",
-          corPrimaria: "#2f6f62",
-          numeroWhatsApp: "5541999999999",
-          idiomaPadrao: "pt",
-          saudacao: {
-            pt: "Olá! Como posso ajudar?",
-            en: "Hi! How can I help?"
-          },
-          transferirLabel: {
-            pt: "Falar com atendente",
-            en: "Talk to someone"
-          },
-          transferirMensagemWhats: {
-            pt: "Olá! Vim pelo site e gostaria de falar com um atendente.",
-            en: "Hi! I came from the website and would like to talk to someone."
-          },
-          opcoes: [
-            {
-              label: { pt: "Horário de funcionamento", en: "Opening hours" },
-              tipo: "resposta",
-              resposta: {
-                pt: "Funcionamos de segunda a sábado, das 9h às 18h.",
-                en: "We're open Monday to Saturday, 9am to 6pm."
-              }
-            },
-            {
-              label: { pt: "Agendar horário", en: "Book an appointment" },
-              tipo: "agenda",
-              linkAgenda: "https://cal.com/seu-estabelecimento"
-            },
-            {
-              label: { pt: "Chamar no WhatsApp", en: "Open WhatsApp" },
-              tipo: "whatsapp",
-              mensagemWhats: {
-                pt: "Olá! Vim pelo site e quero saber mais.",
-                en: "Hi! I came from the website and want to know more."
-              }
-            }
-          ]
-        };
-      }
-
-      // Cria a tag do widget dinamicamente, já com "data-site" definido
-      // antes de inserir no DOM — assim o widget lê o atributo certo
-      // desde a primeira execução, sem precisar trocar a tag depois.
-      var scriptWidget = document.createElement("script");
-      scriptWidget.src = "/atendente-virtual-widget.js";
-      if (siteId) scriptWidget.dataset.site = siteId;
-      document.body.appendChild(scriptWidget);
-    </script>
+    <script src="/teste-widget.js" defer></script>
   </body>
 </html>

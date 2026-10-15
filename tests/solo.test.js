@@ -46,7 +46,8 @@ await test('coleta solo valida contatos e protege eventos e contadores privados'
     await assert.rejects(db.query('insert into public.leads(public_id,nome) values($1,$2)', [PUB, 'x'.repeat(121)]));
     await assert.rejects(db.query("insert into public.leads(public_id,nome,telefone) values($1,'   ','   ')", [PUB]));
     await assert.rejects(db.query("insert into public.leads(public_id,telefone) values($1,'invalid-phone')", [PUB]));
-    await db.query("insert into public.leads(public_id,nome,nota,status_atendimento,criado_em) values($1,' Pessoa ','forged','respondido','2000-01-01')", [PUB]);
+    await assert.rejects(db.query("insert into public.leads(public_id,nome,nota,status_atendimento,criado_em) values($1,' Pessoa ','forged','respondido','2000-01-01')", [PUB]));
+    await db.query("insert into public.leads(public_id,nome) values($1,' Pessoa ')", [PUB]);
     for (let i=0;i<60;i++) await db.query("insert into public.pagina_eventos(public_id,tipo) values($1,'pagina_visualizada')", [PUB]);
     await assert.rejects(db.query("insert into public.pagina_eventos(public_id,tipo) values($1,'pagina_visualizada')", [PUB]));
     await assert.rejects(db.exec('select * from private.solo_public_limits'));

@@ -9,7 +9,8 @@ const assert = require('node:assert/strict');
 const repo=fileURLToPath(new URL('..',import.meta.url)).replace(/\/$/,'');
 const nomes=[...readFileSync(repo+'/src/storage.js','utf8').matchAll(/export async function (\w+)/g)].map(m=>m[1]);
 const base={id:'ficticio-a',nomeNegocio:'Aurora fictícia',plano:'pagina',incluiPagina:true,corPrimaria:'#ffff00',numeroWhatsApp:'5541999999999',idiomaPadrao:'pt',sobreNegocio:'Exemplo',endereco:'',horarioFuncionamento:'',incluiAssistente:false,layout:'classico',opcoes:[],status:'draft',publicId:'00000000-0000-4000-8000-000000000001'};
-const stubs={listarClientes:`return {'ficticio-a':${JSON.stringify(base)},'ficticio-b':${JSON.stringify({...base,id:'ficticio-b',nomeNegocio:'Café fictício'})}}`,verificarESolicitarAcessoColaborador:'return false',storageGet:'return null',listarRegistrosSolo:'return []',buscarMetricas:'return {visitasPagina:0,whatsPagina:0,aberturas:0,handoffs:0}',listarLeads:'return []',salvarClienteRemoto:'return {}'};
+const assistente={...base,id:'ficticio-c',nomeNegocio:'Assistência fictícia',plano:'assistente',incluiPagina:false,incluiAssistente:true,status:'suspended',opcoes:[{id:'o1',labelPt:'Horário',tipo:'resposta',respostaPt:'De segunda a sexta.'}]};
+const stubs={listarClientes:`return {'ficticio-a':${JSON.stringify(base)},'ficticio-b':${JSON.stringify({...base,id:'ficticio-b',nomeNegocio:'Café fictício'})},'ficticio-c':${JSON.stringify(assistente)}}`,verificarESolicitarAcessoColaborador:'return false',storageGet:'return null',listarRegistrosSolo:'return []',buscarMetricas:'return {visitasPagina:0,whatsPagina:0,aberturas:0,handoffs:0}',listarLeads:'return []',salvarClienteRemoto:'return {}',estenderTesteRemoto:'return new Date(Date.now()+14*86400000).toISOString()'};
 test('criação, salvamento, prévia responsiva e rascunho funcionam com dados fictícios', async () => {
 const fixture=await build({stdin:{contents:`import React,{act} from 'react';import {createRoot} from 'react-dom/client';import App from '${repo}/src/App.jsx';import {TemaProvider} from '${repo}/src/useTema.js';export {React,act,createRoot,App,TemaProvider};`,resolveDir:repo},bundle:true,write:false,banner:{js: "import {createRequire as fixtureRequire} from 'node:module';const require=fixtureRequire(import.meta.url);"},platform:'node',format:'esm',external:['react','react-dom','react-dom/client'],define:{'import.meta.env':'{}'},plugins:[{name:'dados-ficticios',setup(b){b.onResolve({filter:/\/storage$/},()=>({path:'storage',namespace:'fixture'}));b.onResolve({filter:/\/utils\/supabase$/},()=>({path:'supabase',namespace:'fixture'}));b.onLoad({filter:/\.css$/},()=>({contents:'',loader:'js'}));b.onLoad({filter:/.*/,namespace:'fixture'},({path})=>({contents:path==='storage'?nomes.map(n=>`export async function ${n}(...args){${stubs[n]||'return []'}}`).join('\n'):`export const supabase={auth:{getSession:async()=>({data:{session:{user:{id:'operadora-ficticia',email:'teste@example.invalid'}}}}),onAuthStateChange:()=>({data:{subscription:{unsubscribe(){}}}})}};`}))}}]});
 const anteriores={window:globalThis.window,document:globalThis.document,fetch:globalThis.fetch,IS_REACT_ACT_ENVIRONMENT:globalThis.IS_REACT_ACT_ENVIRONMENT};
@@ -62,6 +63,32 @@ try{
  await click(document.querySelector('[aria-label="Fechar prévia"]'));
  await click(document.querySelector('[aria-label="Mudar para o tema escuro"]'));
  assert.equal(document.documentElement.dataset.theme,'dark');
+ // Plano Só Assistente: orientação e prévia próprias, sem página pública.
+ await act(async()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set.call(search,'');search.dispatchEvent(new dom.window.Event('input',{bubbles:true}))});
+ await click([...document.querySelectorAll('.panel-client')].find(b=>b.textContent.includes('Assistência fictícia')));
+ assert.ok(button('Ver assistente'));
+ assert.doesNotMatch(document.body.textContent,/Link público da página/);
+ const antes=confirmacoes;
+ await click(button('Publicar teste de 14 dias'));
+ assert.match(document.body.textContent,/Informe o endereço HTTPS/);
+ assert.equal(confirmacoes,antes);
+ const site=document.querySelector('input[type="url"]');
+ await act(async()=>{Object.getOwnPropertyDescriptor(dom.window.HTMLInputElement.prototype,'value').set.call(site,'https://site-do-cliente.example');site.dispatchEvent(new dom.window.Event('input',{bubbles:true}))});
+ for(const text of ['Conferi a compatibilidade','O cliente aprovou']){
+  const box=[...document.querySelectorAll('label')].find(e=>e.textContent.includes(text)).querySelector('input');await click(box);
+ }
+ await click(button('Salvar alterações'));
+ await click(button('Ver assistente'));
+ await act(async()=>{await new Promise(r=>setTimeout(r,20))});
+ const widgetFrame=document.querySelector('iframe');
+ widgetFrame.contentDocument.body.innerHTML='<div id="previa-raiz"></div>';
+ await act(async()=>widgetFrame.dispatchEvent(new dom.window.Event('load')));
+ assert.match(widgetFrame.contentDocument.body.textContent,/SIMULAÇÃO DO SITE EXISTENTE/);
+ assert.equal(widgetFrame.contentDocument.querySelector('.biz-page'),null);
+ await click(document.querySelector('[aria-label="Fechar prévia"]'));
+ dom.window.confirm=()=>true;
+ await click(button('Publicar teste de 14 dias'));
+ assert.match(document.body.textContent,/Em teste/);
  console.log('Painel: criação por plano/modelo, busca, rascunho, salvamento, prévia em 360px e computador, fechamento e tema OK. Sem rede ou conta real.');
 } finally {await act(async()=>root.unmount());dom.window.close();Object.assign(globalThis,anteriores);}
 });

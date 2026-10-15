@@ -11,6 +11,51 @@ const config = {
   opcoes: [{ labelPt: 'Horário', labelEn: 'Hours', tipo: 'resposta', respostaPt: 'Das 9h às 18h', respostaEn: '9am to 6pm' }],
 }
 
+async function widgetExterno(t,{preview=false,status=200,dados=config,local=null,publicId='00000000-0000-4000-8000-000000000001'}={}) {
+ const dom=new JSDOM('<!doctype html><html><body><button id="botao-do-cliente">Site existente</button></body></html>',{url:'https://site-do-cliente.example/servicos',runScripts:'outside-only'})
+ t.after(()=>dom.window.close())
+ const {window}=dom,doc=window.document,chamadas=[],estados=[]
+ const script=doc.createElement('script');script.src='https://pronto.example/atendente-virtual-widget.js';script.dataset.site=publicId
+ if(preview)script.dataset.preview='true'
+ doc.body.appendChild(script)
+ Object.defineProperty(doc,'currentScript',{value:script})
+ if(local)window.ATENDENTE_CONFIG=local
+ window.addEventListener('pronto:widget-status',e=>estados.push(e.detail.estado))
+ window.fetch=async(url,options)=>{chamadas.push({url,method:options?.method||'GET'});return {ok:status===200,json:async()=>dados?[{dados}]:[]}}
+ window.eval(codigo)
+ await new Promise(r=>setImmediate(r))
+ return {window,doc,chamadas,estados}
+}
+
+test('site externo carrega configuração remota e CSS da origem Prontô sem sobrescrever o site',async t=>{
+ const {doc,chamadas,estados}=await widgetExterno(t,{local:{...config,nomeNegocio:'Configuração local indevida'}})
+ assert.equal(doc.querySelector('.avw-title').textContent,config.nomeNegocio)
+ assert.equal(doc.querySelector('[data-atendente-widget] link[rel="stylesheet"]').href,'https://pronto.example/atendente-virtual-widget.css')
+ assert.equal(doc.querySelector('[data-atendente-widget] style'),null)
+ assert.equal(doc.querySelector('#botao-do-cliente').textContent,'Site existente')
+ assert.equal(chamadas.filter(c=>c.method==='GET').length,1)
+ assert.deepEqual(estados,['pronto'])
+})
+
+test('conferência do cliente real consulta conteúdo sem registrar visitas ou contatos',async t=>{
+ const {doc,chamadas}=await widgetExterno(t,{preview:true})
+ doc.querySelector('.avw-fab').click()
+ doc.querySelector('.avw-option').click()
+ ;[...doc.querySelectorAll('.avw-option')].at(-1).click()
+ assert.equal(doc.querySelectorAll('input').length,0)
+ assert.equal(chamadas.filter(c=>c.method==='POST').length,0)
+ assert.ok(doc.querySelector('.avw-link-btn'))
+})
+
+test('falhas, expiração e plano sem assistente não interrompem a página do cliente',async t=>{
+ for(const [options,estado] of [[{status:500},'erro'],[{dados:null},'indisponivel'],[{dados:{...config,incluiAssistente:false}},'indisponivel'],[{publicId:'id-invalido'},'erro']]){
+  const {doc,estados}=await widgetExterno(t,options)
+  assert.equal(doc.querySelector('[data-atendente-widget]'),null)
+  assert.ok(doc.querySelector('#botao-do-cliente'))
+  assert.deepEqual(estados,[estado])
+ }
+})
+
 function abrirWidget(overrides = {}, language = 'pt-BR', clicar = true) {
   const dom = new JSDOM('<!doctype html><html><body></body></html>', { url: 'https://exemplo.com/demo', runScripts: 'outside-only' })
   Object.defineProperty(dom.window.navigator, 'language', { value: language })

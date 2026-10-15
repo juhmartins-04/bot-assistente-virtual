@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { atualizarStatusRemoto, listarRegistrosSolo, salvarRegistroSolo } from './storage';
 import { NOMES_PLANOS, PRECOS } from './negocio';
+import { validarPublicacao } from './instalacao';
 
 export default function AssinaturaSolo({ cliente, onChange, onPlano, configPendente = false }) {
   const [historico, setHistorico] = useState([]);
@@ -23,6 +24,8 @@ export default function AssinaturaSolo({ cliente, onChange, onPlano, configPende
   async function registrar(evento) {
     evento.preventDefault();
     if (configPendente) { setAviso("Salve a configuração antes de registrar ou ativar um período pago."); return; }
+    const pendencias = validarPublicacao(cliente);
+    if (pendencias.length) { setAviso(pendencias.join(' ')); return; }
     if (validade <= recebido) { setAviso('A validade precisa ser posterior ao recebimento.'); return; }
     if (!window.confirm(`Você conferiu o recebimento de R$ ${PRECOS[plano]} no banco? Este registro não efetua uma cobrança.`)) return;
     setBusy(true); setAviso('');
@@ -47,6 +50,8 @@ export default function AssinaturaSolo({ cliente, onChange, onPlano, configPende
 
   async function ativar() {
     if (configPendente) { setAviso("Salve a configuração antes de ativar o acesso."); return; }
+    const pendencias = validarPublicacao(cliente);
+    if (pendencias.length) { setAviso(pendencias.join(' ')); return; }
     if (!window.confirm('Confirma que há um período já pago e vigente no histórico?')) return;
     setBusy(true);
     try { await atualizarStatusRemoto(cliente.id, 'active'); onChange({ status: 'active' }); setAviso('Acesso ativado.'); }
