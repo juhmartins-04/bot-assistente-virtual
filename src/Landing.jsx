@@ -106,7 +106,6 @@ export default function Landing() {
               <a className="pr-play-link" href="#demonstracao"><Play size={14} fill="currentColor" aria-hidden="true" />Veja funcionar</a>
             </div>
             <p className="pr-micro"><Check size={14} aria-hidden="true" />Sem taxa de adesão. Sem fidelidade.</p>
-            <div className="pr-founder-note"><span className="pr-avatar">JM</span><p>Feito por Julia, em Curitiba.<br /><strong>Eu configuro. Você cuida do seu negócio.</strong></p></div>
           </div>
           <Demonstracao />
         </section>
@@ -178,7 +177,7 @@ export default function Landing() {
 
         <section className="pr-final-cta pr-container" aria-labelledby="titulo-teste"><div><p className="pr-eyebrow">PRONTÔ PARA O PRÓXIMO PASSO?</p><h2 id="titulo-teste">Seu atendimento<br />pode começar aqui.</h2><p>Me conte sobre o seu negócio. Eu te mostro como o Prontô pode ajudar.</p></div><div><BotaoContato /><p className="pr-cta-note">Configuração comigo. Teste no seu ritmo.</p></div></section>
       </main>
-      <footer className="pr-footer pr-container"><a href="/" className="pr-brand">Prontô<span className="pr-brand-dot">.</span></a><p>Atendimento digital simples.<br />Feito por Julia Martins · Curitiba</p><nav aria-label="Links do rodapé"><a href={CONTATO.instagram} target="_blank" rel="noopener noreferrer">Instagram</a><a href="/demo">Demonstração</a><a href="/privacidade">Privacidade</a>{OPERACAO_COMPLETA && <a href="/cliente">Área do cliente</a>}<a href="/painel">Acessar painel</a></nav></footer>
+      <footer className="pr-footer pr-container"><a href="/" className="pr-brand">Prontô<span className="pr-brand-dot">.</span></a><p>Atendimento digital simples.</p><nav aria-label="Links do rodapé"><a href={CONTATO.instagram} target="_blank" rel="noopener noreferrer">Instagram</a><a href="/demo">Demonstração</a><a href="/privacidade">Privacidade</a>{OPERACAO_COMPLETA && <a href="/cliente">Área do cliente</a>}<a href="/painel">Acessar painel</a></nav></footer>
     </div>
   )
 }
