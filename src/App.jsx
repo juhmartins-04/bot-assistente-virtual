@@ -1057,7 +1057,7 @@ export default function GeradorAtendenteVirtual() {
               <div className="card p-5 flex flex-col gap-4">
                 <div className="flex justify-between gap-2"><h2 className="font-semibold flex items-center gap-2"><span className="icon-chip"><Building2 size={14} /></span> Identidade</h2><button className="btn btn-outline text-xs" onClick={() => {
                   const { publicId, status, trialEndsAt, paidUntil, cancelAt, legacyAccess, ...conteudo } = cliente;
-                  const copia = { ...conteudo, id: novoIdCliente(), nomeNegocio: `${cliente.nomeNegocio} (cópia)` };
+                  const copia = { ...conteudo, instalacao: {}, id: novoIdCliente(), nomeNegocio: `${cliente.nomeNegocio} (cópia)` };
                   setClienteId(copia.id); setCliente(copia); setValidacao([]);
                 }}>Duplicar configuração</button></div>
                 <label className="flex flex-col gap-1 text-sm"><span className="font-medium">Plano e recursos desta entrega</span><select value={cliente.plano || 'completo'} onChange={e=>setCliente(prev=>aplicarPlano(prev,e.target.value))} className="border rounded-lg p-2">{Object.entries(NOMES_PLANOS).map(([k,v])=><option key={k} value={k}>{v}</option>)}</select></label>

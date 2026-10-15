@@ -27,8 +27,8 @@ export function validarPublicacao(cliente) {
   if (cliente.plano !== 'assistente') return []
   const i = cliente.instalacao || {}, erros = []
   if (!urlSite(i.siteUrl)) erros.push('Informe o endereço HTTPS do site que receberá o assistente.')
-  if (!i.autorizada) erros.push('Confirme a autorização para instalar no site do cliente.')
-  if (!i.conteudoAprovado) erros.push('Confirme que o cliente aprovou as respostas do assistente.')
+  if (i.autorizada !== true) erros.push('Confirme a autorização para instalar no site do cliente.')
+  if (i.conteudoAprovado !== true) erros.push('Confirme que o cliente aprovou as respostas do assistente.')
   return erros
 }
 

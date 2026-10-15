@@ -83,6 +83,7 @@ test('código de instalação aceita somente origem HTTPS e identificador válid
 
 test('Só Assistente precisa de site, autorização e conteúdo aprovado para publicar',()=>{
  assert.equal(validarPublicacao({plano:'assistente'}).length,3)
+ assert.equal(validarPublicacao({plano:'assistente',instalacao:{siteUrl:'https://cliente.example',autorizada:'false',conteudoAprovado:'false'}}).length,2)
  assert.deepEqual(validarPublicacao({plano:'pagina'}),[])
  assert.deepEqual(validarPublicacao({plano:'assistente',instalacao:{siteUrl:'https://cliente.example',autorizada:true,conteudoAprovado:true}}),[])
 })
