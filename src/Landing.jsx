@@ -55,6 +55,7 @@ function Demonstracao() {
       <div className="pr-demo-caption"><span className="pr-status-dot" />Clique em “Iniciar conversa” para testar o menu.</div>
       <p className="pr-demo-disclaimer">Dados fictícios. O WhatsApp fala com a Julia sobre o Prontô.</p>
       <a className="pr-demo-expand" href={`/demo?segmento=${segmento}&modelo=${modelo}`} target="_blank" rel="noopener noreferrer">Abrir demonstração em tela inteira ↗</a>
+      <a className="pr-demo-expand" href="/demos/">Ver páginas e assistentes por segmento ↗</a>
     </div>
   )
 }

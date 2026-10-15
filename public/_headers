@@ -28,3 +28,10 @@
 /demo-pet.html
   Cache-Control: no-cache
   X-Robots-Tag: noindex, nofollow
+
+/demos
+  Cache-Control: no-cache
+  X-Robots-Tag: noindex, nofollow
+/demos/*
+  Cache-Control: no-cache
+  X-Robots-Tag: noindex, nofollow

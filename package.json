@@ -5,6 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
+    "demos:generate": "node scripts/generate-commercial-demos.mjs",
+    "prebuild": "npm run demos:generate",
     "build": "vite build",
     "preview": "vite preview",
     "test": "node --test tests/*.test.js",
